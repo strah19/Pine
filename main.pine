@@ -1,1 +1,14 @@
-int var;
+int main() {
+    int i = 10;
+    if ( i == 10 ) {
+        i = 0;
+    }
+    elif ( i > 5 ) {
+        i = 10;
+    }
+    else {
+        i = 20;
+    }
+
+    return 0;
+}

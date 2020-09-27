@@ -14,13 +14,11 @@ struct Lexer {
     char current_possible_token[MAX_TOKEN_SIZE];
     struct Vector* tokens;
     char* copy_string_token;
+    char current_char, next_char;
 };
 
 extern bool
 AssertLexer ( struct Lexer* lexer );
-
-static int
-FindDigits ( struct Lexer* lexer, struct TokenInfo token_pos );
 
 extern struct Lexer*
 CreateLexer( const char* source_file_path );

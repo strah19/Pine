@@ -23,8 +23,7 @@ AddToken ( enum TokenType type, const char* in_source_token, struct TokenInfo to
         token->token_string = copy_string;
     }
     token->token_info = token_info;
-    token->token_info.token_pos -= ( sizeof( char ) * strlen( token->token_string ) );
-    printf( "Token size: %d\n", ( sizeof( char ) * strlen( token->token_string ) ) );
+
     token->code_id = MoveTokenCounter( 1 );
     token->type = type;
 
