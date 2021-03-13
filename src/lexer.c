@@ -28,6 +28,28 @@ CreateLexer ( const char* source_file_path ) {
     return lexer;
 }
 
+int 
+OperaterTokens ( struct Lexer* lexer, struct TokenInfo* token_pos ) {
+    if ( *lexer->current_possible_token == '+' ) {
+        VectorPushBack( lexer->tokens, AddToken( ADD, "+", *token_pos, lexer->copy_string_token  ) );
+        return CREATING_TOKEN;           
+    }
+    if ( *lexer->current_possible_token == '-' ) {
+        VectorPushBack( lexer->tokens, AddToken( SUBTRACT, "-", *token_pos, lexer->copy_string_token  ) );
+        return CREATING_TOKEN;           
+    }
+    if ( *lexer->current_possible_token == '*' ) {
+        VectorPushBack( lexer->tokens, AddToken( MULTIPLE, "*", *token_pos, lexer->copy_string_token  ) );
+        return CREATING_TOKEN;           
+    }
+    if ( *lexer->current_possible_token == '/' ) {
+        VectorPushBack( lexer->tokens, AddToken( DIVIDE, "/", *token_pos, lexer->copy_string_token  ) );
+        return CREATING_TOKEN;           
+    }
+
+    return NEED_MORE_STRING_FOR_TOKEN;
+}
+
 int
 MakeToken ( struct Lexer* lexer, struct TokenInfo token_pos ) {
     if ( AssertLexer( lexer ) ) {
@@ -89,59 +111,47 @@ MakeToken ( struct Lexer* lexer, struct TokenInfo token_pos ) {
                 return CREATING_TOKEN;
             }
         }
-        if ( lexer->current_possible_token[0] == ';' ) {
+        if ( *lexer->current_possible_token == ';' ) {
             VectorPushBack( lexer->tokens, AddToken( END_EXPRESSION, ";", token_pos, lexer->copy_string_token  ) );
             return CREATING_TOKEN;           
         }
-        if ( lexer->current_possible_token[0] == '(' ) {
+        if ( *lexer->current_possible_token == '(' ) {
             VectorPushBack( lexer->tokens, AddToken( LPAR, "(", token_pos, lexer->copy_string_token  ) );
             return CREATING_TOKEN;           
         }
-        if ( lexer->current_possible_token[0] == ')' ) {
+        if ( *lexer->current_possible_token == ')' ) {
             VectorPushBack( lexer->tokens, AddToken( RPAR, ")", token_pos, lexer->copy_string_token  ) );
             return CREATING_TOKEN;           
         }
-        if ( lexer->current_possible_token[0] == '[' ) {
+        if ( *lexer->current_possible_token == '[' ) {
             VectorPushBack( lexer->tokens, AddToken( LBRACKET, "[", token_pos, lexer->copy_string_token  ) );
             return CREATING_TOKEN;           
         }
-        if ( lexer->current_possible_token[0] == ']' ) {
+        if ( *lexer->current_possible_token == ']' ) {
             VectorPushBack( lexer->tokens, AddToken( RBRACKET, "]", token_pos, lexer->copy_string_token  ) );
             return CREATING_TOKEN;           
         }
-        if ( lexer->current_possible_token[0] == '{' ) {
+        if ( *lexer->current_possible_token == '{' ) {
             VectorPushBack( lexer->tokens, AddToken( LCURLEY_BRACKET, "{", token_pos, lexer->copy_string_token  ) );
             return CREATING_TOKEN;           
         }
-        if ( lexer->current_possible_token[0] == '}' ) {
+        if ( *lexer->current_possible_token == '}' ) {
             VectorPushBack( lexer->tokens, AddToken( RCURLEY_BRACKET, "}", token_pos, lexer->copy_string_token  ) );
             return CREATING_TOKEN;           
         }
-        if ( lexer->current_possible_token[0] == '<' ) {
+        if ( *lexer->current_possible_token == '<' ) {
             VectorPushBack( lexer->tokens, AddToken( LESS_THAN, "<", token_pos, lexer->copy_string_token  ) );
             return CREATING_TOKEN;           
         }
-        if ( lexer->current_possible_token[0] == '>' ) {
+        if ( *lexer->current_possible_token == '>' ) {
             VectorPushBack( lexer->tokens, AddToken( GREATER_THAN, ">", token_pos, lexer->copy_string_token  ) );
             return CREATING_TOKEN;           
         }
 
-        if ( lexer->current_possible_token[0] == '+' ) {
-            VectorPushBack( lexer->tokens, AddToken( ADD, "+", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
+        if ( OperaterTokens( lexer, &token_pos ) ) {
+            return CREATING_TOKEN;
         }
-        if ( lexer->current_possible_token[0] == '-' ) {
-            VectorPushBack( lexer->tokens, AddToken( SUBTRACT, "-", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( lexer->current_possible_token[0] == '*' ) {
-            VectorPushBack( lexer->tokens, AddToken( MULTIPLE, "*", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( lexer->current_possible_token[0] == '/' ) {
-            VectorPushBack( lexer->tokens, AddToken( DIVIDE, "/", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
+
         if ( IsCharGoodForVariableName( lexer->current_possible_token[0] ) ) {
             if ( !IsCharGoodForVariableName( ( char ) lexer->next_char ) ) {
                 VectorPushBack( lexer->tokens, AddToken( ID, lexer->current_possible_token, token_pos, lexer->copy_string_token ) );
@@ -181,20 +191,15 @@ RunTokenizer( struct Lexer* lexer ) {
         lexer->current_char = current_character;
         lexer->next_char = next_character;
         if ( wait_on_loop ) {
-            /* Do everything in here! */
-            //printf ( "Current char: { %c } Next char: { %c }\n", current_character, next_character );
-
             switch ( current_lexer_state ) {
             case NEED_MORE_STRING_FOR_TOKEN: {
                 if ( current_character != ' ' && current_character != '\n' && token_size < MAX_TOKEN_SIZE ) {
                     lexer->current_possible_token[token_size] = ( char ) current_character;
                     token_size++;
                 }
-                //printf( "Searching for token... %s\n", lexer->current_possible_token );
             }
             break;
             case CREATING_TOKEN: {
-                //printf( "Found token! %s\n", lexer->current_possible_token );
                 for ( int i = 0; i < token_size; i++ ) {
                     lexer->current_possible_token[i] = ' ';
                 }
@@ -214,11 +219,27 @@ RunTokenizer( struct Lexer* lexer ) {
         current_character = next_character;
         if ( current_character == '\n' ) {
             token_position.token_line++;
-            //printf( "%d\n", token_position.token_line );
             token_position.token_pos = 0;
         }    
         token_position.token_pos++;
 
         wait_on_loop = true;
     }
+}
+
+void 
+LogTokenData ( struct Lexer* lexer ) {
+    int pointer = 0;
+    for (size_t i = 0; i < lexer->tokens->size; i++ ) {
+        struct Token* token = lexer->tokens->array[i];
+        printf( "Token[%d], Type: %d, { %s } ln: %d, pos: %d\n", token->code_id, token->type, token->token_string, token->token_info.token_line, token->token_info.token_pos );
+    }
+}
+
+void 
+DestroyLexer ( struct Lexer* lexer ) {
+    fclose( lexer->source_file );
+    FreeVector( lexer->tokens );
+    free(lexer->copy_string_token);
+    free( lexer );
 }

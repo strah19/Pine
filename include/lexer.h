@@ -23,10 +23,19 @@ AssertLexer ( struct Lexer* lexer );
 extern struct Lexer*
 CreateLexer( const char* source_file_path );
 
+static int 
+OperaterTokens ( struct Lexer* lexer, struct TokenInfo* token_pos );
+
 static int
 MakeToken ( struct Lexer* lexer, struct TokenInfo token_pos );
 
 extern void
 RunTokenizer ( struct Lexer* lexer );
+
+extern void
+LogTokenData ( struct Lexer* lexer );
+
+extern void
+DestroyLexer ( struct Lexer* lexer );
 
 #endif // LEXER_H
