@@ -1,12 +1,10 @@
 #include "../include/lexer.h"
 
-bool
-AssertLexer ( struct Lexer* lexer ) {
+bool AssertLexer ( struct Lexer* lexer ) {
     return (lexer != NULL);
 }
 
-struct Lexer*
-CreateLexer ( const char* source_file_path ) {
+struct Lexer* CreateLexer ( const char* source_file_path ) {
     struct Lexer* lexer;
     lexer = malloc( sizeof( struct Lexer ) );
     if ( lexer == NULL ) {
@@ -28,30 +26,7 @@ CreateLexer ( const char* source_file_path ) {
     return lexer;
 }
 
-int 
-OperaterTokens ( struct Lexer* lexer, struct TokenInfo* token_pos ) {
-    if ( *lexer->current_possible_token == '+' ) {
-        VectorPushBack( lexer->tokens, AddToken( ADD, "+", *token_pos, lexer->copy_string_token  ) );
-        return CREATING_TOKEN;           
-    }
-    if ( *lexer->current_possible_token == '-' ) {
-        VectorPushBack( lexer->tokens, AddToken( SUBTRACT, "-", *token_pos, lexer->copy_string_token  ) );
-        return CREATING_TOKEN;           
-    }
-    if ( *lexer->current_possible_token == '*' ) {
-        VectorPushBack( lexer->tokens, AddToken( MULTIPLE, "*", *token_pos, lexer->copy_string_token  ) );
-        return CREATING_TOKEN;           
-    }
-    if ( *lexer->current_possible_token == '/' ) {
-        VectorPushBack( lexer->tokens, AddToken( DIVIDE, "/", *token_pos, lexer->copy_string_token  ) );
-        return CREATING_TOKEN;           
-    }
-
-    return NEED_MORE_STRING_FOR_TOKEN;
-}
-
-int
-MakeToken ( struct Lexer* lexer, struct TokenInfo token_pos ) {
+int MakeToken ( struct Lexer* lexer, struct TokenInfo token_pos ) {
     if ( AssertLexer( lexer ) ) {
         if ( lexer->current_possible_token[0] == '=' ) {
             VectorPushBack( lexer->tokens, AddToken( EQUAL, lexer->current_possible_token,  token_pos, lexer->copy_string_token ) );
@@ -68,94 +43,23 @@ MakeToken ( struct Lexer* lexer, struct TokenInfo token_pos ) {
             }           
             return CREATING_TOKEN;
         }
-        if ( StringCompare( lexer->current_possible_token, "int", 3) == 0 ) {
-            VectorPushBack( lexer->tokens, AddToken( INT_VAR, "int", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( StringCompare( lexer->current_possible_token, "for", 3) == 0 ) {
-            VectorPushBack( lexer->tokens, AddToken( FOR, "for", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( StringCompare( lexer->current_possible_token, "return", 6 ) == 0 ) {
-            VectorPushBack( lexer->tokens, AddToken( RETURN, "return", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( StringCompare( lexer->current_possible_token, "main", 5) == 0 ) {
-            VectorPushBack( lexer->tokens, AddToken( MAIN, "main", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( StringCompare( lexer->current_possible_token, "elif", 5) == 0 ) {
-            VectorPushBack( lexer->tokens, AddToken( ELIF, "elif", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( StringCompare( lexer->current_possible_token, "else", 5) == 0 ) {
-            VectorPushBack( lexer->tokens, AddToken( ELSE, "else", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( StringCompare( lexer->current_possible_token, "if", 2 ) == 0 ) {
-            VectorPushBack( lexer->tokens, AddToken( IF, "if", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( StringCompare( lexer->current_possible_token, "<=", 2 ) == 0 ) {
-            VectorPushBack( lexer->tokens, AddToken( LESS_THAN_EQUAL, "<=", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( StringCompare( lexer->current_possible_token, ">=", 2 ) == 0 ) {
-            VectorPushBack( lexer->tokens, AddToken( GREATER_THAN_EQUAL, ">=", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-
-        if ( IsCharDigit( lexer->current_possible_token[0] ) ) {
+        else if ( IsCharDigit( lexer->current_possible_token[0] ) ) {
             if ( !IsCharDigit( ( char ) lexer->next_char ) ) {
                 VectorPushBack( lexer->tokens, AddToken( INTEGER, lexer->current_possible_token, token_pos, lexer->copy_string_token ) );
                 return CREATING_TOKEN;
             }
         }
-        if ( *lexer->current_possible_token == ';' ) {
-            VectorPushBack( lexer->tokens, AddToken( END_EXPRESSION, ";", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( *lexer->current_possible_token == '(' ) {
-            VectorPushBack( lexer->tokens, AddToken( LPAR, "(", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( *lexer->current_possible_token == ')' ) {
-            VectorPushBack( lexer->tokens, AddToken( RPAR, ")", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( *lexer->current_possible_token == '[' ) {
-            VectorPushBack( lexer->tokens, AddToken( LBRACKET, "[", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( *lexer->current_possible_token == ']' ) {
-            VectorPushBack( lexer->tokens, AddToken( RBRACKET, "]", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( *lexer->current_possible_token == '{' ) {
-            VectorPushBack( lexer->tokens, AddToken( LCURLEY_BRACKET, "{", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( *lexer->current_possible_token == '}' ) {
-            VectorPushBack( lexer->tokens, AddToken( RCURLEY_BRACKET, "}", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( *lexer->current_possible_token == '<' ) {
-            VectorPushBack( lexer->tokens, AddToken( LESS_THAN, "<", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-        if ( *lexer->current_possible_token == '>' ) {
-            VectorPushBack( lexer->tokens, AddToken( GREATER_THAN, ">", token_pos, lexer->copy_string_token  ) );
-            return CREATING_TOKEN;           
-        }
-
-        if ( OperaterTokens( lexer, &token_pos ) ) {
-            return CREATING_TOKEN;
-        }
-
-        if ( IsCharGoodForVariableName( lexer->current_possible_token[0] ) ) {
+        else if ( IsCharGoodForVariableName( lexer->current_possible_token[0] ) ) {
             if ( !IsCharGoodForVariableName( ( char ) lexer->next_char ) ) {
                 VectorPushBack( lexer->tokens, AddToken( ID, lexer->current_possible_token, token_pos, lexer->copy_string_token ) );
                 return CREATING_TOKEN;                
+            }
+        }
+
+        for(size_t i = 0; i <  sizeof(token_pairs) / sizeof(token_pairs[0]); i++) {
+            if( StringCompare( lexer->current_possible_token, token_pairs[i].in_code_name, strlen(token_pairs[i].in_code_name)) == 0) {
+                VectorPushBack( lexer->tokens, AddToken( token_pairs[i].type, token_pairs[i].in_code_name, token_pos, lexer->copy_string_token ) );
+                return CREATING_TOKEN; 
             }
         }
     }
@@ -163,13 +67,11 @@ MakeToken ( struct Lexer* lexer, struct TokenInfo token_pos ) {
     return NEED_MORE_STRING_FOR_TOKEN;
 }
 
-void
-RunTokenizer( struct Lexer* lexer ) {
+void RunTokenizer( struct Lexer* lexer ) {
     int get_char = 0;       
     int current_character = 0;
     int next_character = 0;
     bool lexer_is_running = true;
-    int current_state = 0;
     int token_size = 0;
     bool wait_on_loop = false;
     struct TokenInfo token_position = { 0, 0 };
@@ -227,8 +129,7 @@ RunTokenizer( struct Lexer* lexer ) {
     }
 }
 
-void 
-LogTokenData ( struct Lexer* lexer ) {
+void LogTokenData ( struct Lexer* lexer ) {
     int pointer = 0;
     for (size_t i = 0; i < lexer->tokens->size; i++ ) {
         struct Token* token = lexer->tokens->array[i];
@@ -236,8 +137,7 @@ LogTokenData ( struct Lexer* lexer ) {
     }
 }
 
-void 
-DestroyLexer ( struct Lexer* lexer ) {
+void DestroyLexer ( struct Lexer* lexer ) {
     fclose( lexer->source_file );
     FreeVector( lexer->tokens );
     free(lexer->copy_string_token);
