@@ -11,9 +11,9 @@ COMPILER_FLAGS = -Werror -Wfloat-conversion -ggdb -g
 LINKER_FLAGS = 0
 
 ifeq ($(OS), Windows_NT)
-	LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_mixer -lSDL2_ttf
+	LINKER_FLAGS = -lmingw32
 else
-	LINKER_FLAGS = -lSDL2main -lSDL2 -lSDL2_image -lSDL2_mixer -lSDL2_ttf -lm
+	LINKER_FLAGS = -lm
 endif
 
 OBJ_NAME = Pine

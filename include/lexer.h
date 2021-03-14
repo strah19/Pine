@@ -9,44 +9,41 @@
 #define NEED_MORE_STRING_FOR_TOKEN 0
 #define CREATING_TOKEN 1
 
-struct Lexer {
-    const char* input_text;
+struct Lexer
+{
+    const char *input_text;
     char current_possible_token[MAX_TOKEN_SIZE];
-    struct Vector* tokens;
-    char* copy_string_token;
+    struct Vector *tokens;
+    char *copy_string_token;
     char current_char, next_char;
 };
 
-extern bool
-AssertLexer ( struct Lexer* lexer );
-
-extern struct Lexer*
-CreateLexer( const char* source_file_path );
-
-static int
-MakeToken ( struct Lexer* lexer, struct TokenInfo token_pos );
-
-extern void
-RunTokenizer ( struct Lexer* lexer );
-
-extern void
-LogTokenData ( struct Lexer* lexer );
-
-extern void
-DestroyLexer ( struct Lexer* lexer );
-
-struct LexerLoader {
-    FILE* file;
-    const char* file_path;
-    char* buffer;
+struct LexerLoader
+{
+    FILE *file;
+    const char *file_path;
+    char *buffer;
 };
 
-extern const char* CreateBufferForLexer(struct LexerLoader* loader);
-
-struct TokenPair {
-    const char* in_code_name;
+struct TokenPair
+{
+    const char *in_code_name;
     enum TokenType type;
 };
+
+extern bool AssertLexer(struct Lexer *lexer);
+
+extern struct Lexer * CreateLexer(const char *text_input);
+
+static int MakeToken(struct Lexer *lexer, struct TokenInfo token_pos);
+
+extern void RunTokenizer(struct Lexer *lexer);
+
+extern void LogTokenData(struct Lexer *lexer);
+
+extern void DestroyLexer(struct Lexer *lexer);
+
+extern const char *CreateBufferForLexer(struct LexerLoader *loader);
 
 static struct TokenPair token_pairs[] = {
     {"{", LCURLEY_BRACKET},
@@ -71,7 +68,6 @@ static struct TokenPair token_pairs[] = {
     // These should not stay...What needs to happen is that these should be functions!
     {"sin", SIN},
     {"cos", COS},
-    {"tan", TAN}
-};
+    {"tan", TAN}};
 
 #endif // LEXER_H
