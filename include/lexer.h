@@ -10,7 +10,7 @@
 #define CREATING_TOKEN 1
 
 struct Lexer {
-    FILE* source_file;
+    const char* input_text;
     char current_possible_token[MAX_TOKEN_SIZE];
     struct Vector* tokens;
     char* copy_string_token;
@@ -35,6 +35,14 @@ LogTokenData ( struct Lexer* lexer );
 extern void
 DestroyLexer ( struct Lexer* lexer );
 
+struct LexerLoader {
+    FILE* file;
+    const char* file_path;
+    char* buffer;
+};
+
+extern const char* CreateBufferForLexer(struct LexerLoader* loader);
+
 struct TokenPair {
     const char* in_code_name;
     enum TokenType type;
@@ -55,7 +63,15 @@ static struct TokenPair token_pairs[] = {
     {"-", SUBTRACT},
     {"+", ADD},
     {"*", MULTIPLE},
-    {"/", DIVIDE}
+    {"/", DIVIDE},
+
+    //This should not stay...This should actually be a variable!
+    {"pi", PI},
+
+    // These should not stay...What needs to happen is that these should be functions!
+    {"sin", SIN},
+    {"cos", COS},
+    {"tan", TAN}
 };
 
 #endif // LEXER_H
