@@ -37,6 +37,8 @@ extern struct Lexer * CreateLexer(const char *text_input);
 
 static int MakeToken(struct Lexer *lexer, struct TokenInfo token_pos);
 
+static bool PushNewToken(struct Lexer *lexer, size_t i, struct TokenInfo token_pos, const struct TokenPair token_pairs[]);
+
 extern void RunTokenizer(struct Lexer *lexer);
 
 extern void LogTokenData(struct Lexer *lexer);
@@ -45,7 +47,17 @@ extern void DestroyLexer(struct Lexer *lexer);
 
 extern const char *CreateBufferForLexer(struct LexerLoader *loader);
 
-static struct TokenPair token_pairs[] = {
+static const struct TokenPair TOKEN_OPERATORS[] = {
+    {"sin", SIN},
+    {"cos", COS},
+    {"tan", TAN},
+    {"-", SUBTRACT},
+    {"+", ADD},
+    {"*", MULTIPLE},
+    {"/", DIVIDE},
+};
+
+static const struct TokenPair TOKEN_PAIRS[] = {
     {"{", LCURLEY_BRACKET},
     {"}", RCURLEY_BRACKET},
     {"(", LPAR},
@@ -57,17 +69,9 @@ static struct TokenPair token_pairs[] = {
     {"<=", LESS_THAN_EQUAL},
     {">", GREATER_THAN},
     {">=", GREATER_THAN_EQUAL},
-    {"-", SUBTRACT},
-    {"+", ADD},
-    {"*", MULTIPLE},
-    {"/", DIVIDE},
 
     //This should not stay...This should actually be a variable!
     {"pi", PI},
-
-    // These should not stay...What needs to happen is that these should be functions!
-    {"sin", SIN},
-    {"cos", COS},
-    {"tan", TAN}};
+};
 
 #endif // LEXER_H

@@ -38,7 +38,8 @@ enum TokenType
     PI,
     COS,
     SIN,
-    TAN
+    TAN,
+    NONE
 };
 
 struct TokenInfo

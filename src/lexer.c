@@ -29,14 +29,10 @@ int MakeToken(struct Lexer *lexer, struct TokenInfo token_pos)
 {
     if (AssertLexer(lexer))
     {
-        for (size_t i = 0; i < sizeof(token_pairs) / sizeof(token_pairs[0]); i++)
-        {
-            if (StringCompare(lexer->current_possible_token, token_pairs[i].in_code_name, strlen(token_pairs[i].in_code_name)) == 0)
-            {
-                VectorPushBack(lexer->tokens, AddToken(token_pairs[i].type, token_pairs[i].in_code_name, token_pos, lexer->copy_string_token));
-                return CREATING_TOKEN;
-            }
-        }
+        for (size_t i = 0; i < sizeof(TOKEN_PAIRS) / sizeof(TOKEN_PAIRS[0]); i++) { 
+            if(PushNewToken(lexer, i, token_pos, TOKEN_PAIRS)) return CREATING_TOKEN; }
+        for (size_t i = 0; i < sizeof(TOKEN_OPERATORS) / sizeof(TOKEN_OPERATORS[0]); i++) { 
+            if(PushNewToken(lexer, i, token_pos, TOKEN_OPERATORS)) return CREATING_TOKEN; }
 
         if (lexer->current_possible_token[0] == '=')
         {
@@ -75,6 +71,15 @@ int MakeToken(struct Lexer *lexer, struct TokenInfo token_pos)
     }
 
     return NEED_MORE_STRING_FOR_TOKEN;
+}
+
+bool PushNewToken(struct Lexer *lexer, size_t i, struct TokenInfo token_pos, const struct TokenPair token_pairs[]) {
+    if (StringCompare(lexer->current_possible_token, token_pairs[i].in_code_name, strlen(token_pairs[i].in_code_name)) == 0)
+    {
+        VectorPushBack(lexer->tokens, AddToken(token_pairs[i].type, token_pairs[i].in_code_name, token_pos, lexer->copy_string_token));
+        return true;
+    }
+    return false;
 }
 
 void RunTokenizer(struct Lexer *lexer)
@@ -179,7 +184,6 @@ extern const char *CreateBufferForLexer(struct LexerLoader *loader)
 
 void LogTokenData(struct Lexer *lexer)
 {
-    int pointer = 0;
     for (size_t i = 0; i < lexer->tokens->size; i++)
     {
         struct Token *token = lexer->tokens->array[i];

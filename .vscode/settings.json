@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "cstdlib": "c",
-        "lexer.h": "c"
+        "lexer.h": "c",
+        "shunt_yard_algorithim.h": "c"
     }
 }

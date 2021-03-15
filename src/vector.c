@@ -28,6 +28,9 @@ void VectorPushBack(struct Vector *vector, void *element)
 
 void VectorErase(struct Vector *vector, size_t element, int element_size)
 {
-    vector->size--;
-    vector->array = realloc(vector->array, vector->size * element_size);
+    if (vector->size > 0)
+    {
+        vector->size--;
+        vector->array = realloc(vector->array, vector->size * element_size);
+    }
 }
