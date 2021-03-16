@@ -45,7 +45,7 @@ extern void LogTokenData(struct Lexer *lexer);
 
 extern void DestroyLexer(struct Lexer *lexer);
 
-extern const char *CreateBufferForLexer(struct LexerLoader *loader);
+extern void CreateBufferForLexer(struct LexerLoader *loader);
 
 static const struct TokenPair TOKEN_OPERATORS[] = {
     {"sin", SIN},

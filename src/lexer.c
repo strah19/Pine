@@ -52,11 +52,15 @@ int MakeToken(struct Lexer *lexer, struct TokenInfo token_pos)
             }
             return CREATING_TOKEN;
         }
-        else if (IsCharDigit(lexer->current_possible_token[0]))
+        else if (IsCharDigit(lexer->current_possible_token[0]) || lexer->current_char == '.')
         {
-            if (!IsCharDigit((char)lexer->next_char))
+            if (!IsCharDigit((char)lexer->next_char) && lexer->next_char != '.')
             {
-                VectorPushBack(lexer->tokens, AddToken(INTEGER, lexer->current_possible_token, token_pos, lexer->copy_string_token));
+                int is_float = strchr(lexer->current_possible_token, '.') != NULL;
+                if(is_float)
+                    VectorPushBack(lexer->tokens, AddToken(FLOAT, lexer->current_possible_token, token_pos, lexer->copy_string_token));
+                else
+                    VectorPushBack(lexer->tokens, AddToken(INTEGER, lexer->current_possible_token, token_pos, lexer->copy_string_token));
                 return CREATING_TOKEN;
             }
         }
@@ -152,34 +156,32 @@ void RunTokenizer(struct Lexer *lexer)
     }
 }
 
-extern const char *CreateBufferForLexer(struct LexerLoader *loader)
+extern void CreateBufferForLexer(struct LexerLoader *loader)
 {
-    long lSize;
-
     loader->file = fopen(loader->file_path, LEXER_FILE_MODE);
-    if (!loader->file)
-    {
-        perror(loader->file_path), exit(1);
+    if (loader->file != NULL) {
+        /* Go to the end of the file. */
+        if (fseek(loader->file, 0L, SEEK_END) == 0) {
+            /* Get the size of the file. */
+            long bufsize = ftell(loader->file);
+            if (bufsize == -1) { /* Error */ }
+
+            /* Allocate our buffer to that size. */
+            loader->buffer = malloc(sizeof(char) * (bufsize + 1));
+
+            /* Go back to the start of the file. */
+            if (fseek(loader->file, 0L, SEEK_SET) != 0) { /* Error */ }
+
+            /* Read the entire file into memory. */
+            size_t newLen = fread( loader->buffer , sizeof(char), bufsize, loader->file);
+            if ( ferror( loader->file ) != 0 ) {
+                fputs("Error reading file", stderr);
+            } else {
+                 loader->buffer [newLen++] = '\0'; /* Just to be safe. */
+            }
+        }
+        fclose(loader->file);
     }
-
-    fseek(loader->file, 0L, SEEK_END);
-    lSize = ftell(loader->file);
-    rewind(loader->file);
-
-    loader->buffer = calloc(1, lSize + 1);
-    if (!loader->buffer)
-    {
-        fclose(loader->file), fputs("memory alloc fails", stderr), exit(1);
-    }
-    
-    if (1 != fread(loader->buffer, lSize, 1, loader->file))
-    {
-        fclose(loader->file), free(loader->buffer), fputs("entire read fails", stderr), exit(1);
-    }
-
-    fclose(loader->file);
-
-    return loader->buffer;
 }
 
 void LogTokenData(struct Lexer *lexer)

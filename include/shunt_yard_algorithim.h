@@ -14,11 +14,11 @@ struct TokenNode
     enum TokenType op;
     int precedence;
     enum Associativity associativity;
-    int value;
+    float value;
 };
 
 extern struct Stack *RunShuntYardAlgorithim(struct Lexer *lexer);
 
-extern int RunPostfixNotation(struct Stack *shunt_yard_output);
+extern float RunPostfixNotation(struct Stack *shunt_yard_output);
 
 #endif

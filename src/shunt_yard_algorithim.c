@@ -26,7 +26,15 @@ struct Stack *RunShuntYardAlgorithim(struct Lexer *lexer)
             struct TokenNode *node;
             node = malloc(sizeof(struct TokenNode));
             node->value = atoi(token->token_string);
-            node->op = INTEGER;
+            node->op = FLOAT;
+            PushStack(output_queue, node);
+        }
+        if(token->type == FLOAT) {
+            char* pend;
+            struct TokenNode *node;
+            node = malloc(sizeof(struct TokenNode));
+            node->value = strtof(token->token_string, &pend);
+            node->op = token->type;
             PushStack(output_queue, node);
         }
         else if (token->type == LPAR)
@@ -82,27 +90,27 @@ struct Stack *RunShuntYardAlgorithim(struct Lexer *lexer)
     for (size_t i = 0; i < output_queue->top + 1; i++)
     {
         struct TokenNode *data = output_queue->array[i];
-        printf("Output Queue Element %d, Value: %d, Operator: %d\n", i, data->value, data->op);
+        printf("Output Queue Element %d, Value: %f, Operator: %d\n", i, data->value, data->op);
     }
 
     DestroyStack(op_stack);
     return output_queue;
 }
 
-int RunPostfixNotation(struct Stack *shunt_yard_output)
+float RunPostfixNotation(struct Stack *shunt_yard_output)
 {
     struct Stack *out = CreateStack(sizeof(struct TokenNode));
     struct TokenNode *current;
-    int result;
+    float result;
     
     for (size_t i = 0; i < shunt_yard_output->top + 1; i++)
     {
         current = shunt_yard_output->array[i];
-        if (current->op == INTEGER)
+        if (current->op == INTEGER || current->op == FLOAT)
         {
             PushStack(out, current);
         }
-        if (out->top >= 1 && current->op != INTEGER)
+        if (out->top >= 1 && current->op != FLOAT)
         {
             struct TokenNode *operand1 = Peek(out);
             PopStack(out);
@@ -110,7 +118,6 @@ int RunPostfixNotation(struct Stack *shunt_yard_output)
             PopStack(out);
             struct TokenNode *node;
             node = malloc(sizeof(struct TokenNode));
-            node->op = INTEGER;
             switch (current->op)
             {
             case ADD:
@@ -135,7 +142,7 @@ int RunPostfixNotation(struct Stack *shunt_yard_output)
             }
             case TO_THE_POWER_OF:
             {
-                node->value = (int) powf((float) operand2->value, (float) operand1->value);
+                node->value = powf(operand2->value, operand1->value);
                 break;
             }
             default:

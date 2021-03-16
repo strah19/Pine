@@ -40,6 +40,7 @@ enum TokenType
     SIN,
     TAN,
     TO_THE_POWER_OF,
+    FLOAT,
     NONE
 };
 
