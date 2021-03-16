@@ -11,9 +11,13 @@ int main(int argc, char *argv[])
 
     RunTokenizer(lexer);
     LogTokenData(lexer);
-    RunShuntYardAlgorithim(lexer);
+    struct Stack* postfix = RunShuntYardAlgorithim(lexer);
+
+    printf("Lexer output: %d\n", RunPostfixNotation(postfix));
 
     DestroyLexer(lexer);
     free(loader.buffer);
+    free(postfix);
+
     return 0;
 }

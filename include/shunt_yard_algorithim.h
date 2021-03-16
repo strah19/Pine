@@ -3,17 +3,22 @@
 
 #include "lexer.h"
 
-enum Associativity {
-    LEFT, RIGHT
+enum Associativity
+{
+    LEFT,
+    RIGHT
 };
 
-struct TokenNode {
+struct TokenNode
+{
     enum TokenType op;
     int precedence;
     enum Associativity associativity;
     int value;
 };
 
-extern void RunShuntYardAlgorithim(struct Lexer* lexer);
+extern struct Stack *RunShuntYardAlgorithim(struct Lexer *lexer);
+
+extern int RunPostfixNotation(struct Stack *shunt_yard_output);
 
 #endif

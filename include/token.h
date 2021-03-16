@@ -39,6 +39,7 @@ enum TokenType
     COS,
     SIN,
     TAN,
+    TO_THE_POWER_OF,
     NONE
 };
 

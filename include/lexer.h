@@ -61,6 +61,7 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {"{", LCURLEY_BRACKET},
     {"}", RCURLEY_BRACKET},
     {"(", LPAR},
+    {")", RPAR},
     {";", END_EXPRESSION},
     {")", RPAR},
     {"[", LBRACKET},
@@ -69,7 +70,7 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {"<=", LESS_THAN_EQUAL},
     {">", GREATER_THAN},
     {">=", GREATER_THAN_EQUAL},
-
+    {"^", TO_THE_POWER_OF},
     //This should not stay...This should actually be a variable!
     {"pi", PI},
 };
