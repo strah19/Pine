@@ -6,7 +6,8 @@
 enum Associativity
 {
     LEFT,
-    RIGHT
+    RIGHT,
+    NO_ASSOCIATIVITY
 };
 
 struct TokenNode

@@ -2,7 +2,6 @@ OBJS = src/*.c
 CC = gcc
 
 ifeq ($(OS), Windows_NT)
-	INCLUDE_PATHS = -IC:\MinGW\include\SDL2
 	LIBRARY_PATHS = -LC:\MinGW\lib
 endif 
 

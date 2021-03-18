@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
 
     printf("Lexer output: %f\n", RunPostfixNotation(postfix));
 
+
     DestroyLexer(lexer);
     free(loader.buffer);
     free(postfix);

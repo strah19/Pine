@@ -9,6 +9,9 @@ const struct TokenNode shunt_yard_operators[] = {
     {TO_THE_POWER_OF, 4, LEFT, 0},
     {DIVIDE, 3, LEFT, 0}};
 
+const struct TokenNode shunt_yard_operands[] = {
+    {PI, 0, NO_ASSOCIATIVITY, 3.14159265f}};
+
 struct Stack *RunShuntYardAlgorithim(struct Lexer *lexer)
 {
     struct Stack *output_queue;
@@ -21,6 +24,17 @@ struct Stack *RunShuntYardAlgorithim(struct Lexer *lexer)
     {
         struct Token *token = lexer->tokens->array[i];
 
+        for (size_t i = 0; i < sizeof(shunt_yard_operands) / sizeof(shunt_yard_operands[0]); i++)
+        {
+            if(token->type == shunt_yard_operands[i].op){
+                struct TokenNode *node;
+                node = malloc(sizeof(struct TokenNode));
+                node->value = shunt_yard_operands[i].value;
+                node->op = FLOAT;
+                PushStack(output_queue, node);
+            }
+        }
+
         if (token->type == INTEGER)
         {
             struct TokenNode *node;
@@ -29,8 +43,9 @@ struct Stack *RunShuntYardAlgorithim(struct Lexer *lexer)
             node->op = FLOAT;
             PushStack(output_queue, node);
         }
-        if(token->type == FLOAT) {
-            char* pend;
+        if (token->type == FLOAT)
+        {
+            char *pend;
             struct TokenNode *node;
             node = malloc(sizeof(struct TokenNode));
             node->value = strtof(token->token_string, &pend);
@@ -102,7 +117,7 @@ float RunPostfixNotation(struct Stack *shunt_yard_output)
     struct Stack *out = CreateStack(sizeof(struct TokenNode));
     struct TokenNode *current;
     float result;
-    
+
     for (size_t i = 0; i < shunt_yard_output->top + 1; i++)
     {
         current = shunt_yard_output->array[i];

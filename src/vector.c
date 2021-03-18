@@ -5,6 +5,7 @@ struct Vector *CreateVector(size_t item_size)
     struct Vector *vector;
     vector = malloc(sizeof(struct Vector));
     vector->size = 0;
+    vector->element_size = item_size;
     vector->array = calloc(0, item_size);
 }
 
@@ -22,15 +23,21 @@ void FreeVector(struct Vector *vector)
 void VectorPushBack(struct Vector *vector, void *element)
 {
     vector->size++;
-    vector->array = realloc(vector->array, vector->size * sizeof(element));
+    vector->array = realloc(vector->array, vector->size * vector->element_size);
     vector->array[vector->size - 1] = element;
 }
 
-void VectorErase(struct Vector *vector, size_t element, int element_size)
+void PopVector(struct Vector *vector, size_t element)
 {
     if (vector->size > 0)
     {
         vector->size--;
-        vector->array = realloc(vector->array, vector->size * element_size);
+        vector->array = realloc(vector->array, vector->size * vector->element_size);
     }
+}
+
+void ClearVector(struct Vector* vector)
+{
+    vector->size = 0;
+    vector->array = realloc(vector->array, vector->size * vector->element_size);
 }

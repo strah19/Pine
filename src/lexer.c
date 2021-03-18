@@ -29,10 +29,16 @@ int MakeToken(struct Lexer *lexer, struct TokenInfo token_pos)
 {
     if (AssertLexer(lexer))
     {
-        for (size_t i = 0; i < sizeof(TOKEN_PAIRS) / sizeof(TOKEN_PAIRS[0]); i++) { 
-            if(PushNewToken(lexer, i, token_pos, TOKEN_PAIRS)) return CREATING_TOKEN; }
-        for (size_t i = 0; i < sizeof(TOKEN_OPERATORS) / sizeof(TOKEN_OPERATORS[0]); i++) { 
-            if(PushNewToken(lexer, i, token_pos, TOKEN_OPERATORS)) return CREATING_TOKEN; }
+        for (size_t i = 0; i < sizeof(TOKEN_PAIRS) / sizeof(TOKEN_PAIRS[0]); i++)
+        {
+            if (PushNewToken(lexer, i, token_pos, TOKEN_PAIRS))
+                return CREATING_TOKEN;
+        }
+        for (size_t i = 0; i < sizeof(TOKEN_OPERATORS) / sizeof(TOKEN_OPERATORS[0]); i++)
+        {
+            if (PushNewToken(lexer, i, token_pos, TOKEN_OPERATORS))
+                return CREATING_TOKEN;
+        }
 
         if (lexer->current_possible_token[0] == '=')
         {
@@ -44,8 +50,8 @@ int MakeToken(struct Lexer *lexer, struct TokenInfo token_pos)
             {
                 if (token_1->token_info.token_pos - token_2->token_info.token_pos == 1)
                 {
-                    VectorErase(lexer->tokens, lexer->tokens->size - 1, sizeof(struct Token));
-                    VectorErase(lexer->tokens, lexer->tokens->size - 2, sizeof(struct Token));
+                    PopVector(lexer->tokens, lexer->tokens->size - 1);
+                    PopVector(lexer->tokens, lexer->tokens->size - 2);
                     MoveTokenCounter(-2);
                     VectorPushBack(lexer->tokens, AddToken(DOUBLE_EQUAL, "==", token_pos, lexer->copy_string_token));
                 }
@@ -57,7 +63,7 @@ int MakeToken(struct Lexer *lexer, struct TokenInfo token_pos)
             if (!IsCharDigit((char)lexer->next_char) && lexer->next_char != '.')
             {
                 int is_float = strchr(lexer->current_possible_token, '.') != NULL;
-                if(is_float)
+                if (is_float)
                     VectorPushBack(lexer->tokens, AddToken(FLOAT, lexer->current_possible_token, token_pos, lexer->copy_string_token));
                 else
                     VectorPushBack(lexer->tokens, AddToken(INTEGER, lexer->current_possible_token, token_pos, lexer->copy_string_token));
@@ -77,7 +83,8 @@ int MakeToken(struct Lexer *lexer, struct TokenInfo token_pos)
     return NEED_MORE_STRING_FOR_TOKEN;
 }
 
-bool PushNewToken(struct Lexer *lexer, size_t i, struct TokenInfo token_pos, const struct TokenPair token_pairs[]) {
+bool PushNewToken(struct Lexer *lexer, size_t i, struct TokenInfo token_pos, const struct TokenPair token_pairs[])
+{
     if (StringCompare(lexer->current_possible_token, token_pairs[i].in_code_name, strlen(token_pairs[i].in_code_name)) == 0)
     {
         VectorPushBack(lexer->tokens, AddToken(token_pairs[i].type, token_pairs[i].in_code_name, token_pos, lexer->copy_string_token));
@@ -159,25 +166,29 @@ void RunTokenizer(struct Lexer *lexer)
 extern void CreateBufferForLexer(struct LexerLoader *loader)
 {
     loader->file = fopen(loader->file_path, LEXER_FILE_MODE);
-    if (loader->file != NULL) {
-        /* Go to the end of the file. */
-        if (fseek(loader->file, 0L, SEEK_END) == 0) {
-            /* Get the size of the file. */
+    if (loader->file != NULL)
+    {
+        if (fseek(loader->file, 0L, SEEK_END) == 0)
+        {
             long bufsize = ftell(loader->file);
-            if (bufsize == -1) { /* Error */ }
+            if (bufsize == -1)
+            { 
+            }
 
-            /* Allocate our buffer to that size. */
             loader->buffer = malloc(sizeof(char) * (bufsize + 1));
 
-            /* Go back to the start of the file. */
-            if (fseek(loader->file, 0L, SEEK_SET) != 0) { /* Error */ }
+            if (fseek(loader->file, 0L, SEEK_SET) != 0)
+            { 
+            }
 
-            /* Read the entire file into memory. */
-            size_t newLen = fread( loader->buffer , sizeof(char), bufsize, loader->file);
-            if ( ferror( loader->file ) != 0 ) {
+            size_t newLen = fread(loader->buffer, sizeof(char), bufsize, loader->file);
+            if (ferror(loader->file) != 0)
+            {
                 fputs("Error reading file", stderr);
-            } else {
-                 loader->buffer [newLen++] = '\0'; /* Just to be safe. */
+            }
+            else
+            {
+                loader->buffer[newLen++] = '\0'; 
             }
         }
         fclose(loader->file);
@@ -198,4 +209,13 @@ void DestroyLexer(struct Lexer *lexer)
     FreeVector(lexer->tokens);
     free(lexer->copy_string_token);
     free(lexer);
+}
+
+void ClearLexerData(struct Lexer *lexer)
+{
+    lexer->input_text = "";
+    lexer->current_possible_token[0] = '\0';
+    ClearVector(lexer->tokens);
+    lexer->next_char = ' ';
+    lexer->current_char = ' ';
 }
