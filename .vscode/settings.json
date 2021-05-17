@@ -2,6 +2,7 @@
     "files.associations": {
         "cstdlib": "c",
         "lexer.h": "c",
-        "shunt_yard_algorithim.h": "c"
+        "shunt_yard_algorithim.h": "c",
+        "stack.h": "c"
     }
 }

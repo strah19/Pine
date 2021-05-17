@@ -9,6 +9,7 @@ struct Stack
 {
     int top;
     void** array;
+    int full_size;
     size_t size_of_element;
 };
 

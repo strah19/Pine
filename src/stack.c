@@ -1,10 +1,12 @@
 #include "../include/stack.h"
+#include <stdio.h>
 
 struct Stack *CreateStack(size_t size_of_element)
 {
     struct Stack *stack = (struct Stack *)malloc(sizeof(struct Stack));
     stack->top = -1;
     stack->size_of_element = size_of_element;
+    stack->full_size = 0;
     stack->array = calloc(0, size_of_element);
     return stack;
 }
@@ -12,8 +14,10 @@ struct Stack *CreateStack(size_t size_of_element)
 void PushStack(struct Stack *stack, void *data)
 {
     stack->top++;
-    if(stack->top * sizeof(data) + sizeof(data) > sizeof(stack->array))
+    if(stack->top * sizeof(data) + sizeof(data) > sizeof(stack->array)) {
         stack->array = realloc(stack->array, (stack->top + 1) * sizeof(data));
+        stack->full_size++;
+    }
     stack->array[stack->top] = data;
 }
 
@@ -34,7 +38,10 @@ void *Peek(struct Stack *stack)
 
 void DestroyStack(struct Stack *stack)
 {
-    free(stack->array);
+    for(int i = 0; i < stack->full_size; i++)
+    {
+        free(stack->array[i]);
+    }
     free(stack);
 }
 

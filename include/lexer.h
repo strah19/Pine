@@ -14,7 +14,6 @@ struct Lexer
     const char *input_text;
     char current_possible_token[MAX_TOKEN_SIZE];
     struct Vector *tokens;
-    char *copy_string_token;
     char current_char, next_char;
 };
 
@@ -27,7 +26,7 @@ struct LexerLoader
 
 struct TokenPair
 {
-    const char *in_code_name;
+    char in_code_name[MAX_TOKEN_SIZE];
     enum TokenType type;
 };
 
@@ -50,9 +49,6 @@ extern void CreateBufferForLexer(struct LexerLoader *loader);
 extern void ClearLexerData(struct Lexer* lexer);
 
 static const struct TokenPair TOKEN_OPERATORS[] = {
-    {"sin", SIN},
-    {"cos", COS},
-    {"tan", TAN},
     {"-", SUBTRACT},
     {"+", ADD},
     {"*", MULTIPLE},
@@ -73,8 +69,7 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {">", GREATER_THAN},
     {">=", GREATER_THAN_EQUAL},
     {"^", TO_THE_POWER_OF},
-    //This should not stay...This should actually be a variable!
-    {"pi", PI},
+    {"print", PRINT}
 };
 
 #endif // LEXER_H

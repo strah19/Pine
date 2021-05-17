@@ -7,41 +7,9 @@
 
 enum TokenType
 {
-    INTEGER,
-    INT_VAR,
-    ID,
-    IF,
-    END_EXPRESSION,
-    LPAR,
-    RPAR,
-    EQUAL,
-    DOUBLE_EQUAL,
-    ADD,
-    SUBTRACT,
-    MULTIPLE,
-    DIVIDE,
-    MAIN,
-    LBRACKET,
-    RBRACKET,
-    LCURLEY_BRACKET,
-    RCURLEY_BRACKET,
-    ELIF,
-    ELSE,
-    RETURN,
-    WHILE,
-    FOR,
-    CHAR,
-    LESS_THAN,
-    GREATER_THAN,
-    LESS_THAN_EQUAL,
-    GREATER_THAN_EQUAL,
-    PI,
-    COS,
-    SIN,
-    TAN,
-    TO_THE_POWER_OF,
-    FLOAT,
-    NONE
+    INTEGER, ID, IF, END_EXPRESSION, LPAR, RPAR, EQUAL, DOUBLE_EQUAL, ADD, SUBTRACT, MULTIPLE, DIVIDE, MAIN, LBRACKET, RBRACKET, LCURLEY_BRACKET,
+    RCURLEY_BRACKET, ELIF, ELSE, RETURN, WHILE, FOR, CHAR, LESS_THAN, GREATER_THAN, LESS_THAN_EQUAL, GREATER_THAN_EQUAL, TO_THE_POWER_OF, FLOAT, PRINT,
+    NONE, T_EOF
 };
 
 struct TokenInfo
@@ -53,13 +21,15 @@ struct TokenInfo
 struct Token
 {
     enum TokenType type;
-    char *token_string;
+    char token_string[MAX_TOKEN_SIZE];
     struct TokenInfo token_info;
     int code_id;
 };
 
 extern int MoveTokenCounter(int value);
 
-extern struct Token *AddToken(enum TokenType type, const char *in_source_token, struct TokenInfo token_info, char *copy_string);
+extern void ResetTokenCounter();
+
+extern struct Token *AddToken(enum TokenType type, const char *in_source_token, struct TokenInfo token_info);
 
 #endif // TOKEN_H
