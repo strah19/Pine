@@ -69,7 +69,11 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {">", GREATER_THAN},
     {">=", GREATER_THAN_EQUAL},
     {"^", TO_THE_POWER_OF},
-    {"print", PRINT}
+};
+
+static const struct TokenPair TOKEN_KEY_WORDS[] = {
+    {"print", PRINT},
+    {"int", INT}
 };
 
 #endif // LEXER_H

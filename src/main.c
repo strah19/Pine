@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
     struct Parser* parser = CreateParser(lexer); 
 
     RunTokenizer(lexer);
+    LogTokenData(lexer);
     RunParser(parser);
 
     DestroyParser(parser);

@@ -32,6 +32,7 @@ struct ASTNode
     enum TokenType op;                             
     struct ASTNode *left;                
     struct ASTNode *right;
+    
     float value;    
 };
 

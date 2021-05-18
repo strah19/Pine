@@ -39,6 +39,11 @@ int MakeToken(struct Lexer *lexer, struct TokenInfo token_pos)
             if (PushNewToken(lexer, i, token_pos, TOKEN_OPERATORS))
                 return CREATING_TOKEN;
         }
+        for (size_t i = 0; i < sizeof(TOKEN_KEY_WORDS) / sizeof(TOKEN_KEY_WORDS[0]); i++)
+        {
+            if (PushNewToken(lexer, i, token_pos, TOKEN_KEY_WORDS))
+                return CREATING_TOKEN;
+        }
 
         if (lexer->current_possible_token[0] == '=')
         {
@@ -72,10 +77,13 @@ int MakeToken(struct Lexer *lexer, struct TokenInfo token_pos)
         }
         else if (IsCharGoodForVariableName(lexer->current_possible_token[0]))
         {
-            if (!IsCharGoodForVariableName((char)lexer->next_char))
+            for (size_t i = 0; i < sizeof(TOKEN_KEY_WORDS) / sizeof(TOKEN_KEY_WORDS[0]); i++)
             {
-                VectorPushBack(lexer->tokens, AddToken(ID, lexer->current_possible_token, token_pos));
-                return CREATING_TOKEN;
+                if (!IsCharGoodForVariableName((char)lexer->next_char) && strcmp(lexer->current_possible_token, TOKEN_KEY_WORDS[i].in_code_name) != 0)
+                {
+                    VectorPushBack(lexer->tokens, AddToken(ID, lexer->current_possible_token, token_pos));
+                    return CREATING_TOKEN;
+                }
             }
         }
     }

@@ -20,8 +20,16 @@ extern void RunParser(struct Parser* parser);
 
 extern struct Token* PeekNextToken(struct Parser* parser);  //Only see current token.
 
-extern struct Token* RetreaveNextToken(struct Parser* parser);  //Get current token and then increment to next token.
+extern struct Token* RetrieveNextToken(struct Parser* parser);  //Get current token and then increment to next token.
 
 extern void MatchToken(struct Parser* parser, enum TokenType type, const char* what);
+
+extern void LoopExpressionTokens(struct Parser* parser);
+
+static void PrintStatement(struct Parser* parser);
+
+static void AssignmentStatement(struct Parser* parser);
+
+static void VariableDeclerationStatement(struct Parser* parser);
 
 #endif //!PARSER_H
