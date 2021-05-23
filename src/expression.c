@@ -1,139 +1,133 @@
 #include "../include/expression.h"
+#include "../include/sym.h"
 #include "../include/stack.h"
+#include "../include/err.h"
+
 #include <math.h>
 
-void RunExpression(struct Expression* expression, struct Lexer *lexer, enum TokenType stopping_token, uint32_t token_offset)
-{
-    expression->output_queue = CreateStack(sizeof(struct SYNode));
-    expression->op_stack = CreateStack(sizeof(struct SYNode));
+int run_expression(struct Expression* expression, struct Lexer *lexer, uint32_t token_offset) {
+    int token_stoppage = 0;
 
-    for (size_t i = token_offset; i < lexer->tokens->size; i++)
-    {
+    expression->output_queue = create_stack(sizeof(struct SYNode));
+    expression->op_stack = create_stack(sizeof(struct SYNode));
+
+    for (size_t i = token_offset; i < lexer->tokens->size; i++) {
+        bool stop = false;
         struct Token *token = lexer->tokens->array[i];
-        if(token->type == stopping_token)
-            break;
-
-        if (token->type == INTEGER)
-        {
+        
+        if (token->type == INTEGER) {
             struct SYNode *node;
             node = malloc(sizeof(struct SYNode));
             node->value = atoi(token->token_string);
             node->op = FLOAT;
-            PushStack(expression->output_queue, node);  
+            push_stack(expression->output_queue, node);  
         }
-        if (token->type == FLOAT)
-        {
+        else if (token->type == FLOAT) {
             char *pend;
             struct SYNode *node;
             node = malloc(sizeof(struct SYNode));
             node->value = strtof(token->token_string, &pend);
             node->op = token->type;
-            PushStack(expression->output_queue, node);
+            push_stack(expression->output_queue, node);
         }
-        else if (token->type == LPAR)
-        {
+        else if(token->type == ID) {
+            struct SYNode *node;
+            node = malloc(sizeof(struct SYNode));
+            node->value = get_global_symbol(token->token_string)->value;
+            node->op = FLOAT;
+            push_stack(expression->output_queue, node);  
+        }
+        else if (token->type == LPAR) {
             struct SYNode *node;
             node = malloc(sizeof(struct SYNode));
             node->value = 0;
             node->op = LPAR;
-            PushStack(expression->op_stack, node);
+            push_stack(expression->op_stack, node);
         }
-        else if (token->type == RPAR)
-        {
-            struct SYNode *top = Peek(expression->op_stack);
-            while (top->op != LPAR)
-            {
-                PushStack(expression->output_queue, top);
-                PopStack(expression->op_stack);
-                top = Peek(expression->op_stack);
+        else if (token->type == RPAR) {
+            struct SYNode *top = peek_stack(expression->op_stack);
+            while (top->op != LPAR) {
+                push_stack(expression->output_queue, top);
+                pop_stack(expression->op_stack);
+                top = peek_stack(expression->op_stack);
             }
             if (top->op == LPAR)
-            {
-                PopStack(expression->op_stack);
-            }
+                pop_stack(expression->op_stack);
         }
-        for (size_t i = 0; i < sizeof(SHUNT_YARD_OPERATORS) / sizeof(SHUNT_YARD_OPERATORS[0]); i++)
-        {
-            if (token->type == SHUNT_YARD_OPERATORS[i].op)
-            {
-                struct SYNode *top = Peek(expression->op_stack);
-                if (top != NULL)
-                {
-                    while ((!IsEmpty(expression->op_stack)) && ((SHUNT_YARD_OPERATORS[i].associativity == LEFT && SHUNT_YARD_OPERATORS[i].precedence <= top->precedence) || (SHUNT_YARD_OPERATORS[i].associativity == RIGHT && SHUNT_YARD_OPERATORS[i].precedence < top->precedence)) && top->op != LPAR)
-                    {
-                        PushStack(expression->output_queue, top);
-                        PopStack(expression->op_stack);
-                        top = Peek(expression->op_stack);
+        else
+            stop = true;
+        for (size_t i = 0; i < sizeof(SHUNT_YARD_OPERATORS) / sizeof(SHUNT_YARD_OPERATORS[0]); i++) {
+            if (token->type == SHUNT_YARD_OPERATORS[i].op) {
+                struct SYNode *top = peek_stack(expression->op_stack);
+                if (top != NULL) {
+                    while ((!is_stack_empty(expression->op_stack)) && ((SHUNT_YARD_OPERATORS[i].associativity == LEFT && SHUNT_YARD_OPERATORS[i].precedence <= top->precedence) || (SHUNT_YARD_OPERATORS[i].associativity == RIGHT && SHUNT_YARD_OPERATORS[i].precedence < top->precedence)) && top->op != LPAR) {
+                        push_stack(expression->output_queue, top);
+                        pop_stack(expression->op_stack);
+                        top = peek_stack(expression->op_stack);
                     }
                 }
 
-                PushStack(expression->op_stack, (void *)&SHUNT_YARD_OPERATORS[i]);
+                push_stack(expression->op_stack, (void *)&SHUNT_YARD_OPERATORS[i]);
+                stop = false;
+                break;
             }
         }
+
+        if(stop == true)
+            break;
+
+        token_stoppage++;
     }
 
-    struct SYNode *top = Peek(expression->op_stack);
-    while (!IsEmpty(expression->op_stack))
-    {
-        PushStack(expression->output_queue, top);
-        PopStack(expression->op_stack);
-        top = Peek(expression->op_stack);
+    struct SYNode *top = peek_stack(expression->op_stack);
+    while (!is_stack_empty(expression->op_stack)) {
+        push_stack(expression->output_queue, top);
+        pop_stack(expression->op_stack);
+        top = peek_stack(expression->op_stack);
     }
 
-    /*
-    for (size_t i = 0; i < output_queue->top + 1; i++)
-    {
-        struct SYNode *data = output_queue->array[i];
-        printf("Output Queue Element %d, Value: %f, Operator: %d\n", i, data->value, data->op);
-    }
-    */
+    return token_stoppage;
 }
 
-float CalculateExpression(struct Expression* expression)
-{
-    struct Stack *out = CreateStack(sizeof(struct SYNode));
+float calculate_expression(struct Expression* expression) {
+    struct Stack *out = create_stack(sizeof(struct SYNode));
     float result;
 
-    for (size_t i = 0; i < expression->output_queue->top + 1; i++)
-    {
+    if(expression->output_queue->top == 0) {
+        struct SYNode * current = expression->output_queue->array[0];
+        result = current->value;
+    }
+
+    for (size_t i = 0; i < expression->output_queue->top + 1; i++) {
         struct SYNode * current = expression->output_queue->array[i];
         if (current->op == INTEGER || current->op == FLOAT)
-        {
-            PushStack(out, current);
-        }
-        if (out->top >= 1 && current->op != FLOAT)
-        {
-            struct SYNode *operand1 = Peek(out);
-            PopStack(out);
-            struct SYNode *operand2 = Peek(out);
-            PopStack(out);
+            push_stack(out, current);
+        if (out->top >= 1 && current->op != FLOAT) {
+            struct SYNode *operand1 = peek_stack(out);
+            pop_stack(out);
+            struct SYNode *operand2 = peek_stack(out);
+            pop_stack(out);
             struct SYNode *node;
             node = malloc(sizeof(struct SYNode));
 
-            switch (current->op)
-            {
-            case ADD:
-            {
+            switch (current->op) {
+            case ADD: {
                 node->value = operand2->value + operand1->value;
                 break;
             }
-            case SUBTRACT:
-            {
+            case SUBTRACT: {
                 node->value = operand2->value - operand1->value;
                 break;
             }
-            case MULTIPLE:
-            {
+            case MULTIPLE: {
                 node->value = operand2->value * operand1->value;
                 break;
             }
-            case DIVIDE:
-            {
+            case DIVIDE: {
                 node->value = operand2->value / operand1->value;
                 break;
             }
-            case TO_THE_POWER_OF:
-            {
+            case TO_THE_POWER_OF: {
                 node->value = powf(operand2->value, operand1->value);
                 break;
             }
@@ -141,25 +135,21 @@ float CalculateExpression(struct Expression* expression)
                 break;
             }
             result = node->value;
-            PushStack(out, node);
+            push_stack(out, node);
         }
     }
-    DestroyStack(out);
+    destroy_stack(out);
 
     return result;
 }
 
-struct ASTNode* CreateASTNode(enum TokenType op, struct ASTNode* left, struct ASTNode* right, float value)
-{
+struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct ASTNode* right, float value) {
     struct ASTNode* node = NULL;
 
     node = malloc(sizeof(struct ASTNode));
 
     if(node == NULL)
-    {
-        fprintf(stderr, "Unable to malloc in CreateASTNode()\n");
-        exit(EXIT_FAILURE);
-    }
+        fatal_error("could not allocate 'ASTNode'");
 
     memset(node, 0, sizeof(struct ASTNode));
 
@@ -171,67 +161,52 @@ struct ASTNode* CreateASTNode(enum TokenType op, struct ASTNode* left, struct AS
     return node;
 }
 
-void TransverseTree(struct ASTNode* root, int space)
-{
-    if (root == NULL)
-        return;
-    space += 10;
-    TransverseTree(root->right, space);
-  
-    printf("\n");
-    for (int i = 10; i < space; i++)
-        printf(" ");
-    printf("Node:%d   %f\n", root->op, root->value);
-  
-    TransverseTree(root->left, space);
-}
-
-struct ASTNode CreateASTreeFromExpression(struct Expression* expression)
-{
-    struct Stack *out = CreateStack(sizeof(struct ASTNode));
+struct ASTNode create_ast_node_from_expression(struct Expression* expression) {
+    struct Stack *out = create_stack(sizeof(struct ASTNode));
     struct SYNode *current;
 
-    for (size_t i = 0; i < expression->output_queue->top + 1; i++)
-    {
+    for (size_t i = 0; i < expression->output_queue->top + 1; i++) {
         current = expression->output_queue->array[i];
         if (current->op == INTEGER || current->op == FLOAT)
-        {
-            PushStack(out, CreateASTNode(FLOAT, NULL, NULL, current->value));
-        }
-        if (out->top >= 1 && current->op != FLOAT)
-        {
-            struct ASTNode *operand1 = Peek(out);
-            PopStack(out);
-            struct ASTNode *operand2 = Peek(out);
-            PopStack(out);
+            push_stack(out, create_ast_node(FLOAT, NULL, NULL, current->value));
+        if (out->top >= 1 && current->op != FLOAT) {
+            struct ASTNode *operand1 = peek_stack(out);
+            pop_stack(out);
+            struct ASTNode *operand2 = peek_stack(out);
+            pop_stack(out);
             struct ASTNode *node;
 
-            node = CreateASTNode(current->op, operand1, operand2, 0.0);
+            node = create_ast_node(current->op, operand1, operand2, 0.0);
 
-            PushStack(out, node);
+            push_stack(out, node);
         }
     }
-    struct ASTNode* r = Peek(out);
+    struct ASTNode* r = peek_stack(out);
     struct ASTNode root = *r;
 
-    TransverseTree(&root, 0);
-    DestroyStack(out);
+    destroy_stack(out);
 
     return root;
 }
 
-void DestroyASTNode(struct ASTNode* root)
-{
+void destroy_ast_node(struct ASTNode* root) {
     if(root == NULL)
         return;
 
     free(root);
-    DestroyASTNode(root->left);
-    DestroyASTNode(root->right);
+    destroy_ast_node(root->left);
+    destroy_ast_node(root->right);
 }
 
-void DestroyExpression(struct Expression* expression)
-{
-    DestroyStack(expression->op_stack);
-    DestroyStack(expression->output_queue);
+void destroy_expression(struct Expression* expression) {
+    destroy_stack(expression->op_stack);
+    destroy_stack(expression->output_queue);
+}
+
+struct ASTNode* create_leaf_node(enum TokenType op, float value) {
+    return create_ast_node(op, NULL, NULL, value);
+}
+
+struct ASTNode* create_unary(enum TokenType op, float value, struct ASTNode* left) {
+    return create_ast_node(op, left, NULL, value);
 }

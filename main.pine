@@ -1,7 +1,15 @@
-print 5 * 2 - 2 / 5;
+int const = 2;
 
-print 1 + 2;
+int height = 2;
+int width = height = const;
 
-pr int
+print width * height;
 
-2 + 2;
+int a = 3;
+int b = 2;
+int c = 3;
+c = b = a;
+
+print a;
+print b;
+print c;

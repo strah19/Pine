@@ -2,125 +2,152 @@
 #include "../include/stack.h"
 #include "../include/expression.h"
 #include "../include/sym.h"
+#include "../include/err.h"
 
-struct Parser* CreateParser(struct Lexer* lexer)
-{
+#define PARSER_LOOP 1
+
+struct Parser* create_parser(struct Lexer* lexer) {
     struct Parser* parser;
     parser = malloc(sizeof(struct Parser));
 
-    memset(parser, 0, sizeof(struct Parser));
-    if(parser == NULL)
-    {
-        //Use error code here.
-        exit(EXIT_FAILURE);
-    }
+    if (parser == NULL)
+        fatal_error("could not allocate 'Parser'");
 
+    memset(parser, 0, sizeof(struct Parser));
     parser->lexer = lexer;
     parser->token_index = 0;
 
     return parser;
 }
 
-void DestroyParser(struct Parser* parser)
-{
+void destroy_parser(struct Parser* parser) {
     free(parser);
 }
 
-void RunParser(struct Parser* parser)
-{
-    while(1)
-    {
-        struct Token* token = PeekNextToken(parser);
+void run_parser(struct Parser* parser) {
+    while (PARSER_LOOP) {
+        struct Token* token = peek_next_token(parser);
         
-        if(token->type == T_EOF)
+        if (token->type == T_EOF)
             break;
-        switch(token->type)
-        {
+        switch (token->type) {
         case PRINT:
-            PrintStatement(parser);
+            print_statement(parser);
             break;
         case INT:
-            VariableDeclerationStatement(parser);
+            variable_decleration_statement(parser);
+            break;
+        case ID:
+            assignment_statement(parser);
             break;
         default:
-            fprintf(stderr, "Error: Undefined token, '%s' found at line %d.\n", token->token_string, token->token_info.token_line);
-            exit(EXIT_FAILURE);
+            fatal_token_error("Undefined token", token);
         }
     }
 }
 
-struct Token* PeekNextToken(struct Parser* parser)
-{
+struct Token* peek_next_token(struct Parser* parser) {
     return (parser->token_index < parser->lexer->tokens->size) ? parser->lexer->tokens->array[parser->token_index] : NULL;
 }
 
-struct Token* RetreaveNextToken(struct Parser* parser)
-{
+struct Token* retrieve_next_token(struct Parser* parser) {
     return (parser->token_index < parser->lexer->tokens->size) ? parser->lexer->tokens->array[parser->token_index++] : NULL;
 }
 
-void MatchToken(struct Parser* parser, enum TokenType type, const char* what)
-{
-    struct Token* token = PeekNextToken(parser);
-    if(token)
-    {
-        if(token->type == type)
-        {
-            RetreaveNextToken(parser);
-        }
+void match_token(struct Parser* parser, enum TokenType type, const char* what) {
+    struct Token* token = peek_next_token(parser);
+    if (token) 
+        if (token->type == type)
+            retrieve_next_token(parser);
         else 
-        {
-            fprintf(stderr, "Error::Expected %s at line %d.\n", what, token->token_info.token_line);
-            exit(EXIT_FAILURE);
-        }
-    }
+        fatal_compiler_error("Expected", what, token->token_info.token_line);
 }
 
-void LoopExpressionTokens(struct Parser* parser)
-{
-    while(1)
-    {
-        struct Token* token = RetreaveNextToken(parser);
-        if(token->type == END_EXPRESSION)
-            break;
-    }
-}
+void print_statement(struct Parser* parser) {
+    match_token(parser, PRINT, "print");
 
-void PrintStatement(struct Parser* parser)
-{
-    MatchToken(parser, PRINT, "print");
-
+    struct Token* token = peek_next_token(parser);
+    
     struct Expression expression;
 
-    RunExpression(&expression, parser->lexer, END_EXPRESSION, parser->token_index);
-    printf("%f\n", CalculateExpression(&expression));
+    parser->token_index += run_expression(&expression, parser->lexer, parser->token_index);
+    printf("%f\n", calculate_expression(&expression));
 
-    DestroyExpression(&expression);
-    LoopExpressionTokens(parser);
+    destroy_expression(&expression);
+    match_token(parser, END_EXPRESSION, ";");
 }
 
-void AssignmentStatement(struct Parser* parser)
-{
-    struct Token* token = PeekNextToken(parser);
-    MatchToken(parser, ID, "identifier");
+void assignment_statement(struct Parser* parser) {
+    struct Token* token = peek_next_token(parser);
+    match_token(parser, ID, "identifier");
     
-    if(FindGlobal(token->token_string) == -1)
-    {
-        fprintf(stderr, "Error: Undecleared variable '%s' at line %d.\n", token->token_string, token->token_info.token_line);
-        exit(EXIT_FAILURE);
-    }
+    if (find_global_symbol(token->token_string) == -1)
+        fatal_token_error("Undecleared variable", token);
 
-
+    struct Symbol* var = get_global_symbol(token->token_string);  
+    parser->token_index = equal_statement(parser, parser->token_index);
+    match_token(parser, END_EXPRESSION, ";");
 }
 
-void VariableDeclerationStatement(struct Parser* parser)
-{
-    MatchToken(parser, INT, "int");
+void variable_decleration_statement(struct Parser* parser) {
+    match_token(parser, INT, "int");
 
-    struct Token* token = PeekNextToken(parser);
+    struct Token* token = peek_next_token(parser);
 
-    MatchToken(parser, ID, "identifier");
-    MatchToken(parser, END_EXPRESSION, ";");
+    match_token(parser, ID, "identifier");
+    parser->token_index = equal_statement(parser, parser->token_index);
 
-    AddGlobal(token->token_string);
+    match_token(parser, END_EXPRESSION, ";");
+}
+
+int equal_statement(struct Parser* parser, int end_token) {
+    struct Token* var_token = parser->lexer->tokens->array[parser->token_index - 1];
+    if (var_token->type != ID)
+        fatal_token_error("Value needs to be lvalue", var_token);
+    match_token(parser, EQUAL, "=");
+
+    struct Token* token = peek_next_token(parser);
+
+    int start_of_expression = parser->token_index;
+
+    while (1) {
+        if (token->type == EQUAL || token->type == END_EXPRESSION)
+            break;
+        token = retrieve_next_token(parser);
+    }
+    parser->token_index--;
+
+    if (token->type == EQUAL)
+        end_token = equal_statement(parser, end_token);
+    if (token->type == END_EXPRESSION)
+    {
+        parser->token_index = start_of_expression;
+        struct Expression expression;
+    
+        parser->token_index += run_expression(&expression, parser->lexer, parser->token_index);
+
+        struct Symbol* variable = get_global_symbol(var_token->token_string);
+        if (variable == NULL)
+            add_symbol(var_token->token_string, calculate_expression(&expression));
+        else
+            variable->value = calculate_expression(&expression);
+        
+        end_token = parser->token_index;
+        destroy_expression(&expression);
+        return end_token;
+    }
+    parser->token_index = start_of_expression;
+
+    struct Expression expression;
+    
+    parser->token_index += run_expression(&expression, parser->lexer, parser->token_index);
+
+    struct Symbol* variable = get_global_symbol(var_token->token_string);
+    if (variable == NULL)
+        add_symbol(var_token->token_string, calculate_expression(&expression));
+    else
+        variable->value = calculate_expression(&expression);
+    destroy_expression(&expression);
+
+    return end_token;
 }

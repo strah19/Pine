@@ -1,16 +1,17 @@
 #ifndef SYM_H
 #define SYM_H
 
-struct Symbol
-{
+struct Symbol {
     char* name;
     float value;
 };
 
-extern int FindGlobal(char* name);
+extern int find_global_symbol(char* name);
 
-extern int AddGlobal(char* name);
+extern int add_symbol(char* name, float value);
 
-extern struct Symbol GetSymbol(char* name);
+extern struct Symbol* get_global_symbol(char* name);
+
+extern void log_symbols();
 
 #endif //!SYM_H

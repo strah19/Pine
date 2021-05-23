@@ -10,17 +10,17 @@ int main(int argc, char *argv[])
     struct LexerLoader loader;
     loader.file_path = "main.pine";
     struct Lexer *lexer;
-    CreateBufferForLexer(&loader);
-    lexer = CreateLexer(loader.buffer);
+    create_buffer_for_lexer(&loader);
+    lexer = create_lexer(loader.buffer);
 
-    struct Parser* parser = CreateParser(lexer); 
+    struct Parser* parser = create_parser(lexer); 
 
-    RunTokenizer(lexer);
-    LogTokenData(lexer);
-    RunParser(parser);
+    run_tokenizer(lexer);
+    log_token_data(lexer);
+    run_parser(parser);
 
-    DestroyParser(parser);
-    DestroyLexer(lexer);
+    destroy_parser(parser);
+    destroy_lexer(lexer);
     /*
     This is for loading in a text file.
     struct LexerLoader loader;
