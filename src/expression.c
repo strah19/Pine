@@ -1,3 +1,23 @@
+/**
+ * @file expression.c
+ * @author strah19
+ * @date May 23 2021
+ * @version 1.0
+ *
+ * @section LICENSE
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * @section DESCRIPTION
+ *
+ * This file contains code for constructing postfix notation for expressions 
+ * and calculating them. It also contains AST nodes and functions to create
+ * an AST tree out of an expression.
+ */
+
 #include "../include/expression.h"
 #include "../include/sym.h"
 #include "../include/stack.h"

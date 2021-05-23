@@ -1,3 +1,23 @@
+/**
+ * @file err.c
+ * @author strah19
+ * @date May 23 2021
+ * @version 1.0
+ *
+ * @section LICENSE
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * @section DESCRIPTION
+ *
+ * This file contains basic error handlers and logging functions to allow 
+ * developers to specify different levels of errors and handle unexpected behavior 
+ * that could arise.
+ */
+
 #include "../include/err.h"
 
 void fatal_token_error(const char* error, struct Token* token) {

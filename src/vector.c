@@ -1,3 +1,22 @@
+/**
+ * @file vector.c
+ * @author strah19
+ * @date May 23 2021
+ * @version 1.0
+ *
+ * @section LICENSE
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * @section DESCRIPTION
+ *
+ * This file contains a generic vector object that 
+ * represents a common dynamic array.
+ */
+
 #include "../include/vector.h"
 #include "../include/err.h"
 

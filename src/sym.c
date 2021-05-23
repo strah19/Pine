@@ -1,3 +1,23 @@
+/**
+ * @file sym.c
+ * @author strah19
+ * @date May 23 2021
+ * @version 1.0
+ *
+ * @section LICENSE
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * @section DESCRIPTION
+ *
+ * This file contains code for variables and functions defined in 
+ * the language. It stores and completes operations to determine
+ * the semantics of the parsing code.
+ */
+
 #include "../include/sym.h"
 #include "../include/err.h"
 
