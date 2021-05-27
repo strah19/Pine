@@ -52,7 +52,10 @@ static const struct TokenPair TOKEN_PAIRS[] = {
 
 static const struct TokenPair TOKEN_KEY_WORDS[] = {
     {"print", PRINT},
-    {"int", INT}
+    {"int", INT},
+    {"if", IF},
+    {"and", AND},
+    {"or", OR}
 };
 
 extern struct Lexer *create_lexer(const char *text_input);

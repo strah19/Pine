@@ -24,9 +24,15 @@ extern struct Token* retrieve_next_token(struct Parser* parser);  //Get current 
 
 extern void match_token(struct Parser* parser, enum TokenType type, const char* what);
 
+static void expression_assignment(struct Parser* parser, struct Token* var);
+
 static void print_statement(struct Parser* parser);
 
 static void assignment_statement(struct Parser* parser);
+
+static void if_statement(struct Parser* parser);
+
+static void compare_statment(struct Parser* parser);
 
 static void variable_decleration_statement(struct Parser* parser);
 

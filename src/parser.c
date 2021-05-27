@@ -83,6 +83,19 @@ void match_token(struct Parser* parser, enum TokenType type, const char* what) {
         fatal_compiler_error("Expected", what, token->token_info.token_line);
 }
 
+void expression_assignment(struct Parser* parser, struct Token* var) {
+    struct Expression expression;
+    
+    run_expression(&expression, parser);
+
+    struct Symbol* variable = get_global_symbol(var->token_string);
+    if (variable == NULL)
+        add_symbol(var->token_string, calculate_expression(&expression));
+    else
+        variable->value = calculate_expression(&expression);
+    destroy_expression(&expression);  
+}
+
 void print_statement(struct Parser* parser) {
     match_token(parser, PRINT, "print");
 
@@ -90,7 +103,7 @@ void print_statement(struct Parser* parser) {
     
     struct Expression expression;
 
-    parser->token_index += run_expression(&expression, parser->lexer, parser->token_index);
+    run_expression(&expression, parser);
     printf("%f\n", calculate_expression(&expression));
 
     destroy_expression(&expression);
@@ -142,32 +155,24 @@ int equal_statement(struct Parser* parser, int end_token) {
     if (token->type == END_EXPRESSION)
     {
         parser->token_index = start_of_expression;
-        struct Expression expression;
-    
-        parser->token_index += run_expression(&expression, parser->lexer, parser->token_index);
+        expression_assignment(parser, var_token);
 
-        struct Symbol* variable = get_global_symbol(var_token->token_string);
-        if (variable == NULL)
-            add_symbol(var_token->token_string, calculate_expression(&expression));
-        else
-            variable->value = calculate_expression(&expression);
-        
         end_token = parser->token_index;
-        destroy_expression(&expression);
         return end_token;
     }
     parser->token_index = start_of_expression;
 
-    struct Expression expression;
-    
-    parser->token_index += run_expression(&expression, parser->lexer, parser->token_index);
-
-    struct Symbol* variable = get_global_symbol(var_token->token_string);
-    if (variable == NULL)
-        add_symbol(var_token->token_string, calculate_expression(&expression));
-    else
-        variable->value = calculate_expression(&expression);
-    destroy_expression(&expression);
+    expression_assignment(parser, var_token);
 
     return end_token;
+}
+
+void if_statement(struct Parser* parser) {
+    match_token(parser, IF, "if");
+
+    compare_statment(parser);
+}
+
+void compare_statment(struct Parser* parser) {
+
 }

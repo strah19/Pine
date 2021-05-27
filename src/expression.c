@@ -25,22 +25,21 @@
 
 #include <math.h>
 
-int run_expression(struct Expression* expression, struct Lexer *lexer, uint32_t token_offset) {
+void run_expression(struct Expression* expression, struct Parser* parser) {
     int token_stoppage = 0;
 
-    expression->output_queue = create_stack(sizeof(struct SYNode));
-    expression->op_stack = create_stack(sizeof(struct SYNode));
+    expression->output_queue = create_stack(sizeof(struct SYNode), STACK_SIZE);
+    expression->op_stack = create_stack(sizeof(struct SYNode), STACK_SIZE);
 
-    for (size_t i = token_offset; i < lexer->tokens->size; i++) {
+    for (size_t i = parser->token_index; i < parser->lexer->tokens->size; i++) {
         bool stop = false;
-        struct Token *token = lexer->tokens->array[i];
+        struct Token *token = parser->lexer->tokens->array[i];
         
         if (token->type == INTEGER) {
-            struct SYNode *node;
-            node = malloc(sizeof(struct SYNode));
-            node->value = atoi(token->token_string);
-            node->op = FLOAT;
-            push_stack(expression->output_queue, node);  
+            struct SYNode node;
+            node.value = atoi(token->token_string);
+            node.op = FLOAT;
+            push_stack(expression->output_queue, (void*) &node);  
         }
         else if (token->type == FLOAT) {
             char *pend;
@@ -106,20 +105,29 @@ int run_expression(struct Expression* expression, struct Lexer *lexer, uint32_t 
         top = peek_stack(expression->op_stack);
     }
 
-    return token_stoppage;
+    /*
+    for (size_t i = 0; i < expression->output_queue->top; i++)
+    {
+        struct SYNode *data = get_stack(expression->output_queue, i);
+        printf("Output Queue Element %d, Value: %f, Operator: %d\n", i, data->value, data->op);
+    }
+    */
+    
+
+    parser->token_index += token_stoppage;
 }
 
 float calculate_expression(struct Expression* expression) {
-    struct Stack *out = create_stack(sizeof(struct SYNode));
+    struct Stack *out = create_stack(sizeof(struct SYNode), STACK_SIZE);
     float result;
 
-    if(expression->output_queue->top == 0) {
-        struct SYNode * current = expression->output_queue->array[0];
+    if(expression->output_queue->top == 1) {
+        struct SYNode * current = get_stack(expression->output_queue, 0);
         result = current->value;
     }
 
-    for (size_t i = 0; i < expression->output_queue->top + 1; i++) {
-        struct SYNode * current = expression->output_queue->array[i];
+    for (size_t i = 0; i < expression->output_queue->top; i++) {
+        struct SYNode * current = get_stack(expression->output_queue, i);
         if (current->op == INTEGER || current->op == FLOAT)
             push_stack(out, current);
         if (out->top >= 1 && current->op != FLOAT) {
@@ -149,6 +157,22 @@ float calculate_expression(struct Expression* expression) {
             }
             case TO_THE_POWER_OF: {
                 node->value = powf(operand2->value, operand1->value);
+                break;
+            }
+            case LESS_THAN: {
+                node->value = (operand2->value < operand1->value) ? 1 : 0;
+                break;
+            }
+            case GREATER_THAN: {
+                node->value = (operand2->value > operand1->value) ? 1 : 0;
+                break;
+            }
+            case LESS_THAN_EQUAL: {
+                node->value = (operand2->value <= operand1->value) ? 1 : 0;
+                break;
+            }
+            case GREATER_THAN_EQUAL: {
+                node->value = (operand2->value >= operand1->value) ? 1 : 0;
                 break;
             }
             default:
@@ -182,11 +206,11 @@ struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct 
 }
 
 struct ASTNode create_ast_node_from_expression(struct Expression* expression) {
-    struct Stack *out = create_stack(sizeof(struct ASTNode));
+    struct Stack *out = create_stack(sizeof(struct ASTNode), STACK_SIZE);
     struct SYNode *current;
 
-    for (size_t i = 0; i < expression->output_queue->top + 1; i++) {
-        current = expression->output_queue->array[i];
+    for (size_t i = 0; i < expression->output_queue->top; i++) {
+        current = get_stack(expression->output_queue, i);
         if (current->op == INTEGER || current->op == FLOAT)
             push_stack(out, create_ast_node(FLOAT, NULL, NULL, current->value));
         if (out->top >= 1 && current->op != FLOAT) {

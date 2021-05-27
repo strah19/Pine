@@ -61,6 +61,18 @@ int make_token(struct Lexer *lexer, struct TokenInfo token_pos) {
                 push_back_vector(lexer->tokens, create_token(DOUBLE_EQUAL, "==", token_pos));
             }
         }
+        if(token_1->type == EQUAL && token_2->type == LESS_THAN) {
+            pop_vector(lexer->tokens, lexer->tokens->size - 1);
+            pop_vector(lexer->tokens, lexer->tokens->size - 2);
+            move_token_counter(-2);
+            push_back_vector(lexer->tokens, create_token(LESS_THAN_EQUAL, "<=", token_pos));
+        }
+        if(token_1->type == EQUAL && token_2->type == GREATER_THAN) {
+            pop_vector(lexer->tokens, lexer->tokens->size - 1);
+            pop_vector(lexer->tokens, lexer->tokens->size - 2);
+            move_token_counter(-2);
+            push_back_vector(lexer->tokens, create_token(GREATER_THAN, ">=", token_pos));
+        }
         return CREATING_TOKEN;
     }
     else if (is_char_digit(lexer->current_possible_token[0]) || lexer->current_char == '.') {

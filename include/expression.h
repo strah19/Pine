@@ -1,7 +1,7 @@
 #ifndef SHUNT_YARD_ALGORITHIM_H
 #define SHUNT_YARD_ALGORITHIM_H
 
-#include "../include/lexer.h"
+#include "../include/parser.h"
 
 #include <stdint.h>
 
@@ -23,7 +23,11 @@ static const struct SYNode SHUNT_YARD_OPERATORS[] = {
     {ADD, 2, LEFT, 0},
     {MULTIPLE, 3, LEFT, 0},
     {TO_THE_POWER_OF, 4, LEFT, 0},
-    {DIVIDE, 3, LEFT, 0}
+    {DIVIDE, 3, LEFT, 0},
+    {GREATER_THAN, 5, LEFT, 0},
+    {LESS_THAN, 5, LEFT, 0},
+    {GREATER_THAN_EQUAL, 5, LEFT, 0},
+    {LESS_THAN_EQUAL, 5, LEFT, 0}
 };
 
 struct ASTNode {
@@ -39,7 +43,7 @@ struct Expression {
     struct Stack *op_stack;
 };
 
-extern int run_expression(struct Expression* expression, struct Lexer *lexer, uint32_t token_offset);
+extern void run_expression(struct Expression* expression, struct Parser* parser);
 
 extern float calculate_expression(struct Expression* expression);
 
