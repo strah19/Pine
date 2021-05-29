@@ -44,9 +44,7 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {"[", LBRACKET},
     {"]", RBRACKET},
     {"<", LESS_THAN},
-    {"<=", LESS_THAN_EQUAL},
     {">", GREATER_THAN},
-    {">=", GREATER_THAN_EQUAL},
     {"^", TO_THE_POWER_OF},
 };
 
@@ -63,6 +61,8 @@ extern struct Lexer *create_lexer(const char *text_input);
 static int make_token(struct Lexer *lexer, struct TokenInfo token_pos);
 
 static bool push_new_token(struct Lexer *lexer, size_t i, struct TokenInfo token_pos, const struct TokenPair token_pairs[]);
+
+static void concant_tokens(struct Lexer* lexer, struct TokenInfo token_pos, enum TokenType type, const char* fin_val);
 
 extern void run_tokenizer(struct Lexer *lexer);
 

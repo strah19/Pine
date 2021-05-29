@@ -39,29 +39,30 @@ void run_expression(struct Expression* expression, struct Parser* parser) {
             struct SYNode node;
             node.value = atoi(token->token_string);
             node.op = FLOAT;
+            node.order = token->token_info.token_pos * token->token_info.token_line;
             push_stack(expression->output_queue, (void*) &node);  
         }
         else if (token->type == FLOAT) {
             char *pend;
-            struct SYNode *node;
-            node = malloc(sizeof(struct SYNode));
-            node->value = strtof(token->token_string, &pend);
-            node->op = token->type;
-            push_stack(expression->output_queue, node);
+            struct SYNode node;
+            node.value = strtof(token->token_string, &pend);
+            node.op = token->type;
+            node.order = token->token_info.token_pos * token->token_info.token_line;
+            push_stack(expression->output_queue, (void*) &node);  
         }
         else if(token->type == ID) {
-            struct SYNode *node;
-            node = malloc(sizeof(struct SYNode));
-            node->value = get_global_symbol(token->token_string)->value;
-            node->op = FLOAT;
-            push_stack(expression->output_queue, node);  
+            struct SYNode node;
+            node.value = get_global_symbol(token->token_string)->value;
+            node.op = FLOAT;
+            node.order = token->token_info.token_pos * token->token_info.token_line;
+            push_stack(expression->output_queue, (void*) &node);  
         }
         else if (token->type == LPAR) {
-            struct SYNode *node;
-            node = malloc(sizeof(struct SYNode));
-            node->value = 0;
-            node->op = LPAR;
-            push_stack(expression->op_stack, node);
+            struct SYNode node;
+            node.value = 0;
+            node.op = LPAR;
+            node.order = token->token_info.token_pos * token->token_info.token_line;
+            push_stack(expression->output_queue, (void*) &node);  
         }
         else if (token->type == RPAR) {
             struct SYNode *top = peek_stack(expression->op_stack);
@@ -78,6 +79,8 @@ void run_expression(struct Expression* expression, struct Parser* parser) {
         for (size_t i = 0; i < sizeof(SHUNT_YARD_OPERATORS) / sizeof(SHUNT_YARD_OPERATORS[0]); i++) {
             if (token->type == SHUNT_YARD_OPERATORS[i].op) {
                 struct SYNode *top = peek_stack(expression->op_stack);
+                struct SYNode op = SHUNT_YARD_OPERATORS[i];
+                op.order = token->token_info.token_pos * token->token_info.token_line;
                 if (top != NULL) {
                     while ((!is_stack_empty(expression->op_stack)) && ((SHUNT_YARD_OPERATORS[i].associativity == LEFT && SHUNT_YARD_OPERATORS[i].precedence <= top->precedence) || (SHUNT_YARD_OPERATORS[i].associativity == RIGHT && SHUNT_YARD_OPERATORS[i].precedence < top->precedence)) && top->op != LPAR) {
                         push_stack(expression->output_queue, top);
@@ -86,7 +89,7 @@ void run_expression(struct Expression* expression, struct Parser* parser) {
                     }
                 }
 
-                push_stack(expression->op_stack, (void *)&SHUNT_YARD_OPERATORS[i]);
+                push_stack(expression->op_stack, (void*)&op);
                 stop = false;
                 break;
             }
@@ -104,16 +107,14 @@ void run_expression(struct Expression* expression, struct Parser* parser) {
         pop_stack(expression->op_stack);
         top = peek_stack(expression->op_stack);
     }
-
-    /*
-    for (size_t i = 0; i < expression->output_queue->top; i++)
-    {
-        struct SYNode *data = get_stack(expression->output_queue, i);
-        printf("Output Queue Element %d, Value: %f, Operator: %d\n", i, data->value, data->op);
-    }
-    */
+  
     
-
+    printf("Expression output~------------------------------------------------~\n");
+    for (size_t i = 0; i < expression->output_queue->top; i++) {
+        struct SYNode *data = get_stack(expression->output_queue, i);
+        printf("Output queue element %d, value: %f, operator: %d, rel pos: %d\n", i, data->value, data->op, data->order);
+    }
+  
     parser->token_index += token_stoppage;
 }
 
@@ -122,64 +123,88 @@ float calculate_expression(struct Expression* expression) {
     float result;
 
     if(expression->output_queue->top == 1) {
-        struct SYNode * current = get_stack(expression->output_queue, 0);
+        struct SYNode *current = get_stack(expression->output_queue, 0);
         result = current->value;
     }
 
     for (size_t i = 0; i < expression->output_queue->top; i++) {
-        struct SYNode * current = get_stack(expression->output_queue, i);
+        struct SYNode *current = get_stack(expression->output_queue, i);
         if (current->op == INTEGER || current->op == FLOAT)
             push_stack(out, current);
-        if (out->top >= 1 && current->op != FLOAT) {
+        else {
             struct SYNode *operand1 = peek_stack(out);
             pop_stack(out);
             struct SYNode *operand2 = peek_stack(out);
             pop_stack(out);
-            struct SYNode *node;
-            node = malloc(sizeof(struct SYNode));
+            struct SYNode node;
 
             switch (current->op) {
             case ADD: {
-                node->value = operand2->value + operand1->value;
+                node.value = operand2->value + operand1->value;
                 break;
             }
             case SUBTRACT: {
-                node->value = operand2->value - operand1->value;
+                node.value = operand2->value - operand1->value;
                 break;
             }
             case MULTIPLE: {
-                node->value = operand2->value * operand1->value;
+                node.value = operand2->value * operand1->value;
                 break;
             }
             case DIVIDE: {
-                node->value = operand2->value / operand1->value;
+                node.value = operand2->value / operand1->value;
                 break;
             }
             case TO_THE_POWER_OF: {
-                node->value = powf(operand2->value, operand1->value);
+                node.value = powf(operand2->value, operand1->value);
                 break;
             }
             case LESS_THAN: {
-                node->value = (operand2->value < operand1->value) ? 1 : 0;
+                if(operand1->order < operand2->order) 
+                    node.value = (operand1->value < operand2->value) ? 1 : 0;
+                else
+                    node.value = (operand2->value < operand1->value) ? 1 : 0;
                 break;
             }
             case GREATER_THAN: {
-                node->value = (operand2->value > operand1->value) ? 1 : 0;
+                if(operand1->order < operand2->order) 
+                    node.value = (operand1->value > operand2->value) ? 1 : 0;
+                else
+                    node.value = (operand2->value > operand1->value) ? 1 : 0;
                 break;
             }
             case LESS_THAN_EQUAL: {
-                node->value = (operand2->value <= operand1->value) ? 1 : 0;
+                if(operand1->order < operand2->order) 
+                    node.value = (operand1->value <= operand2->value) ? 1 : 0;
+                else
+                    node.value = (operand2->value <= operand1->value) ? 1 : 0;
                 break;
             }
             case GREATER_THAN_EQUAL: {
-                node->value = (operand2->value >= operand1->value) ? 1 : 0;
+                 if(operand1->order < operand2->order) 
+                    node.value = (operand1->value >= operand2->value) ? 1 : 0;
+                else
+                    node.value = (operand2->value >= operand1->value) ? 1 : 0;
+                break;
+            }
+            case DOUBLE_EQUAL: {
+                node.value = (operand2->value == operand1->value) ? 1 : 0;
+                break;
+            }
+            case AND: {
+                node.value = (operand1->value != 0 && operand2->value != 0) ? 1 : 0;
+                break;
+            }
+            case OR: {
+                node.value = (operand1->value || operand2->value) ? 1 : 0;
                 break;
             }
             default:
                 break;
             }
-            result = node->value;
-            push_stack(out, node);
+            result = node.value;
+            node.order = operand1->order;
+            push_stack(out, (void*) &node);
         }
     }
     destroy_stack(out);

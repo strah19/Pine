@@ -16,6 +16,7 @@ struct SYNode {
     int precedence;
     enum Associativity associativity;
     float value;
+    int order;
 };
 
 static const struct SYNode SHUNT_YARD_OPERATORS[] = {
@@ -24,10 +25,13 @@ static const struct SYNode SHUNT_YARD_OPERATORS[] = {
     {MULTIPLE, 3, LEFT, 0},
     {TO_THE_POWER_OF, 4, LEFT, 0},
     {DIVIDE, 3, LEFT, 0},
-    {GREATER_THAN, 5, LEFT, 0},
-    {LESS_THAN, 5, LEFT, 0},
-    {GREATER_THAN_EQUAL, 5, LEFT, 0},
-    {LESS_THAN_EQUAL, 5, LEFT, 0}
+    {GREATER_THAN, 1, LEFT, 0},
+    {LESS_THAN, 1, LEFT, 0},
+    {GREATER_THAN_EQUAL, 1, LEFT, 0},
+    {LESS_THAN_EQUAL, 1, LEFT, 0},
+    {DOUBLE_EQUAL, 1, LEFT, 0},
+    {AND, 0, LEFT, 0},
+    {OR, 0, LEFT, 0}
 };
 
 struct ASTNode {

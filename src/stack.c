@@ -67,7 +67,7 @@ void *peek_stack(struct Stack *stack) {
 }
 
 extern void *get_stack(struct Stack* stack, size_t index) {
-    if (index < 0 || index > stack->max_size - 1)
+    if (index < 0 || index > stack->top - 1)
         fatal_error("stack index is out of range");
 
     int start = index * stack->size_of_element;

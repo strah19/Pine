@@ -54,25 +54,13 @@ int make_token(struct Lexer *lexer, struct TokenInfo token_pos) {
         struct Token *token_2 = lexer->tokens->array[lexer->tokens->size - 2];
 
         if (token_1->type == EQUAL && token_2->type == EQUAL) {
-            if (token_1->token_info.token_pos - token_2->token_info.token_pos == 1) {
-                pop_vector(lexer->tokens, lexer->tokens->size - 1);
-                pop_vector(lexer->tokens, lexer->tokens->size - 2);
-                move_token_counter(-2);
-                push_back_vector(lexer->tokens, create_token(DOUBLE_EQUAL, "==", token_pos));
-            }
+            if (token_1->token_info.token_pos - token_2->token_info.token_pos == 1) 
+                concant_tokens(lexer, token_pos, DOUBLE_EQUAL, "==");
         }
-        if(token_1->type == EQUAL && token_2->type == LESS_THAN) {
-            pop_vector(lexer->tokens, lexer->tokens->size - 1);
-            pop_vector(lexer->tokens, lexer->tokens->size - 2);
-            move_token_counter(-2);
-            push_back_vector(lexer->tokens, create_token(LESS_THAN_EQUAL, "<=", token_pos));
-        }
-        if(token_1->type == EQUAL && token_2->type == GREATER_THAN) {
-            pop_vector(lexer->tokens, lexer->tokens->size - 1);
-            pop_vector(lexer->tokens, lexer->tokens->size - 2);
-            move_token_counter(-2);
-            push_back_vector(lexer->tokens, create_token(GREATER_THAN, ">=", token_pos));
-        }
+        else if(token_1->type == EQUAL && token_2->type == LESS_THAN) 
+            concant_tokens(lexer, token_pos, LESS_THAN_EQUAL, "<=");
+        else if(token_1->type == EQUAL && token_2->type == GREATER_THAN) 
+            concant_tokens(lexer, token_pos, GREATER_THAN_EQUAL, ">=");
         return CREATING_TOKEN;
     }
     else if (is_char_digit(lexer->current_possible_token[0]) || lexer->current_char == '.') {
@@ -105,6 +93,13 @@ bool push_new_token(struct Lexer *lexer, size_t i, struct TokenInfo token_pos, c
         return true;
     }
     return false;
+}
+
+void concant_tokens(struct Lexer* lexer, struct TokenInfo token_pos, enum TokenType type, const char* fin_val) {
+    pop_vector(lexer->tokens, lexer->tokens->size - 1);
+    pop_vector(lexer->tokens, lexer->tokens->size - 2);
+    move_token_counter(-2);
+    push_back_vector(lexer->tokens, create_token(type, fin_val, token_pos));
 }
 
 void run_tokenizer(struct Lexer *lexer) {

@@ -1,14 +1,2 @@
-int width = 2;
-int height = 3;
-
-print width * height;
-
-int area = width * height;
-print area;
-
-width = height = 0;
-print width;
-print height;
-
-int c = 1 < 2;
+int c = 2 > 1 and 1 > 4 or 1 == 1;
 print c;
