@@ -128,6 +128,15 @@ void variable_decleration_statement(struct Parser* parser) {
     struct Token* token = peek_next_token(parser);
 
     match_token(parser, ID, "identifier");
+
+    if(peek_next_token(parser)->type == END_EXPRESSION) {
+        match_token(parser, END_EXPRESSION, ";");
+        token = parser->lexer->tokens->array[parser->token_index - 2];
+        printf("%s\n", token->token_string);
+        add_symbol(token->token_string, 0.0);
+        return;
+    }
+         
     parser->token_index = equal_statement(parser, parser->token_index);
 
     match_token(parser, END_EXPRESSION, ";");

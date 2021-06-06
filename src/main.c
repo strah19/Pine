@@ -1,8 +1,7 @@
 #include "../include/lexer.h"
+#include "../include/gen.h"
 #include "../include/expression.h"
 #include "../include/parser.h"
-#include "../include/stack.h"
-#include "../include/gen.h"
 
 #define MAX_INPUT_LEN 256
 
@@ -20,6 +19,8 @@ int main(int argc, char *argv[])
     run_tokenizer(lexer);
     log_token_data(lexer);
     run_parser(parser);
+
+    generate_code();
 
     destroy_parser(parser);
     destroy_lexer(lexer);

@@ -9,6 +9,7 @@
         "err.h": "c",
         "token.h": "c",
         "string.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "parser.h": "c"
     }
 }
