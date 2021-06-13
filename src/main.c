@@ -3,8 +3,6 @@
 #include "../include/expression.h"
 #include "../include/parser.h"
 
-#define MAX_INPUT_LEN 256
-
 int main(int argc, char *argv[])
 {
     struct LexerLoader loader;
@@ -12,7 +10,7 @@ int main(int argc, char *argv[])
     struct Lexer *lexer;
     create_buffer_for_lexer(&loader);
     lexer = create_lexer(loader.buffer);
-    initialize_output("output.s");
+    initialize_output("output.S");
 
     struct Parser* parser = create_parser(lexer); 
 

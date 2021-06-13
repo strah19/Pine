@@ -212,7 +212,7 @@ float calculate_expression(struct Expression* expression) {
     return result;
 }
 
-struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct ASTNode* right, float value) {
+struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct ASTNode* right) {
     struct ASTNode* node = NULL;
 
     node = malloc(sizeof(struct ASTNode));
@@ -225,7 +225,6 @@ struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct 
     node->left = left;
     node->right = right;
     node->op = op;
-    node->value = value;
 
     return node;
 }
@@ -236,8 +235,12 @@ struct ASTNode create_ast_node_from_expression(struct Expression* expression) {
 
     for (size_t i = 0; i < expression->output_queue->top; i++) {
         current = get_stack(expression->output_queue, i);
-        if (current->op == INTEGER || current->op == FLOAT)
-            push_stack(out, create_ast_node(FLOAT, NULL, NULL, current->value));
+        if (current->op == INTEGER || current->op == FLOAT) {
+            struct ASTNode* node = create_ast_node(FLOAT, NULL, NULL);
+            node->value.int_val = (int) current->value;
+            push_stack(out, node);
+        }
+
         if (out->top >= 1 && current->op != FLOAT) {
             struct ASTNode *operand1 = peek_stack(out);
             pop_stack(out);
@@ -245,7 +248,8 @@ struct ASTNode create_ast_node_from_expression(struct Expression* expression) {
             pop_stack(out);
             struct ASTNode *node;
 
-            node = create_ast_node(current->op, operand1, operand2, 0.0);
+            node = create_ast_node(current->op, operand1, operand2);
+            node->value.int_val = 0;
 
             push_stack(out, node);
         }
@@ -272,10 +276,10 @@ void destroy_expression(struct Expression* expression) {
     destroy_stack(expression->output_queue);
 }
 
-struct ASTNode* create_leaf_node(enum TokenType op, float value) {
-    return create_ast_node(op, NULL, NULL, value);
+struct ASTNode* create_leaf_node(enum TokenType op) {
+    return create_ast_node(op, NULL, NULL);
 }
 
-struct ASTNode* create_unary(enum TokenType op, float value, struct ASTNode* left) {
-    return create_ast_node(op, left, NULL, value);
+struct ASTNode* create_unary(enum TokenType op, struct ASTNode* left) {
+    return create_ast_node(op, left, NULL);
 }

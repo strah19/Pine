@@ -39,7 +39,10 @@ struct ASTNode {
     struct ASTNode *left;                
     struct ASTNode *right;
     
-    float value;    
+    union 
+    {
+       int int_val;
+    } value;
 };
 
 struct Expression {
@@ -51,7 +54,7 @@ extern void run_expression(struct Expression* expression, struct Parser* parser)
 
 extern float calculate_expression(struct Expression* expression);
 
-extern struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct ASTNode* right, float value);
+extern struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct ASTNode* right);
 
 extern struct ASTNode create_ast_node_from_expression(struct Expression* expression);
 
@@ -59,8 +62,8 @@ extern void destroy_ast_node(struct ASTNode* root);
 
 extern void destroy_expression(struct Expression* expression);
 
-extern struct ASTNode* create_leaf_node(enum TokenType op, float value);
+extern struct ASTNode* create_leaf_node(enum TokenType op);
 
-extern struct ASTNode* create_unary(enum TokenType op, float value, struct ASTNode* left);
+extern struct ASTNode* create_unary(enum TokenType op, struct ASTNode* left);
 
 #endif

@@ -13,9 +13,8 @@
  *
  * @section DESCRIPTION
  *
- * This file contains the main code for "compiling" our language. It 
- * specifies the grammer and handles the generation of AST trees and
- * code generation that takes place.
+ * This file contains the main code for parsing our language. It 
+ * specifies the grammer and handles the generation of AST trees.
  */
 
 #include "../include/parser.h"
@@ -46,24 +45,34 @@ void destroy_parser(struct Parser* parser) {
 
 void run_parser(struct Parser* parser) {
     while (PARSER_LOOP) {
-        struct Token* token = peek_next_token(parser);
-        
-        if (token->type == T_EOF)
+        if(!run_statements(parser))
             break;
-        switch (token->type) {
-        case PRINT:
-            print_statement(parser);
-            break;
-        case INT:
-            variable_decleration_statement(parser);
-            break;
-        case ID:
-            assignment_statement(parser);
-            break;
-        default:
-            fatal_token_error("Undefined token", token);
-        }
     }
+}
+
+bool run_statements(struct Parser* parser) {
+    struct Token* token = peek_next_token(parser);
+    
+    if (token->type == T_EOF)
+        return false;
+    switch (token->type) {
+    case PRINT:
+        print_statement(parser);
+        break;
+    case INT:
+        variable_decleration_statement(parser);
+        break;
+    case ID:
+        assignment_statement(parser);
+        break;
+    case IF:
+        if_statement(parser);
+        break;
+    default:
+        fatal_token_error("Undefined token", token);
+    }
+
+    return true;
 }
 
 struct Token* peek_next_token(struct Parser* parser) {
@@ -179,9 +188,30 @@ int equal_statement(struct Parser* parser, int end_token) {
 void if_statement(struct Parser* parser) {
     match_token(parser, IF, "if");
 
-    compare_statment(parser);
+    struct Expression expression;
+    
+    run_expression(&expression, parser);
+
+    float val = calculate_expression(&expression); 
+    destroy_expression(&expression);  
+
+    match_token(parser, LCURLEY_BRACKET, "{");
+
+    if(val) {
+        while(peek_next_token(parser)->type != RCURLEY_BRACKET)
+            run_statements(parser);
+    }
+    else {
+        while(peek_next_token(parser)->type != RCURLEY_BRACKET)
+            retrieve_next_token(parser);
+    }
+    match_token(parser, RCURLEY_BRACKET, "}");
 }
 
-void compare_statment(struct Parser* parser) {
+void else_statement(struct Parser* parser) {
+    
+}
+
+void elif_statement(struct Parser* parser) {
 
 }

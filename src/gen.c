@@ -31,12 +31,10 @@ void initialize_output(const char* file_name) {
 
     if(output_file == NULL)
         fatal_error("could not open output file");
+
 }
 
 void generate_code() {
-    fputs("section	.text\n"
-        "\tglobal _start\n"	
-        "_start:\n", output_file);
 }
 
 void close_output() {
