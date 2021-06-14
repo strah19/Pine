@@ -56,8 +56,11 @@ struct Symbol* get_global_symbol(char* name) {
     return (index != -1) ? &global_syms[index] : NULL;
 }
 
-void log_symbols()
-{
+void log_symbols() {
     for (int i = 0; i < global_sym_index; i++)  
        printf("Symbol: '%s', Index: %d\n", global_syms[i].name, i);   
+}
+
+struct Symbol* get_symbols() {
+    return global_syms;
 }

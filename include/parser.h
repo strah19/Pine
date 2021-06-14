@@ -2,6 +2,7 @@
 #define PARSER_H
 
 #include "../include/lexer.h"
+#include "../include/expression.h"
 
 #include <stdint.h>
 
@@ -26,7 +27,7 @@ extern void match_token(struct Parser* parser, enum TokenType type, const char* 
 
 static bool run_statements(struct Parser* parser);
 
-static void expression_assignment(struct Parser* parser, struct Token* var);
+static void expression_assignment(struct Parser* parser, struct Token* var, struct ASTNode** root);
 
 static void print_statement(struct Parser* parser);
 
@@ -38,8 +39,6 @@ static void else_statement(struct Parser* parser);
 
 static void elif_statement(struct Parser* parser);
 
-static void variable_decleration_statement(struct Parser* parser);
-
-static int equal_statement(struct Parser* parser, int end_token);
+static int equal_statement(struct Parser* parser, int end_token, struct Token* var_token, struct ASTNode** root);
 
 #endif //!PARSER_H

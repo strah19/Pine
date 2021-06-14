@@ -170,22 +170,16 @@ extern void create_buffer_for_lexer(struct LexerLoader *loader)
         if (fseek(loader->file, 0L, SEEK_END) == 0) {
             long buf_size = ftell(loader->file);
             if (buf_size == -1)
-            { 
-            }
+                fatal_error("Buffer size of file is -1.");
 
             loader->buffer = malloc(sizeof(char) * (buf_size + 1));
-
-            if (fseek(loader->file, 0L, SEEK_SET) != 0)
-            { 
-            }
+            fseek(loader->file, 0L, SEEK_SET);
 
             size_t new_len = fread(loader->buffer, sizeof(char), buf_size, loader->file);
-            if (ferror(loader->file) != 0) {
+            if (ferror(loader->file) != 0) 
                 fputs("Error reading file", stderr);
-            }
-            else {
+            else 
                 loader->buffer[new_len++] = '\0'; 
-            }
         }
         fclose(loader->file);
     }

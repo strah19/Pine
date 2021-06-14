@@ -10,6 +10,7 @@
         "token.h": "c",
         "string.h": "c",
         "stdio.h": "c",
-        "parser.h": "c"
+        "parser.h": "c",
+        "type_traits": "c"
     }
 }

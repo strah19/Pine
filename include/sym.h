@@ -24,4 +24,6 @@ extern struct Symbol* get_global_symbol(char* name);
 
 extern void log_symbols();
 
+extern struct Symbol* get_symbols();
+
 #endif //!SYM_H

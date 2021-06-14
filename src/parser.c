@@ -19,7 +19,6 @@
 
 #include "../include/parser.h"
 #include "../include/stack.h"
-#include "../include/expression.h"
 #include "../include/sym.h"
 #include "../include/err.h"
 
@@ -56,17 +55,11 @@ bool run_statements(struct Parser* parser) {
     if (token->type == T_EOF)
         return false;
     switch (token->type) {
-    case PRINT:
+    case PRINT: //temporary, till Pine supports functions.
         print_statement(parser);
-        break;
-    case INT:
-        variable_decleration_statement(parser);
         break;
     case ID:
         assignment_statement(parser);
-        break;
-    case IF:
-        if_statement(parser);
         break;
     default:
         fatal_token_error("Undefined token", token);
@@ -89,20 +82,22 @@ void match_token(struct Parser* parser, enum TokenType type, const char* what) {
         if (token->type == type)
             retrieve_next_token(parser);
         else 
-        fatal_compiler_error("Expected", what, token->token_info.token_line);
+            fatal_compiler_error("Expected", what, token->token_info.token_line);
 }
 
-void expression_assignment(struct Parser* parser, struct Token* var) {
-    struct Expression expression;
-    
-    run_expression(&expression, parser);
+void expression_assignment(struct Parser* parser, struct Token* var, struct ASTNode** root) {
+    struct ASTNode* ast_tree;
+    make_ast_from_expr(&ast_tree, parser);
 
     struct Symbol* variable = get_global_symbol(var->token_string);
-    if (variable == NULL)
-        add_symbol(var->token_string, calculate_expression(&expression));
-    else
-        variable->value = calculate_expression(&expression);
-    destroy_expression(&expression);  
+    if (variable == NULL) {
+        ast_tree = run_ast_tree(ast_tree);
+        add_symbol(var->token_string, ast_tree->value.int_val);
+    }
+    else {
+        ast_tree = run_ast_tree(ast_tree);
+        variable->value = ast_tree->value.int_val;
+    }
 }
 
 void print_statement(struct Parser* parser) {
@@ -110,51 +105,62 @@ void print_statement(struct Parser* parser) {
 
     struct Token* token = peek_next_token(parser);
     
-    struct Expression expression;
+    struct ASTNode* ast_tree;
+    make_ast_from_expr(&ast_tree, parser);
+    printf("%d\n", run_ast_tree(ast_tree)->value);
 
-    run_expression(&expression, parser);
-    printf("%f\n", calculate_expression(&expression));
-
-    destroy_expression(&expression);
     match_token(parser, END_EXPRESSION, ";");
 }
 
 void assignment_statement(struct Parser* parser) {
+    struct ASTNode* root_ast = NULL;
+
     struct Token* token = peek_next_token(parser);
     match_token(parser, ID, "identifier");
-    
-    if (find_global_symbol(token->token_string) == -1)
-        fatal_token_error("Undecleared variable", token);
+    int var_id = 0;
+
+    if (find_global_symbol(token->token_string) == -1) {
+        var_id = add_symbol(token->token_string, 0.0);
+    }
+    else 
+        var_id = find_global_symbol(token->token_string);
+
+    if (peek_next_token(parser)->type == COLON) {
+        retrieve_next_token(parser);
+        match_token(parser, INT, "int");
+        if(peek_next_token(parser)->type == END_EXPRESSION) {
+            match_token(parser, END_EXPRESSION, ";");
+            root_ast = create_ast_node(EQUAL, NULL, NULL);
+            root_ast->left = create_ast_node(ID, NULL, NULL);
+            root_ast->left->value.var_id = var_id;
+            root_ast->right = create_ast_node(INTEGER, NULL, NULL);
+            root_ast->right->value.int_val = 0;
+            destroy_ast_node(root_ast);
+            return;
+        }
+    }
 
     struct Symbol* var = get_global_symbol(token->token_string);  
-    parser->token_index = equal_statement(parser, parser->token_index);
+    parser->token_index = equal_statement(parser, parser->token_index, token, &root_ast);
+    
     match_token(parser, END_EXPRESSION, ";");
+
+    //printf("New Tree:\n");
+    //log_tree(root_ast);
+    destroy_ast_node(root_ast);
 }
 
-void variable_decleration_statement(struct Parser* parser) {
-    match_token(parser, INT, "int");
+int equal_statement(struct Parser* parser, int end_token, struct Token* var_token, struct ASTNode** root) {
+    *root = create_ast_node(EQUAL, NULL, NULL);
 
-    struct Token* token = peek_next_token(parser);
+    (*root)->left = create_ast_node(ID, NULL, NULL);
+    (*root)->left->value.var_id = find_global_symbol(var_token->token_string);
 
-    match_token(parser, ID, "identifier");
-
-    if(peek_next_token(parser)->type == END_EXPRESSION) {
-        match_token(parser, END_EXPRESSION, ";");
-        token = parser->lexer->tokens->array[parser->token_index - 2];
-        printf("%s\n", token->token_string);
-        add_symbol(token->token_string, 0.0);
-        return;
-    }
-         
-    parser->token_index = equal_statement(parser, parser->token_index);
-
-    match_token(parser, END_EXPRESSION, ";");
-}
-
-int equal_statement(struct Parser* parser, int end_token) {
-    struct Token* var_token = parser->lexer->tokens->array[parser->token_index - 1];
     if (var_token->type != ID)
-        fatal_token_error("Value needs to be lvalue", var_token);
+        fatal_token_error("Value needs to be modifiable lvalue", var_token);
+    else if ((*root)->left->value.var_id == -1)
+        fatal_token_error("Undefined variable", var_token);
+
     match_token(parser, EQUAL, "=");
 
     struct Token* token = peek_next_token(parser);
@@ -168,19 +174,25 @@ int equal_statement(struct Parser* parser, int end_token) {
     }
     parser->token_index--;
 
-    if (token->type == EQUAL)
-        end_token = equal_statement(parser, end_token);
+    if (token->type == EQUAL) {
+        struct Token* next_var = parser->lexer->tokens->array[parser->token_index - 1];
+        struct Token* lval_check = parser->lexer->tokens->array[parser->token_index - 2];
+            if (next_var->type != ID && lval_check->type != EQUAL) 
+                fatal_token_error("Value needs to be a modifiable lvalue", next_var);
+
+        end_token = equal_statement(parser, end_token, next_var, &(*root)->right);
+    }
     if (token->type == END_EXPRESSION)
     {
         parser->token_index = start_of_expression;
-        expression_assignment(parser, var_token);
-
+        expression_assignment(parser, var_token, &(*root)->right);
+   
         end_token = parser->token_index;
         return end_token;
     }
     parser->token_index = start_of_expression;
 
-    expression_assignment(parser, var_token);
+    expression_assignment(parser, var_token, NULL);
 
     return end_token;
 }

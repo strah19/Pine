@@ -1,9 +1,9 @@
-#ifndef SHUNT_YARD_ALGORITHIM_H
-#define SHUNT_YARD_ALGORITHIM_H
-
-#include "../include/parser.h"
+#ifndef EXPRESSION_H
+#define EXPRESSION_H
 
 #include <stdint.h>
+
+#include "../include/lexer.h"
 
 enum Associativity {
     LEFT,
@@ -35,13 +35,16 @@ static const struct SYNode SHUNT_YARD_OPERATORS[] = {
 };
 
 struct ASTNode {
-    enum TokenType op;                             
+    enum TokenType op;          
+    int precedence;                   
     struct ASTNode *left;                
     struct ASTNode *right;
+    struct ASTNode *parent;
     
     union 
     {
        int int_val;
+       int var_id;
     } value;
 };
 
@@ -49,6 +52,8 @@ struct Expression {
     struct Stack *output_queue;
     struct Stack *op_stack;
 };
+
+struct Parser;
 
 extern void run_expression(struct Expression* expression, struct Parser* parser);
 
@@ -66,4 +71,10 @@ extern struct ASTNode* create_leaf_node(enum TokenType op);
 
 extern struct ASTNode* create_unary(enum TokenType op, struct ASTNode* left);
 
-#endif
+extern void log_tree(struct ASTNode* root);
+
+extern void make_ast_from_expr(struct ASTNode** root, struct Parser* parser);
+
+extern struct ASTNode* run_ast_tree(struct ASTNode* root);
+
+#endif //!EXPRESSION_H
