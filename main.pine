@@ -2,6 +2,6 @@ a : int = 1;
 a = a + 3;
 b : int = 2;
 
-a = a * b;
+a = a * b + 2;
 
 print a;

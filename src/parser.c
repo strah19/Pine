@@ -200,12 +200,11 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
 void if_statement(struct Parser* parser) {
     match_token(parser, IF, "if");
 
-    struct Expression expression;
-    
-    run_expression(&expression, parser);
+    struct ASTNode* ast_tree;
+    make_ast_from_expr(&ast_tree, parser);
 
-    float val = calculate_expression(&expression); 
-    destroy_expression(&expression);  
+    ast_tree = run_ast_tree(ast_tree);
+    int val = ast_tree->value.int_val;
 
     match_token(parser, LCURLEY_BRACKET, "{");
 
