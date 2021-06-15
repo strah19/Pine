@@ -61,6 +61,12 @@ bool run_statements(struct Parser* parser) {
     case ID:
         assignment_statement(parser);
         break;
+    case COMMENT: {
+        int line = token->token_info.token_line;
+        while (line == token->token_info.token_line) 
+            token = retrieve_next_token(parser);
+        break;
+    }
     default:
         fatal_token_error("Undefined token", token);
     }
@@ -97,7 +103,10 @@ void expression_assignment(struct Parser* parser, struct Token* var, struct ASTN
     else {
         ast_tree = run_ast_tree(ast_tree);
         variable->value = ast_tree->value.int_val;
+
+        *root = ast_tree;
     }
+    destroy_ast_node(ast_tree);
 }
 
 void print_statement(struct Parser* parser) {
@@ -108,6 +117,7 @@ void print_statement(struct Parser* parser) {
     struct ASTNode* ast_tree;
     make_ast_from_expr(&ast_tree, parser);
     printf("%d\n", run_ast_tree(ast_tree)->value);
+    destroy_ast_node(ast_tree);
 
     match_token(parser, END_EXPRESSION, ";");
 }
@@ -119,15 +129,13 @@ void assignment_statement(struct Parser* parser) {
     match_token(parser, ID, "identifier");
     int var_id = 0;
 
-    if (find_global_symbol(token->token_string) == -1) {
-        var_id = add_symbol(token->token_string, 0.0);
-    }
-    else 
-        var_id = find_global_symbol(token->token_string);
-
     if (peek_next_token(parser)->type == COLON) {
         retrieve_next_token(parser);
         match_token(parser, INT, "int");
+        if (find_global_symbol(token->token_string) == -1) 
+            var_id = add_symbol(token->token_string, 0.0);
+        else
+            fatal_token_error("Redefination of variable", token);
         if(peek_next_token(parser)->type == END_EXPRESSION) {
             match_token(parser, END_EXPRESSION, ";");
             root_ast = create_ast_node(EQUAL, NULL, NULL);
@@ -139,14 +147,17 @@ void assignment_statement(struct Parser* parser) {
             return;
         }
     }
+    else {
+        if (find_global_symbol(token->token_string) == -1) 
+            var_id = add_symbol(token->token_string, 0.0);
+        else 
+            var_id = find_global_symbol(token->token_string);
+    }
 
     struct Symbol* var = get_global_symbol(token->token_string);  
     parser->token_index = equal_statement(parser, parser->token_index, token, &root_ast);
     
     match_token(parser, END_EXPRESSION, ";");
-
-    //printf("New Tree:\n");
-    //log_tree(root_ast);
     destroy_ast_node(root_ast);
 }
 
@@ -205,6 +216,7 @@ void if_statement(struct Parser* parser) {
 
     ast_tree = run_ast_tree(ast_tree);
     int val = ast_tree->value.int_val;
+    destroy_ast_node(ast_tree);
 
     match_token(parser, LCURLEY_BRACKET, "{");
 

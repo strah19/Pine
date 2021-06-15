@@ -46,7 +46,8 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {"<", LESS_THAN},
     {">", GREATER_THAN},
     {"^", TO_THE_POWER_OF},
-    {":", COLON }
+    {":", COLON },
+    {"!", EXCLEMATION},
 };
 
 static const struct TokenPair TOKEN_KEY_WORDS[] = {

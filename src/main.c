@@ -1,7 +1,6 @@
 #include "../include/lexer.h"
 #include "../include/expression.h"
 #include "../include/parser.h"
-#include <time.h>
 
 int main(int argc, char *argv[])
 {
@@ -13,16 +12,11 @@ int main(int argc, char *argv[])
 
     struct Parser* parser = create_parser(lexer); 
 
-    clock_t begin = clock();
-    run_tokenizer(lexer);
-    log_token_data(lexer);
-    
-    run_parser(parser);
-
-    clock_t end = clock();
-    double time_spent = (double)(end - begin);
-    printf("Execuation time in ms: %f", time_spent);
-
+    begin_debug_benchmark();
+        run_tokenizer(lexer);
+        log_token_data(lexer);
+        run_parser(parser);
+    end_debug_benchmark("Pine");
 
     destroy_parser(parser);
     destroy_lexer(lexer);

@@ -61,6 +61,9 @@ int make_token(struct Lexer *lexer, struct TokenInfo token_pos) {
             concant_tokens(lexer, token_pos, LESS_THAN_EQUAL, "<=");
         else if(token_1->type == EQUAL && token_2->type == GREATER_THAN) 
             concant_tokens(lexer, token_pos, GREATER_THAN_EQUAL, ">=");
+        else if(token_1->type == EQUAL && token_2->type == EXCLEMATION) 
+            concant_tokens(lexer, token_pos, NOT, "!=");
+            
         return CREATING_TOKEN;
     }
     else if (is_char_digit(lexer->current_possible_token[0]) || lexer->current_char == '.') {
@@ -88,7 +91,8 @@ int make_token(struct Lexer *lexer, struct TokenInfo token_pos) {
 bool push_new_token(struct Lexer *lexer, size_t i, struct TokenInfo token_pos, const struct TokenPair token_pairs[]) {
     if(*lexer->current_possible_token != token_pairs[i].in_code_name[0])
         return false;
-    if (adv_string_compare(lexer->current_possible_token, token_pairs[i].in_code_name, strlen(token_pairs[i].in_code_name)) == 0) {
+    
+    if (strcmp(lexer->current_possible_token, token_pairs[i].in_code_name) == 0) {
         push_back_vector(lexer->tokens, create_token(token_pairs[i].type, token_pairs[i].in_code_name, token_pos));
         return true;
     }
@@ -111,8 +115,9 @@ void run_tokenizer(struct Lexer *lexer) {
     struct TokenInfo token_position = {1, 0};
     int current_lexer_state = NEED_MORE_STRING_FOR_TOKEN;
     int counter = 0;
+    int input_len = strlen(lexer->input_text);
 
-    while (counter <= strlen(lexer->input_text)) {
+    while (counter <= input_len) {
         get_char = lexer->input_text[counter];
         counter++;
 
@@ -136,6 +141,7 @@ void run_tokenizer(struct Lexer *lexer) {
                 for (int i = 0; i < token_size; i++) {
                     lexer->current_possible_token[i] = ' ';
                 }
+
                 lexer->current_possible_token[1] = '\0';
 
                 token_size = 0;
@@ -163,8 +169,7 @@ void run_tokenizer(struct Lexer *lexer) {
     push_back_vector(lexer->tokens, create_token(T_EOF, "EOF", token_position));
 }
 
-extern void create_buffer_for_lexer(struct LexerLoader *loader)
-{
+extern void create_buffer_for_lexer(struct LexerLoader *loader) {
     loader->file = fopen(loader->file_path, LEXER_FILE_MODE);
     if (loader->file != NULL) {
         if (fseek(loader->file, 0L, SEEK_END) == 0) {

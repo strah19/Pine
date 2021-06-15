@@ -27,8 +27,6 @@ extern void destroy_ast_node(struct ASTNode* root);
 
 extern struct ASTNode* create_leaf_node(enum TokenType op);
 
-extern struct ASTNode* create_unary(enum TokenType op, struct ASTNode* left);
-
 extern void log_tree(struct ASTNode* root);
 
 extern void make_ast_from_expr(struct ASTNode** root, struct Parser* parser);

@@ -1,0 +1,40 @@
+------------------------PINE DEV LOG-------------------------
+- Store the iterations and progress of the language dev.    -
+- KEY:                                                      -
+- !     ~Means it is urgent.                                -
+- TD    ~Means 'to-do'.                                     -
+- GP    ~Means a git push occured, leave info like commit,  -
+-        time stamp, and even message for reference.        -
+- BUG   ~Means a bug found either in code or in Pine.       -
+-                                                           -
+- *     ~Means something is important.                      -
+-                                                           -
+- Any plain text are just notes to myself on things I did   -
+- or ideas I'm working threw (Should have a new line div).  -
+-------------------------------------------------------------
+
+
+6/14/2021 ~Beta Pine V 0.01~
+-----------------------------
+*   | Created this initial file, sort of like a first commit. Was able to refactor all the expression code (got rid of shunt yard) and
+    | started to investigate into possible lexer optimizations. Around 95% of current compile time (which is just lexing and parsing) 
+    | is from the lexer. Possibly due to too many malloc calls or some sort of expensive string operation.
+BUG | Could be a possible memory leak form the ASTNodes. Freeing children nodes causes segment faults (Investigate). 
+    | 
+    | Added a benchmarking tester into 'pine.h'. 
+    |
+*   | Added more language specific error handlers into the language such as redefination of variables. More these need to be added in
+    | upcoming weeks.
+-----------------------------
+
+6/15/2021 ~Beta Pine V 0.02~
+-----------------------------
+TD  | Work on the bytecode builder. Taking the AST Tree after a single parse statement and convert and store it as byte code in the 
+    | bytecode_builder file. Then, after the entire program has been parsed, run the bytecode in the virtual machine.
+TD  | Need to create a register system for the vm. Also have a stack and instruction pointer. All this can be stored directly in the 
+    | bytecode_builder file instead of having a bytecode_builder struct.
+TD  | Kind of a bug, make a system for symbols that can have different types. This can be done most likely with unions. Possibly make it 
+    | so that the symbol struct doesn't actual store the data but instead have an allocation pool of all the variables and each symbol
+    | stores a pointer and size so it can poke into the pool. 
+GP  | Pushed to github at 13:57, did this to save any work from yesterday before modification.
+

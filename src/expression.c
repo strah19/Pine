@@ -13,8 +13,7 @@
  *
  * @section DESCRIPTION
  *
- * This file contains code for constructing postfix notation for expressions 
- * and calculating them. It also contains AST nodes and functions to create
+ * This file contains code for AST nodes and functions to create
  * an AST tree out of an expression.
  */
 
@@ -47,15 +46,11 @@ struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct 
 }
 
 void destroy_ast_node(struct ASTNode* root) {
-    free(root);
+	free(root);
 }
 
 struct ASTNode* create_leaf_node(enum TokenType op) {
     return create_ast_node(op, NULL, NULL);
-}
-
-struct ASTNode* create_unary(enum TokenType op, struct ASTNode* left) {
-    return create_ast_node(op, left, NULL);
 }
 
 void log_tree(struct ASTNode* root) {
@@ -71,17 +66,33 @@ void log_tree(struct ASTNode* root) {
 int fig_precedence_from_op(enum TokenType op) {
     switch(op) {
     case ADD:
-        return 2;
+        return 6;
     case SUBTRACT:
-        return 2;
+        return 6;
     case MULTIPLE:
-        return 4;
+        return 7;
     case DIVIDE:
-        return 4;
+        return 7;
     case LPAR: 
         return 1;
     case RPAR:
         return 1;
+    case DOUBLE_EQUAL:
+        return 5;
+    case OR:
+        return 2;
+    case AND:
+        return 3;
+    case LESS_THAN:
+        return 5;
+    case GREATER_THAN:
+        return 5;
+    case LESS_THAN_EQUAL:
+        return 5;
+    case GREATER_THAN_EQUAL:
+        return 5;
+    case NOT:
+        return 4;
     }
 
     return -1;
@@ -157,8 +168,7 @@ void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {
         token_stoppage++;
     }
     *root = (*root)->right; //The AST new value will always fill into the right first
-    log_tree((*root));
-
+    
     parser->token_index += token_stoppage;
 }
 
@@ -187,6 +197,22 @@ int run_bin_exp(struct ASTNode* node) {
         return left_val * right_val;
     case DIVIDE:
         return left_val / right_val;
+    case DOUBLE_EQUAL:
+        return (left_val == right_val);
+    case OR:
+        return (left_val || right_val);
+    case AND:
+        return (left_val && right_val);
+    case LESS_THAN:
+        return (left_val < right_val);
+    case GREATER_THAN:
+        return (left_val > right_val);
+    case LESS_THAN_EQUAL:
+        return (left_val <= right_val);
+    case GREATER_THAN_EQUAL:
+        return (left_val >= right_val);
+    case NOT:
+        return (left_val != right_val);
     }
 
     return 0;
