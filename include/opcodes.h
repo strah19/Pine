@@ -8,7 +8,12 @@ enum {
     OPCODE_PUSH, 
     OPCODE_POP, 
     OPCODE_SYS_CALL, 
-    OPCODE_CMP
+    OPCODE_CMP,
+    OPCODE_LD,
+    OPCODE_JMP,
+    OPCODE_MULTIPLY,
+    OPCODE_DIVIDE,
+    OPCODE_MODULO
 };
 
 #endif //!OP_CODES_H

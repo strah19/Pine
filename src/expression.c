@@ -25,6 +25,8 @@
 
 #include <math.h>
 
+#define NUMERIC_PRECEDENCE 10
+
 struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct ASTNode* right) {
     struct ASTNode* node = NULL;
 
@@ -101,19 +103,19 @@ int fig_precedence_from_op(enum TokenType op) {
 void fill_ast_node(struct Token* token, struct ASTNode** node) {
     if (token->type == INTEGER) {
         (*node)->value.int_val = atoi(token->token_string);
-        (*node)->precedence = 10;
+        (*node)->precedence = NUMERIC_PRECEDENCE;
     }
     else if (token->type == FLOAT) {
         char *pend;
         (*node)->value.int_val = (int) strtof(token->token_string, &pend);
-        (*node)->precedence = 10;
+        (*node)->precedence = NUMERIC_PRECEDENCE;
     }
     else if(token->type == ID) {
         int var_id = find_global_symbol(token->token_string);
         if (var_id == -1)
             fatal_token_error("Undefined variable", token);
         (*node)->value.var_id = var_id;
-        (*node)->precedence = 10;
+        (*node)->precedence = NUMERIC_PRECEDENCE;
     }
     else {
         (*node)->value.int_val = 0;

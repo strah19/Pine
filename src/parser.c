@@ -61,12 +61,6 @@ bool run_statements(struct Parser* parser) {
     case ID:
         assignment_statement(parser);
         break;
-    case COMMENT: {
-        int line = token->token_info.token_line;
-        while (line == token->token_info.token_line) 
-            token = retrieve_next_token(parser);
-        break;
-    }
     default:
         fatal_token_error("Undefined token", token);
     }

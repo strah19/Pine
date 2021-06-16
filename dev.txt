@@ -36,5 +36,9 @@ TD  | Need to create a register system for the vm. Also have a stack and instruc
 TD  | Kind of a bug, make a system for symbols that can have different types. This can be done most likely with unions. Possibly make it 
     | so that the symbol struct doesn't actual store the data but instead have an allocation pool of all the variables and each symbol
     | stores a pointer and size so it can poke into the pool. 
-GP  | Pushed to github at 13:57, did this to save any work from yesterday before modification.
+GP  | Pushed to github at 13:58, did this to save any work from yesterday before modification.
+    |
+TD  | Get rid of huge switch statement in 'expression.h', instead store the precedence values for different operators in an array. | IGNORE FOR NOW |
+    |
+    | Fixed error from parser. Forgot to take out unused code from last push.
 
