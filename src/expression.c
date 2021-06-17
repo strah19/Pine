@@ -41,8 +41,8 @@ struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct 
 
     node->op = op;
     node->precedence = 0;
-    node->value.var_id = 0;
-    node->value.int_val = 0;
+    node->var_id = 0;
+    node->int_val = 0;
 
     return node;
 }
@@ -59,7 +59,7 @@ void log_tree(struct ASTNode* root) {
     if (root == NULL)
         return;
 
-    printf("Node: %d, Op: %d\n", root->value, root->op);
+    printf("Node: %d, Op: %d\n", root->int_val, root->op);
 
     log_tree(root->left);
     log_tree(root->right);
@@ -102,23 +102,23 @@ int fig_precedence_from_op(enum TokenType op) {
 
 void fill_ast_node(struct Token* token, struct ASTNode** node) {
     if (token->type == INTEGER) {
-        (*node)->value.int_val = atoi(token->token_string);
+        (*node)->int_val = atoi(token->token_string);
         (*node)->precedence = NUMERIC_PRECEDENCE;
     }
     else if (token->type == FLOAT) {
         char *pend;
-        (*node)->value.int_val = (int) strtof(token->token_string, &pend);
+        (*node)->int_val = (int) strtof(token->token_string, &pend);
         (*node)->precedence = NUMERIC_PRECEDENCE;
     }
     else if(token->type == ID) {
         int var_id = find_global_symbol(token->token_string);
         if (var_id == -1)
             fatal_token_error("Undefined variable", token);
-        (*node)->value.var_id = var_id;
+        (*node)->var_id = var_id;
         (*node)->precedence = NUMERIC_PRECEDENCE;
     }
     else {
-        (*node)->value.int_val = 0;
+        (*node)->int_val = 0;
         (*node)->precedence = fig_precedence_from_op(token->type);
     }
 }
@@ -182,13 +182,13 @@ int run_bin_exp(struct ASTNode* node) {
     int left_val = 0, right_val = 0;
 
     if (node->left->op == ID) 
-        left_val = (int) get_symbols()[node->left->value.var_id].value;
+        left_val = (int) get_symbols()[node->left->var_id].value;
     else
-        left_val = node->left->value.int_val;
+        left_val = node->left->int_val;
    if (node->right->op == ID) 
-        right_val = (int) get_symbols()[node->right->value.var_id].value;
+        right_val = (int) get_symbols()[node->right->var_id].value;
     else
-        right_val = node->right->value.int_val;
+        right_val = node->right->int_val;
 
     switch(node->op) {
     case ADD:
@@ -223,18 +223,18 @@ int run_bin_exp(struct ASTNode* node) {
 struct ASTNode* run_ast_tree(struct ASTNode* root) {
     if (root == NULL || root->left == NULL || root->right == NULL) {
         if (root->op == ID)
-            root->value.int_val = (int) get_symbols()[root->value.var_id].value;
+            root->int_val = (int) get_symbols()[root->var_id].value;
         return root;
     }
     
     if(is_node_childern_operands(root)) {
-        root->value.int_val = run_bin_exp(root);
+        root->int_val = run_bin_exp(root);
         return root;
     }
     else {
         root->left = run_ast_tree(root->left);
         root->right = run_ast_tree(root->right); 
     }
-    root->value.int_val = run_bin_exp(root);
+    root->int_val = run_bin_exp(root);
     return root;
 }

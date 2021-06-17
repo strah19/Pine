@@ -1,11 +1,8 @@
 #ifndef BYTECODE_BUILDER_H
 #define BYTECODE_BUILDER_H
 
-#include "../include/opcodes.h"
+#include "../include/expression.h"
 
-struct ByteCode {
-    int opcode;
-    int args;
-};
+#include <stdint.h>
 
 #endif // !BYTECODE_BUILDER_H

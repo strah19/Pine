@@ -92,11 +92,11 @@ void expression_assignment(struct Parser* parser, struct Token* var, struct ASTN
     struct Symbol* variable = get_global_symbol(var->token_string);
     if (variable == NULL) {
         ast_tree = run_ast_tree(ast_tree);
-        add_symbol(var->token_string, ast_tree->value.int_val);
+        add_symbol(var->token_string, ast_tree->int_val);
     }
     else {
         ast_tree = run_ast_tree(ast_tree);
-        variable->value = ast_tree->value.int_val;
+        variable->value = ast_tree->int_val;
 
         *root = ast_tree;
     }
@@ -110,7 +110,7 @@ void print_statement(struct Parser* parser) {
     
     struct ASTNode* ast_tree;
     make_ast_from_expr(&ast_tree, parser);
-    printf("%d\n", run_ast_tree(ast_tree)->value);
+    printf("%d\n", run_ast_tree(ast_tree)->int_val);
     destroy_ast_node(ast_tree);
 
     match_token(parser, END_EXPRESSION, ";");
@@ -134,9 +134,9 @@ void assignment_statement(struct Parser* parser) {
             match_token(parser, END_EXPRESSION, ";");
             root_ast = create_ast_node(EQUAL, NULL, NULL);
             root_ast->left = create_ast_node(ID, NULL, NULL);
-            root_ast->left->value.var_id = var_id;
+            root_ast->left->var_id = var_id;
             root_ast->right = create_ast_node(INTEGER, NULL, NULL);
-            root_ast->right->value.int_val = 0;
+            root_ast->right->int_val = 0;
             destroy_ast_node(root_ast);
             return;
         }
@@ -159,11 +159,11 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
     *root = create_ast_node(EQUAL, NULL, NULL);
 
     (*root)->left = create_ast_node(ID, NULL, NULL);
-    (*root)->left->value.var_id = find_global_symbol(var_token->token_string);
+    (*root)->left->var_id = find_global_symbol(var_token->token_string);
 
     if (var_token->type != ID)
         fatal_token_error("Value needs to be modifiable lvalue", var_token);
-    else if ((*root)->left->value.var_id == -1)
+    else if ((*root)->left->var_id == -1)
         fatal_token_error("Undefined variable", var_token);
 
     match_token(parser, EQUAL, "=");
@@ -209,7 +209,7 @@ void if_statement(struct Parser* parser) {
     make_ast_from_expr(&ast_tree, parser);
 
     ast_tree = run_ast_tree(ast_tree);
-    int val = ast_tree->value.int_val;
+    int val = ast_tree->int_val;
     destroy_ast_node(ast_tree);
 
     match_token(parser, LCURLEY_BRACKET, "{");

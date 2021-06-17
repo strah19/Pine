@@ -27,7 +27,7 @@ BUG | Could be a possible memory leak form the ASTNodes. Freeing children nodes 
     | upcoming weeks.
 -----------------------------
 
-6/15/2021 ~Beta Pine V 0.02~
+6/15/2021 - 6/16/2021 ~Beta Pine V 0.02~
 -----------------------------
 TD  | Work on the bytecode builder. Taking the AST Tree after a single parse statement and convert and store it as byte code in the 
     | bytecode_builder file. Then, after the entire program has been parsed, run the bytecode in the virtual machine.
@@ -41,4 +41,12 @@ GP  | Pushed to github at 13:58, did this to save any work from yesterday before
 TD  | Get rid of huge switch statement in 'expression.h', instead store the precedence values for different operators in an array. | IGNORE FOR NOW |
     |
     | Fixed error from parser. Forgot to take out unused code from last push.
+    | 
+    | Added the bytecode_builder.c file. Will transfer over some code from vm project. 
+    |
+    | Stopped working on bytecode_builder. Focused on actual vm. Got the basics done. It is a stack based machine using function pointers instead of huge
+    | switch statement. Should in the future do a test to see which is faster. The opcodes are each one byte (256 different possible opcodes). Added a simple
+    | example and create a new pvm executable (Pine Virtual Machine).
+    |
+GP  |
 

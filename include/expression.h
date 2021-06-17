@@ -16,7 +16,7 @@ struct ASTNode {
     {
        int int_val;
        int var_id;
-    } value;
+    };
 };
 
 struct Parser;

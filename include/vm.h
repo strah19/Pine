@@ -1,4 +1,39 @@
 #ifndef VM_H
 #define VM_H
 
+#include <stdint.h>
+
+struct Object {
+    uint8_t type;   //Opcode is a single byte
+
+    union {
+        uint32_t u32;
+        int32_t i32;
+        uint8_t i8;
+        uint8_t u8;
+        
+        void* ptr;
+    };
+};
+
+struct VMStack {
+    int top;
+    int size;
+    struct Object* stack;
+};
+
+enum OpCodes {
+    OP_PUSH_CHAR = 'c',
+    OP_SYS_WRITE = 'p',
+    OP_HALT = 'h'
+};
+
+extern struct VMStack vm_create_stack(int size);
+
+extern int vm_push_stack(struct VMStack* stack, struct Object object);
+
+extern struct Object vm_pop_stack(struct VMStack* stack);
+
+extern struct Object vm_peek_stack(struct VMStack* stack);
+
 #endif // !VM_H
