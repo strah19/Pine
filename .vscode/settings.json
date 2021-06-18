@@ -12,6 +12,7 @@
         "stdio.h": "c",
         "parser.h": "c",
         "type_traits": "c",
-        "pine.h": "c"
+        "pine.h": "c",
+        "types.h": "c"
     }
 }

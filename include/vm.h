@@ -25,7 +25,12 @@ struct VMStack {
 enum OpCodes {
     OP_PUSH_CHAR = 'c',
     OP_SYS_WRITE = 'p',
-    OP_HALT = 'h'
+    OP_PUSH_INT = 'i',
+    OP_ADD = 'a',
+    OP_HALT = 'h',
+
+    OP_VAR_TYPE_SINT,
+    OP_VAR_TYPE_USINT
 };
 
 extern struct VMStack vm_create_stack(int size);

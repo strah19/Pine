@@ -188,6 +188,8 @@ extern void create_buffer_for_lexer(struct LexerLoader *loader) {
         }
         fclose(loader->file);
     }
+    else 
+        fatal_error("Failed to open input file for compilation");
 }
 
 void log_token_data(struct Lexer *lexer) {

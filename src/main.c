@@ -4,8 +4,13 @@
 
 int main(int argc, char *argv[])
 {
+    if (argc != 3) {
+        printf("Must enter a file for the compiler to run and a name for executable.\n");
+        exit(EXIT_FAILURE);
+    }
+
     struct LexerLoader loader;
-    loader.file_path = "main.pine";
+    loader.file_path = argv[1];
     struct Lexer *lexer;
     create_buffer_for_lexer(&loader);
     lexer = create_lexer(loader.buffer);
@@ -14,11 +19,14 @@ int main(int argc, char *argv[])
 
     begin_debug_benchmark();
         run_tokenizer(lexer);
-        run_parser(parser);
     end_debug_benchmark("Pine");
+
+    log_token_data(lexer);
 
     destroy_parser(parser);
     destroy_lexer(lexer);
+
+
 
     return 0;
 }
