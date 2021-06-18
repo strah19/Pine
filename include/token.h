@@ -2,6 +2,7 @@
 #define TOKEN_H
 
 #include "../include/pine.h"
+#include <stdint.h>
 
 #define MAX_TOKEN_SIZE 256
 
@@ -28,7 +29,9 @@ extern int move_token_counter(int value);
 
 extern void reset_token_counter();
 
-extern struct Token *create_token(enum TokenType type, const char *in_source_token, struct TokenInfo token_info);
+extern int get_token_counter();
+
+extern struct Token create_token(enum TokenType type, const char *in_source_token, uint32_t line, uint32_t pos);
 
 extern void log_token(struct Token* token);
 

@@ -69,11 +69,11 @@ bool run_statements(struct Parser* parser) {
 }
 
 struct Token* peek_next_token(struct Parser* parser) {
-    return (parser->token_index < parser->lexer->tokens->size) ? parser->lexer->tokens->array[parser->token_index] : NULL;
+    return (parser->token_index < parser->lexer->size) ? &parser->lexer->tokens[parser->token_index] : NULL;
 }
 
 struct Token* retrieve_next_token(struct Parser* parser) {
-    return (parser->token_index < parser->lexer->tokens->size) ? parser->lexer->tokens->array[parser->token_index++] : NULL;
+    return (parser->token_index < parser->lexer->size) ? &parser->lexer->tokens[parser->token_index++] : NULL;
 }
 
 void match_token(struct Parser* parser, enum TokenType type, const char* what) {
@@ -180,8 +180,8 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
     parser->token_index--;
 
     if (token->type == EQUAL) {
-        struct Token* next_var = parser->lexer->tokens->array[parser->token_index - 1];
-        struct Token* lval_check = parser->lexer->tokens->array[parser->token_index - 2];
+        struct Token* next_var = &parser->lexer->tokens[parser->token_index - 1];
+        struct Token* lval_check = &parser->lexer->tokens[parser->token_index - 2];
             if (next_var->type != ID && lval_check->type != EQUAL) 
                 fatal_token_error("Value needs to be a modifiable lvalue", next_var);
 

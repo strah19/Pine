@@ -50,8 +50,10 @@ void begin_debug_benchmark() {
     bench_mark_clock = clock();
 }
 
-void end_debug_benchmark(const char* label) {
+float end_debug_benchmark(const char* label) {
     clock_t end = clock();
     double time_spent = (double)(end - bench_mark_clock);
     printf("Benchmark time for %s is %f ms.\n", label, time_spent);
+
+    return (float) time_spent;
 }

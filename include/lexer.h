@@ -2,7 +2,6 @@
 #define LEXER_H
 
 #include "../include/token.h"
-#include "../include/vector.h"
 
 #define LEXER_FILE_MODE "r"
 
@@ -10,16 +9,17 @@
 #define CREATING_TOKEN 1
 
 struct Lexer {
-    const char *input_text;
+    uint8_t *input_text;
     char current_possible_token[MAX_TOKEN_SIZE];
-    struct Vector *tokens;
-    char current_char, next_char;
+    uint32_t size;
+    uint32_t allocated_size;
+    uint32_t file_size;
+    struct Token *tokens;
 };
 
-struct LexerLoader {
-    FILE *file;
-    const char *file_path;
-    char *buffer;
+struct LexLoader {
+    uint8_t* text;
+    uint32_t size;
 };
 
 struct TokenPair {
@@ -28,10 +28,7 @@ struct TokenPair {
 };
 
 static const struct TokenPair TOKEN_OPERATORS[] = {
-    {"-", SUBTRACT},
-    {"+", ADD},
-    {"*", MULTIPLE},
-    {"/", DIVIDE},
+ 
 };
 
 static const struct TokenPair TOKEN_PAIRS[] = {
@@ -47,32 +44,32 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {">", GREATER_THAN},
     {"^", TO_THE_POWER_OF},
     {":", COLON },
+    {"=", EQUAL},
     {"!", EXCLEMATION},
-};
-
-static const struct TokenPair TOKEN_KEY_WORDS[] = {
     {"print", PRINT},
     {"int", INT},
     {"if", IF},
     {"and", AND},
-    {"or", OR}
+    {"or", OR},
+    {"-", SUBTRACT},
+    {"+", ADD},
+    {"*", MULTIPLE},
+    {"/", DIVIDE}
 };
 
-extern struct Lexer *create_lexer(const char *text_input);
+static const struct TokenPair TOKEN_KEY_WORDS[] = {
 
-static int make_token(struct Lexer *lexer, struct TokenInfo token_pos);
+};
 
-static bool push_new_token(struct Lexer *lexer, size_t i, struct TokenInfo token_pos, const struct TokenPair token_pairs[]);
+extern struct LexLoader create_buffer_for_lexer(const char *filepath);
 
-static void concant_tokens(struct Lexer* lexer, struct TokenInfo token_pos, enum TokenType type, const char* fin_val);
+extern struct Lexer *create_lexer(struct LexLoader *loader);
+
+extern void destroy_lexer(struct Lexer *lexer);
 
 extern void run_tokenizer(struct Lexer *lexer);
 
 extern void log_token_data(struct Lexer *lexer);
-
-extern void destroy_lexer(struct Lexer *lexer);
-
-extern void create_buffer_for_lexer(struct LexerLoader *loader);
 
 extern void clear_lexer_data(struct Lexer* lexer);
 

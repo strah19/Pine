@@ -4,29 +4,30 @@
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3) {
-        printf("Must enter a file for the compiler to run and a name for executable.\n");
+    if (argc < 2) {
+        printf("Must enter a file for the compiler to run.\n");
         exit(EXIT_FAILURE);
     }
 
-    struct LexerLoader loader;
-    loader.file_path = argv[1];
+    struct LexLoader loader = create_buffer_for_lexer(argv[1]);
+
     struct Lexer *lexer;
-    create_buffer_for_lexer(&loader);
-    lexer = create_lexer(loader.buffer);
+    lexer = create_lexer(&loader);
 
     struct Parser* parser = create_parser(lexer); 
 
     begin_debug_benchmark();
         run_tokenizer(lexer);
-    end_debug_benchmark("Pine");
+    float t = end_debug_benchmark("Pine");
 
-    log_token_data(lexer);
+    if (strcmp(argv[2],"debug") == 0) 
+        log_token_data(lexer);
+
+    printf("Lexer took %f ms.\n", t);
 
     destroy_parser(parser);
     destroy_lexer(lexer);
-
-
+    free(loader.text);
 
     return 0;
 }

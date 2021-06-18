@@ -18,6 +18,6 @@ extern int min(int num1, int num2);
 
 extern void begin_debug_benchmark();
 
-extern void end_debug_benchmark(const char* label);
+extern float end_debug_benchmark(const char* label);
 
 #endif // PINE_H

@@ -130,8 +130,8 @@ void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {
     struct ASTNode* current = *root;
     struct ASTNode* new_item = NULL;
 
-    for (size_t i = parser->token_index; i < parser->lexer->tokens->size; i++) {
-        struct Token *token = parser->lexer->tokens->array[i];
+    for (size_t i = parser->token_index; i < parser->lexer->size; i++) {
+        struct Token *token = &parser->lexer->tokens[i];
 
         if(token->type == END_EXPRESSION) 
             break;

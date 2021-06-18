@@ -21,194 +21,140 @@
 #include "../include/lexer.h"
 #include "../include/err.h"
 
-struct Lexer *create_lexer(const char *text_input) {
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <ctype.h>
+
+#define REALLOC_TOKEN_SIZE 1000
+
+struct Lexer *create_lexer(struct LexLoader *loader) {
     struct Lexer *lexer;
     lexer = malloc(sizeof(struct Lexer));
     if (lexer == NULL)
         fatal_error("could not allocate 'Lexer'");
 
     memset(lexer, 0, sizeof(struct Lexer));
-    if (text_input == NULL)
+    if (loader == NULL)
         fatal_error("Lexer input was incomplete");
 
-    lexer->input_text = text_input;
-    lexer->tokens = create_vector(sizeof(struct Token));
+    lexer->input_text = loader->text;
+    lexer->size = 0;
+    lexer->allocated_size = REALLOC_TOKEN_SIZE;
+    lexer->file_size = loader->size;
+    lexer->tokens = malloc(sizeof(struct Token) * REALLOC_TOKEN_SIZE);
 
     return lexer;
 }
 
-int make_token(struct Lexer *lexer, struct TokenInfo token_pos) {
-    for (size_t i = 0; i < sizeof(TOKEN_PAIRS) / sizeof(TOKEN_PAIRS[0]); i++)
-        if (push_new_token(lexer, i, token_pos, TOKEN_PAIRS))
-            return CREATING_TOKEN;
-    for (size_t i = 0; i < sizeof(TOKEN_OPERATORS) / sizeof(TOKEN_OPERATORS[0]); i++)
-        if (push_new_token(lexer, i, token_pos, TOKEN_OPERATORS))
-            return CREATING_TOKEN;
-    for (size_t i = 0; i < sizeof(TOKEN_KEY_WORDS) / sizeof(TOKEN_KEY_WORDS[0]); i++)
-        if (push_new_token(lexer, i, token_pos, TOKEN_KEY_WORDS))
-            return CREATING_TOKEN;
-
-    if (lexer->current_possible_token[0] == '=') {
-        push_back_vector(lexer->tokens, create_token(EQUAL, lexer->current_possible_token, token_pos));
-        struct Token *token_1 = lexer->tokens->array[lexer->tokens->size - 1];
-        struct Token *token_2 = lexer->tokens->array[lexer->tokens->size - 2];
-
-        if (token_1->type == EQUAL && token_2->type == EQUAL) {
-            if (token_1->token_info.token_pos - token_2->token_info.token_pos == 1) 
-                concant_tokens(lexer, token_pos, DOUBLE_EQUAL, "==");
-        }
-        else if(token_1->type == EQUAL && token_2->type == LESS_THAN) 
-            concant_tokens(lexer, token_pos, LESS_THAN_EQUAL, "<=");
-        else if(token_1->type == EQUAL && token_2->type == GREATER_THAN) 
-            concant_tokens(lexer, token_pos, GREATER_THAN_EQUAL, ">=");
-        else if(token_1->type == EQUAL && token_2->type == EXCLEMATION) 
-            concant_tokens(lexer, token_pos, NOT, "!=");
-            
-        return CREATING_TOKEN;
-    }
-    else if (is_char_digit(lexer->current_possible_token[0]) || lexer->current_char == '.') {
-        if (!is_char_digit((char)lexer->next_char) && lexer->next_char != '.') {
-            int is_float = strchr(lexer->current_possible_token, '.') != NULL;
-            if (is_float)
-                push_back_vector(lexer->tokens, create_token(FLOAT, lexer->current_possible_token, token_pos));
-            else
-                push_back_vector(lexer->tokens, create_token(INTEGER, lexer->current_possible_token, token_pos));
-            return CREATING_TOKEN;
-        }
-    }
-    else if (is_char_good_for_variable_name(lexer->current_possible_token[0])) {
-        for (size_t i = 0; i < sizeof(TOKEN_KEY_WORDS) / sizeof(TOKEN_KEY_WORDS[0]); i++) {
-            if (!is_char_good_for_variable_name((char)lexer->next_char) && strcmp(lexer->current_possible_token, TOKEN_KEY_WORDS[i].in_code_name) != 0) {
-                push_back_vector(lexer->tokens, create_token(ID, lexer->current_possible_token, token_pos));
-                return CREATING_TOKEN;
-            }
-        }
+void push_token(struct Lexer* lexer, enum TokenType type, const char* val, uint32_t line, uint32_t pos) {
+    if (lexer->size + 1 > lexer->allocated_size) {
+        uint32_t new_size = (sizeof(lexer->tokens) * 2);
+        lexer->tokens = realloc(lexer->tokens, (sizeof(struct Token) * lexer->size) * 2);
+    if (!lexer->tokens) 
+        fatal_error("Failed to resize lexical tokens");
+        lexer->allocated_size = lexer->size * 2;
     }
 
-    return NEED_MORE_STRING_FOR_TOKEN;
+    lexer->tokens[get_token_counter() + 1] = create_token(type, val, line, pos);
+    lexer->size++;
 }
 
-bool push_new_token(struct Lexer *lexer, size_t i, struct TokenInfo token_pos, const struct TokenPair token_pairs[]) {
-    if(*lexer->current_possible_token != token_pairs[i].in_code_name[0])
-        return false;
-    
-    if (strcmp(lexer->current_possible_token, token_pairs[i].in_code_name) == 0) {
-        push_back_vector(lexer->tokens, create_token(token_pairs[i].type, token_pairs[i].in_code_name, token_pos));
-        return true;
-    }
-    return false;
-}
-
-void concant_tokens(struct Lexer* lexer, struct TokenInfo token_pos, enum TokenType type, const char* fin_val) {
-    pop_vector(lexer->tokens, lexer->tokens->size - 1);
-    pop_vector(lexer->tokens, lexer->tokens->size - 2);
-    move_token_counter(-2);
-    push_back_vector(lexer->tokens, create_token(type, fin_val, token_pos));
+void reset_lexer(uint32_t* pos, uint32_t* token_len, char* token_str) {
+    *pos += *token_len;
+    *token_len = 0;
+    memset(token_str, 0, sizeof(token_str));   
 }
 
 void run_tokenizer(struct Lexer *lexer) {
-    int get_char = 0;
-    int current_character = 0;
-    int next_character = 0;
-    int token_size = 0;
-    bool wait_on_loop = false;
-    struct TokenInfo token_position = {1, 0};
-    int current_lexer_state = NEED_MORE_STRING_FOR_TOKEN;
-    int counter = 0;
-    int input_len = strlen(lexer->input_text);
+    uint8_t* bp = lexer->input_text;
+    uint8_t* end_byte = lexer->input_text + lexer->file_size;
 
-    while (counter <= input_len) {
-        get_char = lexer->input_text[counter];
-        counter++;
+    char current_token_str[MAX_TOKEN_SIZE];
+    memset(current_token_str, 0, sizeof(current_token_str));
+    uint32_t current_token_len = 0;
 
-        if (!wait_on_loop)
-            current_character = get_char;
+    uint32_t line = 1;
+    uint32_t pos = 1;
 
-        next_character = get_char;
+    while (bp < end_byte) {
+        if (*bp == '\n') {
+            line++;
+            pos = 1;
+        }
+        if(*bp != ' ' && *bp != '\n') {
+            current_token_str[current_token_len] = *bp;
+            current_token_len++;
 
-        lexer->current_char = current_character;
-        lexer->next_char = next_character;
-        if (wait_on_loop) {
-            switch (current_lexer_state) {
-            case NEED_MORE_STRING_FOR_TOKEN: {
-                if (current_character != ' ' && current_character != '\n' && token_size < MAX_TOKEN_SIZE) {
-                    lexer->current_possible_token[token_size] = (char)current_character;
-                    token_size++;
-                }
+            if (is_char_digit((char) *bp) && !is_char_digit((char) *(bp + 1))) {
+                push_token(lexer, INTEGER, current_token_str, line, pos);
+                reset_lexer(&pos, &current_token_len, current_token_str);
             }
-            break;
-            case CREATING_TOKEN: {
-                for (int i = 0; i < token_size; i++) {
-                    lexer->current_possible_token[i] = ' ';
+            else {
+                if (*bp == '=' && *(bp + 1) == '=') {
+                    push_token(lexer, DOUBLE_EQUAL, "==", line, pos);
+                    reset_lexer(&pos, &current_token_len, current_token_str);
+                    bp++;
                 }
-
-                lexer->current_possible_token[1] = '\0';
-
-                token_size = 0;
-                if (current_character != ' ' && current_character != '\n' && token_size < MAX_TOKEN_SIZE) {
-                    lexer->current_possible_token[token_size] = (char)current_character;
-                    token_size++;
+                else {
+                    bool check_for_var = true;
+                    for (int i = 0; i < sizeof(TOKEN_PAIRS) / sizeof(TOKEN_PAIRS[0]); i++) {
+                        if (current_token_str[0] != TOKEN_PAIRS[i].in_code_name[0])
+                            continue;
+                        if (strcmp(current_token_str, TOKEN_PAIRS[i].in_code_name) == 0) {
+                            push_token(lexer, TOKEN_PAIRS[i].type, TOKEN_PAIRS[i].in_code_name, line, pos);
+                            reset_lexer(&pos, &current_token_len, current_token_str);
+                            check_for_var = false;
+                            break;
+                        }
+                    }
+                    if (check_for_var && is_char_good_for_variable_name((char)*bp) && !is_char_good_for_variable_name((char) *(bp + 1))) {
+                        push_token(lexer, ID, current_token_str, line, pos);
+                        reset_lexer(&pos, &current_token_len, current_token_str);                    
+                    }
                 }
-            }
-            break;
             }
         }
-
-        current_lexer_state = make_token(lexer, token_position);
-
-        current_character = next_character;
-        if (current_character == '\n') {
-            token_position.token_line++;
-            token_position.token_pos = 0;
-        }
-        token_position.token_pos++;
-
-        wait_on_loop = true;
+        bp++;
     }
-
-    push_back_vector(lexer->tokens, create_token(T_EOF, "EOF", token_position));
 }
 
-extern void create_buffer_for_lexer(struct LexerLoader *loader) {
-    loader->file = fopen(loader->file_path, LEXER_FILE_MODE);
-    if (loader->file != NULL) {
-        if (fseek(loader->file, 0L, SEEK_END) == 0) {
-            long buf_size = ftell(loader->file);
-            if (buf_size == -1)
-                fatal_error("Buffer size of file is -1.");
+struct LexLoader create_buffer_for_lexer(const char *filepath) {
+    struct LexLoader loader;
+    FILE* file;
+    int size;
 
-            loader->buffer = malloc(sizeof(char) * (buf_size + 1));
-            fseek(loader->file, 0L, SEEK_SET);
+    if(file = fopen(filepath, LEXER_FILE_MODE)) {
+        struct stat st;
 
-            size_t new_len = fread(loader->buffer, sizeof(char), buf_size, loader->file);
-            if (ferror(loader->file) != 0) 
-                fputs("Error reading file", stderr);
-            else 
-                loader->buffer[new_len++] = '\0'; 
+        if (fstat(fileno(file), &st) != -1) {
+            loader.text = (uint8_t *) malloc(st.st_size);
+            loader.size = st.st_size;
+            fread((void*) loader.text, 1, st.st_size, file);
         }
-        fclose(loader->file);
+        else 
+            fatal_error("Failed to load stats of input file");
     }
     else 
         fatal_error("Failed to open input file for compilation");
-}
+
+    return loader;
+}   
 
 void log_token_data(struct Lexer *lexer) {
-    for (size_t i = 0; i < lexer->tokens->size; i++) {
-        struct Token *token = lexer->tokens->array[i];
+    for (size_t i = 0; i < lexer->size; i++) {
+        struct Token *token = &lexer->tokens[i];
         printf("Token[%d], Type: %d, { %s } ln: %d, pos: %d\n", token->code_id, token->type, token->token_string, token->token_info.token_line, token->token_info.token_pos);
     }
 }
 
 void destroy_lexer(struct Lexer *lexer) {
-    free_vector(lexer->tokens);
+    free(lexer->tokens);
     free(lexer);
 }
 
 void clear_lexer_data(struct Lexer *lexer) {
     lexer->input_text = "";
     lexer->current_possible_token[0] = '\0';
-    clear_vector(lexer->tokens);
-    lexer->next_char = ' ';
-    lexer->current_char = ' ';
     reset_token_counter();
 }

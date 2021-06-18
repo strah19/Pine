@@ -13,6 +13,8 @@
         "parser.h": "c",
         "type_traits": "c",
         "pine.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "stdint.h": "c",
+        "cctype": "cpp"
     }
 }
