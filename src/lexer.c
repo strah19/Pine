@@ -63,7 +63,7 @@ void push_token(struct Lexer* lexer, enum TokenType type, const char* val, uint3
 void reset_lexer(uint32_t* pos, uint32_t* token_len, char* token_str) {
     *pos += *token_len;
     *token_len = 0;
-    memset(token_str, 0, sizeof(token_str));   
+    memset(token_str, 0, sizeof(token_str) + 1);   
 }
 
 void run_tokenizer(struct Lexer *lexer) {
@@ -77,14 +77,10 @@ void run_tokenizer(struct Lexer *lexer) {
     uint32_t line = 1;
     uint32_t pos = 1;
 
-    enum {
-        MULTI_LINE_EXCLUDE, SINGLE_LINE_EXCLUDE, NONE
-    };
-
     uint8_t comment_counter = 0;
     uint8_t single_line = 0;
 
-    while (*bp != '`') {
+    while (*bp != '`' && !single_line && !comment_counter) {
         if (*bp == '\n') {
             if (single_line)
                 single_line = 0;
@@ -104,7 +100,7 @@ void run_tokenizer(struct Lexer *lexer) {
             bp++;
             single_line = 1;
         }
-        else if(*bp != ' ' && *bp != '\n' && comment_counter == 0 && single_line == 0) {
+        else if(*bp != ' ' && *bp != '\n' && !comment_counter && !single_line) {
             current_token_str[current_token_len] = *bp;
             current_token_len++;
 
@@ -115,6 +111,16 @@ void run_tokenizer(struct Lexer *lexer) {
             else {
                 if (*bp == '=' && *(bp + 1) == '=') {
                     push_token(lexer, DOUBLE_EQUAL, "==", line, pos);
+                    reset_lexer(&pos, &current_token_len, current_token_str);
+                    bp++;
+                }
+                else if (*bp == '<' && *(bp + 1) == '=') {
+                    push_token(lexer, DOUBLE_EQUAL, "<=", line, pos);
+                    reset_lexer(&pos, &current_token_len, current_token_str);
+                    bp++;
+                }
+                else if (*bp == '>' && *(bp + 1) == '=') {
+                    push_token(lexer, DOUBLE_EQUAL, ">=", line, pos);
                     reset_lexer(&pos, &current_token_len, current_token_str);
                     bp++;
                 }

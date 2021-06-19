@@ -41,7 +41,7 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {"^", TO_THE_POWER_OF},
     {":", COLON },
     {"=", EQUAL},
-    {"!", EXCLEMATION},
+    {"!=", NOT},
     {"print", PRINT},
     {"int", INT},
     {"if", IF},
