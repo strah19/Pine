@@ -49,39 +49,13 @@ struct Object vm_peek_stack(struct VMStack* stack) {
     return stack->stack[stack->top];
 }
 
-uint8_t* load_bytecode(const char* filepath) {
-    FILE* file;
-    int size;
+typedef uint32_t* (*instruction)(uint32_t *, struct VMStack *);
 
-    uint8_t* opcodes = NULL;
-
-    if(file = fopen(filepath, "r")) {
-        struct stat st;
-
-        if (fstat(fileno(file), &st) != -1) {
-            opcodes = (uint8_t *) malloc(st.st_size);
-            fread((void*) opcodes, 1, st.st_size, file);
-        }
-        else {
-            printf("Failed to load stats of bytecode file '%s'.\n", filepath);
-            exit(EXIT_FAILURE);
-        }
-    }
-    else {
-        printf("Failed to load in bytecode file '%s'.\n", filepath);
-        exit(EXIT_FAILURE);
-    }
-
-    return opcodes;
-}   
-
-typedef uint8_t* (*instruction)(uint8_t *, struct VMStack *);
-
-uint8_t* opcode_nop(uint8_t* ip, struct VMStack* stack) {
+uint32_t* opcode_nop(uint32_t* ip, struct VMStack* stack) {
     return ip + 1;
 }
 
-uint8_t* opcode_push_char(uint8_t* ip, struct VMStack* stack) {
+uint32_t* opcode_push_char(uint32_t* ip, struct VMStack* stack) {
     struct Object o;
     o.type = OP_PUSH_CHAR;
     o.u8 = *(ip + 1);
@@ -89,33 +63,16 @@ uint8_t* opcode_push_char(uint8_t* ip, struct VMStack* stack) {
     return ip + 2;
 }
 
-uint8_t* opcode_push_int(uint8_t* ip, struct VMStack* stack) {
+uint32_t* opcode_push_int(uint32_t* ip, struct VMStack* stack) {
     struct Object o;
-
-    uint32_t index_offset = 1;
-    if (*(ip + 1) == 'u') {
-        o.type = OP_VAR_TYPE_USINT;
-        index_offset++;
-    }
-    else
-        o.type = OP_VAR_TYPE_SINT;
-
-    char int_buf[64];
-    uint32_t index = 0;
-
-    if (*(ip + index_offset) == '-') 
-        index_offset++;
-
-    while(isdigit((int) *(ip + index + index_offset))) 
-        int_buf[index++] = *(ip + index + index_offset);
-
-    o.i32 = (index_offset > 1) ? -(atoi(int_buf)) : atoi(int_buf);
+    o.type = OP_VAR_TYPE_INT;
+    o.i32 = *(ip + 1);
 
     vm_push_stack(stack, o);
-    return ip + index + index_offset;   
+    return ip + 2;   
 }
 
-uint8_t* opcode_add(uint8_t* ip, struct VMStack* stack) {
+uint32_t* opcode_add(uint32_t* ip, struct VMStack* stack) {
     struct Object o2 = vm_pop_stack(stack);
     struct Object o1 = vm_pop_stack(stack);
 
@@ -129,7 +86,7 @@ uint8_t* opcode_add(uint8_t* ip, struct VMStack* stack) {
 
 void sys_write_type_call(struct Object o) {
     switch(o.type) {
-    case OP_VAR_TYPE_SINT:
+    case OP_VAR_TYPE_INT:
         printf("%d", o.i32);
         break;
     case OP_VAR_TYPE_USINT:
@@ -138,15 +95,15 @@ void sys_write_type_call(struct Object o) {
     }
 }
 
-uint8_t* opcode_sys_write(uint8_t* ip, struct VMStack* stack) {
+uint32_t* opcode_sys_write(uint32_t* ip, struct VMStack* stack) {
     struct Object o = vm_pop_stack(stack);
     sys_write_type_call(o);
     return ip + 1;
 }
 
-void run_vm(uint8_t* buf) {
-    uint8_t* opcodes;
-    uint8_t* ip = NULL;
+void run_vm(uint32_t* buf) {
+    uint32_t* opcodes;
+    uint32_t* ip = NULL;
     instruction ops[256];
 
     struct VMStack data;

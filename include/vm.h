@@ -22,14 +22,14 @@ struct VMStack {
     struct Object* stack;
 };
 
-enum OpCodes {
+enum {
     OP_PUSH_CHAR = 'c',
     OP_SYS_WRITE = 'p',
     OP_PUSH_INT = 'i',
     OP_ADD = 'a',
     OP_HALT = 'h',
 
-    OP_VAR_TYPE_SINT,
+    OP_VAR_TYPE_INT,
     OP_VAR_TYPE_USINT
 };
 
@@ -41,6 +41,6 @@ extern struct Object vm_pop_stack(struct VMStack* stack);
 
 extern struct Object vm_peek_stack(struct VMStack* stack);
 
-extern void run_vm(uint8_t* buf);
+extern void run_vm(uint32_t* buf);
 
 #endif // !VM_H

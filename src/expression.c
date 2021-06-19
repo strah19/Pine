@@ -48,6 +48,10 @@ struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct 
 }
 
 void destroy_ast_node(struct ASTNode* root) {
+	if(!root) return;
+	destroy_ast_node (root->left);
+	destroy_ast_node (root->right);
+	memset(root, 0, sizeof(struct ASTNode));
 	free(root);
 }
 

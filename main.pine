@@ -1,4 +1,8 @@
 oranges : int = 2;
+apples := 23;
+bananas : int;
 
-print oranges;
+print (oranges * 2);
+print apples;
+print bananas;
 `

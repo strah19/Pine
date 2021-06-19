@@ -100,7 +100,6 @@ void expression_assignment(struct Parser* parser, struct Token* var, struct ASTN
 
         *root = ast_tree;
     }
-    destroy_ast_node(ast_tree);
 }
 
 void print_statement(struct Parser* parser) {
@@ -125,7 +124,7 @@ int check_for_var_redefination(struct Token* token) {
 }
 
 void assignment_statement(struct Parser* parser) {
-    struct ASTNode* root_ast = NULL;
+    struct ASTNode* assignment_ast = NULL;
 
     struct Token* token = peek_next_token(parser);
     match_token(parser, ID, "identifier");
@@ -138,12 +137,12 @@ void assignment_statement(struct Parser* parser) {
             match_token(parser, INT, "int");
             if(peek_next_token(parser)->type == END_EXPRESSION) {
                 match_token(parser, END_EXPRESSION, ";");
-                root_ast = create_ast_node(EQUAL, NULL, NULL);
-                root_ast->left = create_ast_node(ID, NULL, NULL);
-                root_ast->left->var_id = var_id;
-                root_ast->right = create_ast_node(INTEGER, NULL, NULL);
-                root_ast->right->int_val = 0;
-                destroy_ast_node(root_ast);
+                assignment_ast = create_ast_node(EQUAL, NULL, NULL);
+                assignment_ast->left = create_ast_node(ID, NULL, NULL);
+                assignment_ast->left->var_id = var_id;
+                assignment_ast->right = create_ast_node(INTEGER, NULL, NULL);
+                assignment_ast->right->int_val = 0;
+                destroy_ast_node(assignment_ast);
                 return;
             }
         }
@@ -153,10 +152,10 @@ void assignment_statement(struct Parser* parser) {
             fatal_token_error("Undefined variable", token);
 
     struct Symbol* var = get_global_symbol(token->token_string);  
-    parser->token_index = equal_statement(parser, parser->token_index, token, &root_ast);
+    parser->token_index = equal_statement(parser, parser->token_index, token, &assignment_ast);
     
     match_token(parser, END_EXPRESSION, ";");
-    destroy_ast_node(root_ast);
+    destroy_ast_node(assignment_ast);
 }
 
 int equal_statement(struct Parser* parser, int end_token, struct Token* var_token, struct ASTNode** root) {
@@ -201,7 +200,7 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
     }
     parser->token_index = start_of_expression;
 
-    expression_assignment(parser, var_token, NULL);
+    expression_assignment(parser, var_token, &(*root)->right);
 
     return end_token;
 }
