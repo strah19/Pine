@@ -26,6 +26,8 @@ int main(int argc, char *argv[])
         run_parser(parser);
     end_debug_benchmark("Pine");
 
+    log_token_data(lexer);
+
     finalize_code();
     compile_and_link(argv[2]);
 

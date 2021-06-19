@@ -116,6 +116,14 @@ void print_statement(struct Parser* parser) {
     match_token(parser, END_EXPRESSION, ";");
 }
 
+int check_for_var_redefination(struct Token* token) {
+    if (find_global_symbol(token->token_string) == -1) 
+        return add_symbol(token->token_string, 0.0);
+    else
+        fatal_token_error("Redefination of variable", token);
+    return -1;
+}
+
 void assignment_statement(struct Parser* parser) {
     struct ASTNode* root_ast = NULL;
 
@@ -125,28 +133,24 @@ void assignment_statement(struct Parser* parser) {
 
     if (peek_next_token(parser)->type == COLON) {
         retrieve_next_token(parser);
-        match_token(parser, INT, "int");
-        if (find_global_symbol(token->token_string) == -1) 
-            var_id = add_symbol(token->token_string, 0.0);
-        else
-            fatal_token_error("Redefination of variable", token);
-        if(peek_next_token(parser)->type == END_EXPRESSION) {
-            match_token(parser, END_EXPRESSION, ";");
-            root_ast = create_ast_node(EQUAL, NULL, NULL);
-            root_ast->left = create_ast_node(ID, NULL, NULL);
-            root_ast->left->var_id = var_id;
-            root_ast->right = create_ast_node(INTEGER, NULL, NULL);
-            root_ast->right->int_val = 0;
-            destroy_ast_node(root_ast);
-            return;
+        var_id = check_for_var_redefination(token);
+        if (peek_next_token(parser)->type == INT) {
+            match_token(parser, INT, "int");
+            if(peek_next_token(parser)->type == END_EXPRESSION) {
+                match_token(parser, END_EXPRESSION, ";");
+                root_ast = create_ast_node(EQUAL, NULL, NULL);
+                root_ast->left = create_ast_node(ID, NULL, NULL);
+                root_ast->left->var_id = var_id;
+                root_ast->right = create_ast_node(INTEGER, NULL, NULL);
+                root_ast->right->int_val = 0;
+                destroy_ast_node(root_ast);
+                return;
+            }
         }
     }
-    else {
-        if (find_global_symbol(token->token_string) == -1) 
-            var_id = add_symbol(token->token_string, 0.0);
-        else 
-            var_id = find_global_symbol(token->token_string);
-    }
+
+    if (find_global_symbol(token->token_string) == -1) 
+            fatal_token_error("Undefined variable", token);
 
     struct Symbol* var = get_global_symbol(token->token_string);  
     parser->token_index = equal_statement(parser, parser->token_index, token, &root_ast);

@@ -25,32 +25,33 @@ struct LexLoader {
 struct TokenPair {
     char in_code_name[MAX_TOKEN_SIZE];
     enum TokenType type;
+    bool check_next;
 };
 
 static const struct TokenPair TOKEN_PAIRS[] = {
-    {"{", LCURLEY_BRACKET},
-    {"}", RCURLEY_BRACKET},
-    {"(", LPAR},
-    {")", RPAR},
-    {";", END_EXPRESSION},
-    {")", RPAR},
-    {"[", LBRACKET},
-    {"]", RBRACKET},
-    {"<", LESS_THAN},
-    {">", GREATER_THAN},
-    {"^", TO_THE_POWER_OF},
-    {":", COLON },
-    {"=", EQUAL},
-    {"!=", NOT},
-    {"print", PRINT},
-    {"int", INT},
-    {"if", IF},
-    {"and", AND},
-    {"or", OR},
-    {"-", SUBTRACT},
-    {"+", ADD},
-    {"*", MULTIPLE},
-    {"/", DIVIDE}
+    {"{", LCURLEY_BRACKET, false},
+    {"}", RCURLEY_BRACKET, false},
+    {"(", LPAR, false},
+    {")", RPAR, false},
+    {";", END_EXPRESSION, false},
+    {")", RPAR, false},
+    {"[", LBRACKET, false},
+    {"]", RBRACKET, false},
+    {"<", LESS_THAN, false},
+    {">", GREATER_THAN, false},
+    {"^", TO_THE_POWER_OF, false},
+    {":", COLON , false},
+    {"=", EQUAL, false},
+    {"!=", NOT, false},
+    {"-", SUBTRACT, false},
+    {"+", ADD, false},
+    {"*", MULTIPLE, false},
+    {"/", DIVIDE, false},
+    {"print", PRINT, true},
+    {"int", INT, true},
+    {"if", IF, true},
+    {"and", AND, true},
+    {"or", OR, true}
 };
 
 extern struct LexLoader create_buffer_for_lexer(const char *filepath);

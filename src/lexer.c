@@ -2,7 +2,7 @@
  * @file lexer.c
  * @author strah19
  * @date May 23 2021
- * @version 1.0
+ * @version 1.2
  *
  * @section LICENSE
  *
@@ -63,7 +63,7 @@ void push_token(struct Lexer* lexer, enum TokenType type, const char* val, uint3
 void reset_lexer(uint32_t* pos, uint32_t* token_len, char* token_str) {
     *pos += *token_len;
     *token_len = 0;
-    memset(token_str, 0, sizeof(token_str) + 1);   
+    memset(token_str, 0, MAX_TOKEN_SIZE);   
 }
 
 void run_tokenizer(struct Lexer *lexer) {
@@ -79,6 +79,8 @@ void run_tokenizer(struct Lexer *lexer) {
 
     uint8_t comment_counter = 0;
     uint8_t single_line = 0;
+
+    bool possible_variable = false;
 
     while (*bp != '`' && !single_line && !comment_counter) {
         if (*bp == '\n') {
@@ -130,16 +132,22 @@ void run_tokenizer(struct Lexer *lexer) {
                     for (int i = 0; i < sizeof(TOKEN_PAIRS) / sizeof(TOKEN_PAIRS[0]); i++) {
                         if (current_token_str[0] != TOKEN_PAIRS[i].in_code_name[0])
                             continue;
-                        if (strcmp(current_token_str, TOKEN_PAIRS[i].in_code_name) == 0) {
+                        bool cont = (!TOKEN_PAIRS[i].check_next) ? true : !(is_char_good_for_variable_name((char)(*(bp + 1))));
+                        if (strcmp(current_token_str, TOKEN_PAIRS[i].in_code_name) == 0 && cont) {
                             push_token(lexer, TOKEN_PAIRS[i].type, TOKEN_PAIRS[i].in_code_name, line, pos);
                             reset_lexer(&pos, &current_token_len, current_token_str);
                             check_for_var = false;
                             break;
-                        }
+                        }    
                     }
-                    if (check_for_var && is_char_good_for_variable_name((char)*bp) && !is_char_good_for_variable_name((char) *(bp + 1))) {
-                        push_token(lexer, ID, current_token_str, line, pos);
-                        reset_lexer(&pos, &current_token_len, current_token_str);                    
+
+                    if (check_for_var) {
+                        possible_variable = is_char_good_for_variable_name((char)*bp);
+                        if (possible_variable && !is_char_good_for_variable_name((char)(*(bp + 1)))) {
+                            push_token(lexer, ID, current_token_str, line, pos);
+                            reset_lexer(&pos, &current_token_len, current_token_str);  
+                            possible_variable = false;
+                        }
                     }
                 }
             }
