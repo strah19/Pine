@@ -1,7 +1,8 @@
 #include "../include/lexer.h"
 #include "../include/expression.h"
 #include "../include/parser.h"
-#include "../include/bytecode_builder.h"
+#include "../include/cgen.h"
+#include "../include/vm.h"
 
 int main(int argc, char *argv[])
 {

@@ -41,4 +41,6 @@ extern struct Object vm_pop_stack(struct VMStack* stack);
 
 extern struct Object vm_peek_stack(struct VMStack* stack);
 
+extern void run_vm(uint8_t* buf);
+
 #endif // !VM_H

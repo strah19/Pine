@@ -144,19 +144,14 @@ uint8_t* opcode_sys_write(uint8_t* ip, struct VMStack* stack) {
     return ip + 1;
 }
 
-int main(int argc, char **argv) {
-    if (argc != 2) {
-        printf("Must enter a file for the pvm to run.\n");
-        exit(EXIT_FAILURE);
-    }
-
+void run_vm(uint8_t* buf) {
     uint8_t* opcodes;
     uint8_t* ip = NULL;
     instruction ops[256];
 
     struct VMStack data;
 
-    opcodes = load_bytecode(argv[1]);
+    opcodes = buf;
     data = vm_create_stack(1028);
     ip = opcodes;
 
@@ -174,5 +169,5 @@ int main(int argc, char **argv) {
     }
 
     free(opcodes);
-    free(data.stack);
+    free(data.stack);    
 }
