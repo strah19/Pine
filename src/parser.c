@@ -69,11 +69,11 @@ bool run_statements(struct Parser* parser) {
 }
 
 struct Token* peek_next_token(struct Parser* parser) {
-    return (parser->token_index < parser->lexer->size) ? &parser->lexer->tokens[parser->token_index] : NULL;
+    return (parser->token_index <= parser->lexer->size) ? &parser->lexer->tokens[parser->token_index] : NULL;
 }
 
 struct Token* retrieve_next_token(struct Parser* parser) {
-    return (parser->token_index < parser->lexer->size) ? &parser->lexer->tokens[parser->token_index++] : NULL;
+    return (parser->token_index <= parser->lexer->size) ? &parser->lexer->tokens[parser->token_index++] : NULL;
 }
 
 void match_token(struct Parser* parser, enum TokenType type, const char* what) {

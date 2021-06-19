@@ -77,12 +77,34 @@ void run_tokenizer(struct Lexer *lexer) {
     uint32_t line = 1;
     uint32_t pos = 1;
 
-    while (bp < end_byte) {
+    enum {
+        MULTI_LINE_EXCLUDE, SINGLE_LINE_EXCLUDE, NONE
+    };
+
+    uint8_t comment_counter = 0;
+    uint8_t single_line = 0;
+
+    while (*bp != '`') {
         if (*bp == '\n') {
+            if (single_line)
+                single_line = 0;
             line++;
             pos = 1;
         }
-        if(*bp != ' ' && *bp != '\n') {
+
+        if (*bp == '/' && *(bp + 1) == '*') {
+            bp++;
+            comment_counter++;
+        }
+        else if (*bp == '*' && *(bp + 1) == '/') {
+            bp++;
+            comment_counter--;
+        }
+        else if (*bp == '/' && *(bp + 1) == '/') {
+            bp++;
+            single_line = 1;
+        }
+        else if(*bp != ' ' && *bp != '\n' && comment_counter == 0 && single_line == 0) {
             current_token_str[current_token_len] = *bp;
             current_token_len++;
 
@@ -96,6 +118,7 @@ void run_tokenizer(struct Lexer *lexer) {
                     reset_lexer(&pos, &current_token_len, current_token_str);
                     bp++;
                 }
+
                 else {
                     bool check_for_var = true;
                     for (int i = 0; i < sizeof(TOKEN_PAIRS) / sizeof(TOKEN_PAIRS[0]); i++) {
@@ -115,8 +138,14 @@ void run_tokenizer(struct Lexer *lexer) {
                 }
             }
         }
+        
         bp++;
     }
+
+    push_token(lexer, T_EOF, "-1", line, pos);
+
+    if (comment_counter != 0)
+        fatal_error("Mismatched multi-line comment");
 }
 
 struct LexLoader create_buffer_for_lexer(const char *filepath) {

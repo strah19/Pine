@@ -4,12 +4,12 @@ CC = gcc
 
 COMPILER_FLAGS = -Werror -Wfloat-conversion -ggdb -g 
 
-LINKER_FLAGS = 0
+LINKER_FLAGS = 
 
 ifeq ($(OS), Windows_NT)
-	LINKER_FLAGS = -lmingw32
+	LINKER_FLAGS = -lmingw32 
 else
-	LINKER_FLAGS = -lm
+	LINKER_FLAGS = -lm 
 endif
 
 PINE_EXEC_NAME = Pine

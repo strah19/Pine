@@ -18,12 +18,11 @@ int main(int argc, char *argv[])
 
     begin_debug_benchmark();
         run_tokenizer(lexer);
-    float t = end_debug_benchmark("Pine");
+        run_parser(parser);
+    end_debug_benchmark("Pine");
 
-    if (strcmp(argv[2],"debug") == 0) 
+    if (argv[2] && strcmp(argv[2], "debug") == 0)
         log_token_data(lexer);
-
-    printf("Lexer took %f ms.\n", t);
 
     destroy_parser(parser);
     destroy_lexer(lexer);

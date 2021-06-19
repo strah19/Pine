@@ -27,10 +27,6 @@ struct TokenPair {
     enum TokenType type;
 };
 
-static const struct TokenPair TOKEN_OPERATORS[] = {
- 
-};
-
 static const struct TokenPair TOKEN_PAIRS[] = {
     {"{", LCURLEY_BRACKET},
     {"}", RCURLEY_BRACKET},
@@ -55,10 +51,6 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {"+", ADD},
     {"*", MULTIPLE},
     {"/", DIVIDE}
-};
-
-static const struct TokenPair TOKEN_KEY_WORDS[] = {
-
 };
 
 extern struct LexLoader create_buffer_for_lexer(const char *filepath);
