@@ -82,7 +82,7 @@ void run_tokenizer(struct Lexer *lexer) {
 
     bool possible_variable = false;
 
-    while (*bp != '`' && !single_line && !comment_counter) {
+    while (*bp != '`' || (comment_counter != 0 || single_line != 0)) {
         if (*bp == '\n') {
             if (single_line)
                 single_line = 0;

@@ -1,4 +1,4 @@
 #!/bin/bash
 
 mingw32-make
-./Pine.exe
+./Pine.exe main.pine
