@@ -92,7 +92,43 @@ void op_iadd(struct VM* vm) {
 
     struct Object result;
     result.type = o2.type;
-    result.i32 = o1.i32 + o2.i32;
+    result.i32 = o2.i32 + o1.i32;
+
+    vm_push_stack(&vm->stack, result);
+    vm->ip++;
+}
+
+void op_isub(struct VM* vm) {
+    struct Object o2 = vm_pop_stack(&vm->stack);
+    struct Object o1 = vm_pop_stack(&vm->stack);
+
+    struct Object result;
+    result.type = o2.type;
+    result.i32 = o2.i32 - o1.i32;
+
+    vm_push_stack(&vm->stack, result);
+    vm->ip++;
+}
+
+void op_imul(struct VM* vm) {
+    struct Object o2 = vm_pop_stack(&vm->stack);
+    struct Object o1 = vm_pop_stack(&vm->stack);
+
+    struct Object result;
+    result.type = o2.type;
+    result.i32 = o2.i32 * o1.i32;
+
+    vm_push_stack(&vm->stack, result);
+    vm->ip++;
+}
+
+void op_idiv(struct VM* vm) {
+    struct Object o2 = vm_pop_stack(&vm->stack);
+    struct Object o1 = vm_pop_stack(&vm->stack);
+
+    struct Object result;
+    result.type = o2.type;
+    result.i32 = o2.i32 / o1.i32;
 
     vm_push_stack(&vm->stack, result);
     vm->ip++;
@@ -100,7 +136,7 @@ void op_iadd(struct VM* vm) {
 
 void op_syswrite(struct VM* vm) {
     struct Object o = vm_pop_stack(&vm->stack);
-    printf("%d\n", o.i32);
+   // printf("\n%d\n", o.i32);
     vm->ip++;
 }
 
@@ -154,7 +190,6 @@ void op_call(struct VM* vm) {
     address.i32 = vm->opcodes[vm->ip];
     vm->ip++;
     num_args.i32 = vm->opcodes[vm->ip];
-    printf("ADDRESS: %d, ARGS: %d\n", address.i32, num_args.i32);
 
     vm_push_stack(&vm->stack, num_args);
 
@@ -182,7 +217,7 @@ int main(int argc, char **argv) {
     uint32_t opcodes[] = {
         LOAD, -3,
         LOAD, -4,
-        IADD,
+        IDIV,
         SYS_WRITE,
         CALL, 13, 0,
         POP,
@@ -194,8 +229,8 @@ int main(int argc, char **argv) {
         ICONST, 0,
         RET,
         
-        ICONST, 10, 
-        ICONST, 8, 
+        ICONST, 15, 
+        ICONST, 5, 
         CALL, 0, 2,
         SYS_WRITE,
         HALT        // stop program
@@ -213,6 +248,9 @@ int main(int argc, char **argv) {
     ops[SYS_WRITE] = op_syswrite;
     ops[ICONST] = op_iconst;
     ops[IADD] = op_iadd;
+    ops[ISUB] = op_isub;
+    ops[IMUL] = op_imul;
+    ops[IDIV] = op_idiv;
     ops[GLOAD] = op_gload;
     ops[GSTORE] = op_gstore;
     ops[JMP] = op_jmp;
@@ -223,7 +261,14 @@ int main(int argc, char **argv) {
     ops[LOAD] = op_load;
 
     while(vm.opcodes[vm.ip] != HALT) {
+        printf("%04x:\t%d\t", vm.ip, vm.opcodes[vm.ip]);
         ops[vm.opcodes[vm.ip]](&vm);
+
+        printf("[ ");
+        for(int i = 0; i < vm.stack.top; i++){
+            printf("%d ", vm.stack.stack[i].i32);
+        }
+        printf("]\n");
     }    
 
     free(vm.stack.stack);

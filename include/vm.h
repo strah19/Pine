@@ -33,6 +33,9 @@ struct VM {
 
 enum OpCodes {
     IADD,
+    ISUB,
+    IMUL,
+    IDIV,
     ICONST,
     POP,
     SYS_WRITE,
