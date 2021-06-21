@@ -22,6 +22,20 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <time.h>
+
+static clock_t bench_mark_clock;
+void begin_debug_benchmark() {
+    bench_mark_clock = clock();
+}
+
+float end_debug_benchmark(const char* label) {
+    clock_t end = clock();
+    double time_spent = (double)(end - bench_mark_clock);
+    printf("Benchmark time for %s is %f ms.\n", label, time_spent);
+
+    return (float) time_spent;
+}
 
 struct VMStack vm_create_stack(int size) {
     struct VMStack stack;
@@ -86,52 +100,78 @@ void op_iconst(struct VM* vm) {
     vm->ip += 2; 
 }
 
-void op_iadd(struct VM* vm) {
+void operate_on_operands(struct VM* vm, char operator) {
     struct Object o2 = vm_pop_stack(&vm->stack);
     struct Object o1 = vm_pop_stack(&vm->stack);
 
     struct Object result;
-    result.type = o2.type;
-    result.i32 = o2.i32 + o1.i32;
+    result.type = o2.type;  
+
+    switch (operator) {
+        case '+': result.i32 = o2.i32 +  o1.i32; break;
+        case '-': result.i32 = o2.i32 -  o1.i32; break;
+        case '*': result.i32 = o2.i32 *  o1.i32; break;
+        case '/': result.i32 = o2.i32 /  o1.i32; break;
+        case '%': result.i32 = o2.i32 %  o1.i32; break;
+        case '=': result.i32 = (o2.i32 == o1.i32) ? 1 : 0; break;
+        case '!': result.i32 = (o2.i32 != o1.i32) ? 1 : 0; break;
+        case '<': result.i32 = (o2.i32 <  o1.i32) ? 1 : 0; break;
+        case '>': result.i32 = (o2.i32 >  o1.i32) ? 1 : 0; break;
+        case 'l': result.i32 = (o2.i32 <= o1.i32) ? 1 : 0; break;
+        case 'g': result.i32 = (o2.i32 >= o1.i32) ? 1 : 0; break; 
+    default:
+        break;
+    }
 
     vm_push_stack(&vm->stack, result);
     vm->ip++;
+}
+
+void op_iadd(struct VM* vm) {
+    operate_on_operands(vm, '+');
 }
 
 void op_isub(struct VM* vm) {
-    struct Object o2 = vm_pop_stack(&vm->stack);
-    struct Object o1 = vm_pop_stack(&vm->stack);
-
-    struct Object result;
-    result.type = o2.type;
-    result.i32 = o2.i32 - o1.i32;
-
-    vm_push_stack(&vm->stack, result);
-    vm->ip++;
+    operate_on_operands(vm, '-');
 }
 
 void op_imul(struct VM* vm) {
-    struct Object o2 = vm_pop_stack(&vm->stack);
-    struct Object o1 = vm_pop_stack(&vm->stack);
-
-    struct Object result;
-    result.type = o2.type;
-    result.i32 = o2.i32 * o1.i32;
-
-    vm_push_stack(&vm->stack, result);
-    vm->ip++;
+    operate_on_operands(vm, '*');
 }
 
 void op_idiv(struct VM* vm) {
-    struct Object o2 = vm_pop_stack(&vm->stack);
-    struct Object o1 = vm_pop_stack(&vm->stack);
+    operate_on_operands(vm, '/');
+}
 
-    struct Object result;
-    result.type = o2.type;
-    result.i32 = o2.i32 / o1.i32;
+void op_imod(struct VM* vm) {
+    operate_on_operands(vm, '%');
+}
 
-    vm_push_stack(&vm->stack, result);
-    vm->ip++;
+void op_ieq(struct VM* vm) {
+    // '=' is actually perform a compariative equal on the two operands
+    operate_on_operands(vm, '=');
+}
+
+void op_ineq(struct VM* vm) {
+    operate_on_operands(vm, '!');
+}
+
+void op_lt(struct VM* vm) {
+    operate_on_operands(vm, '<');
+}
+
+void op_gt(struct VM* vm) {
+    operate_on_operands(vm, '>');
+}
+
+void op_lte(struct VM* vm) {
+    //Use a l because <= is 2 chars but don't want to do a str compare, just a simple switch
+    operate_on_operands(vm, 'l');
+}
+
+void op_gte(struct VM* vm) {
+    //Use a g because >= is 2 chars but don't want to do a str compare, just a simple switch
+    operate_on_operands(vm, 'g');
 }
 
 void op_syswrite(struct VM* vm) {
@@ -175,11 +215,13 @@ void op_jmp(struct VM* vm) {
 void op_jmpt(struct VM* vm) {
     struct Object o = vm_pop_stack(&vm->stack);
     if (o.i32) vm->ip = vm->opcodes[vm->ip + 1];
+    else vm->ip += 2;
 }
 
 void op_jmpn(struct VM* vm) {
     struct Object o = vm_pop_stack(&vm->stack);
     if (!o.i32) vm->ip = vm->opcodes[vm->ip + 1];
+    else vm->ip += 2;
 }
 
 void op_call(struct VM* vm) {
@@ -214,17 +256,19 @@ void op_ret(struct VM* vm) {
 }
 
 int main(int argc, char **argv) {
-    uint32_t opcodes[] = {
+    uint32_t opcodes[] = {/*
         LOAD, -3,
         LOAD, -4,
-        IDIV,
+        IADD,
         SYS_WRITE,
         CALL, 13, 0,
         POP,
         ICONST, 80,
         RET,
 
-        ICONST, 3,
+        ICONST, 4,
+        ICONST, 4,
+        IEQ,
         SYS_WRITE,
         ICONST, 0,
         RET,
@@ -234,9 +278,16 @@ int main(int argc, char **argv) {
         CALL, 0, 2,
         SYS_WRITE,
         HALT        // stop program
+        */
+       ICONST, 4,
+       ICONST, 3,
+       IEQ,
+       JMPN, 8,
+       SYS_WRITE,
+       HALT
     };
 
-    struct VM vm = create_vm(1, 19);
+    struct VM vm = create_vm(1, 0);
     vm.opcodes = opcodes;
 
     instruction ops[256];
@@ -251,6 +302,9 @@ int main(int argc, char **argv) {
     ops[ISUB] = op_isub;
     ops[IMUL] = op_imul;
     ops[IDIV] = op_idiv;
+    ops[IMOD] = op_imod;
+    ops[IEQ] = op_ieq;
+    ops[INEQ] = op_ineq;
     ops[GLOAD] = op_gload;
     ops[GSTORE] = op_gstore;
     ops[JMP] = op_jmp;
@@ -260,6 +314,7 @@ int main(int argc, char **argv) {
     ops[RET] = op_ret;
     ops[LOAD] = op_load;
 
+    begin_debug_benchmark();
     while(vm.opcodes[vm.ip] != HALT) {
         printf("%04x:\t%d\t", vm.ip, vm.opcodes[vm.ip]);
         ops[vm.opcodes[vm.ip]](&vm);
@@ -270,6 +325,7 @@ int main(int argc, char **argv) {
         }
         printf("]\n");
     }    
+    end_debug_benchmark("VM");
 
     free(vm.stack.stack);
     free(vm.data);
