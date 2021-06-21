@@ -19,12 +19,9 @@
 #include "../include/vm.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 struct VMStack vm_create_stack(int size) {
     struct VMStack stack;
@@ -35,6 +32,22 @@ struct VMStack vm_create_stack(int size) {
 
     return stack;
 }
+
+struct VM create_vm(uint32_t data_size, uint32_t main) {
+    struct VM vm;
+    vm.stack = vm_create_stack(1028);
+    vm.ip = main;
+    vm.data = malloc(sizeof(struct Object) * data_size);
+    vm.fp = 0;
+
+    return vm;
+}
+
+struct Object obj_push(int32_t val) {
+    struct Object o;
+    o.i32 = val;
+    return o;
+} 
 
 int vm_push_stack(struct VMStack* stack, struct Object object) {
     stack->stack[stack->top++] = object;
@@ -49,82 +62,170 @@ struct Object vm_peek_stack(struct VMStack* stack) {
     return stack->stack[stack->top];
 }
 
-typedef uint32_t* (*instruction)(uint32_t *, struct VMStack *);
+typedef void (*instruction)(struct VM* vm);
 
-uint32_t* opcode_nop(uint32_t* ip, struct VMStack* stack) {
-    return ip + 1;
+void op_nop(struct VM* vm) {
+    vm->ip++;
 }
 
-uint32_t* opcode_push_char(uint32_t* ip, struct VMStack* stack) {
+void op_charconst(struct VM* vm) {
     struct Object o;
-    o.type = OP_PUSH_CHAR;
-    o.u8 = *(ip + 1);
-    vm_push_stack(stack, o);
-    return ip + 2;
+    o.type = CHARCONST;
+    o.u8 = (char) vm->opcodes[vm->ip + 1];
+    vm_push_stack(&vm->stack, o);
+    vm->ip += 2;
 }
 
-uint32_t* opcode_push_int(uint32_t* ip, struct VMStack* stack) {
+void op_iconst(struct VM* vm) {
     struct Object o;
-    o.type = OP_VAR_TYPE_INT;
-    o.i32 = *(ip + 1);
 
-    vm_push_stack(stack, o);
-    return ip + 2;   
+    o.type = ICONST;
+    o.i32 = vm->opcodes[vm->ip + 1];
+    vm_push_stack(&vm->stack, o);
+
+    vm->ip += 2; 
 }
 
-uint32_t* opcode_add(uint32_t* ip, struct VMStack* stack) {
-    struct Object o2 = vm_pop_stack(stack);
-    struct Object o1 = vm_pop_stack(stack);
+void op_iadd(struct VM* vm) {
+    struct Object o2 = vm_pop_stack(&vm->stack);
+    struct Object o1 = vm_pop_stack(&vm->stack);
 
     struct Object result;
     result.type = o2.type;
     result.i32 = o1.i32 + o2.i32;
 
-    vm_push_stack(stack, result);
-    return ip + 1;
+    vm_push_stack(&vm->stack, result);
+    vm->ip++;
 }
 
-void sys_write_type_call(struct Object o) {
-    switch(o.type) {
-    case OP_VAR_TYPE_INT:
-        printf("%d", o.i32);
-        break;
-    case OP_VAR_TYPE_USINT:
-        printf("%u", o.u32);
-        break;
-    }
+void op_syswrite(struct VM* vm) {
+    struct Object o = vm_pop_stack(&vm->stack);
+    printf("%d\n", o.i32);
+    vm->ip++;
 }
 
-uint32_t* opcode_sys_write(uint32_t* ip, struct VMStack* stack) {
-    struct Object o = vm_pop_stack(stack);
-    sys_write_type_call(o);
-    return ip + 1;
+void op_gload(struct VM* vm) {
+    uint32_t addr = vm->opcodes[vm->ip + 1];
+    struct Object o = vm->data[addr];
+
+    vm_push_stack(&vm->stack, o);
+
+    vm->ip += 2;
 }
 
-void run_vm(uint32_t* buf) {
-    uint32_t* opcodes;
-    uint32_t* ip = NULL;
+void op_gstore(struct VM* vm) {
+    struct Object o = vm_pop_stack(&vm->stack);
+    uint32_t addr = vm->opcodes[vm->ip + 1];
+    vm->data[addr] = o;
+    vm->ip += 2;
+}
+
+void op_load(struct VM* vm) {
+    vm->ip++;
+    int32_t offset = vm->opcodes[vm->ip++];
+    vm_push_stack(&vm->stack, vm->stack.stack[(vm->fp - 1) + offset]);
+}
+
+void op_store(struct VM* vm) {
+    vm->ip++;
+    int32_t offset = vm->opcodes[vm->ip++];
+    vm->stack.stack[(vm->fp - 1) + offset] = vm->stack.stack[vm->stack.top--];
+}
+
+void op_jmp(struct VM* vm) {
+    vm->ip = vm->opcodes[vm->ip + 1];
+}
+
+void op_jmpt(struct VM* vm) {
+    struct Object o = vm_pop_stack(&vm->stack);
+    if (o.i32) vm->ip = vm->opcodes[vm->ip + 1];
+}
+
+void op_jmpn(struct VM* vm) {
+    struct Object o = vm_pop_stack(&vm->stack);
+    if (!o.i32) vm->ip = vm->opcodes[vm->ip + 1];
+}
+
+void op_call(struct VM* vm) {
+    struct Object address;
+    struct Object num_args;
+
+    vm->ip++;
+    address.i32 = vm->opcodes[vm->ip];
+    vm->ip++;
+    num_args.i32 = vm->opcodes[vm->ip];
+    printf("ADDRESS: %d, ARGS: %d\n", address.i32, num_args.i32);
+
+    vm_push_stack(&vm->stack, num_args);
+
+    vm_push_stack(&vm->stack, obj_push(vm->fp));
+    vm_push_stack(&vm->stack, obj_push(vm->ip));
+
+    vm->fp = vm->stack.top;
+    vm->ip = address.i32;
+}
+
+void op_ret(struct VM* vm) {
+    struct Object ret = vm_pop_stack(&vm->stack);
+
+    vm->stack.top = vm->fp;
+    vm->ip = vm_pop_stack(&vm->stack).i32;
+    vm->fp = vm_pop_stack(&vm->stack).i32;
+    int32_t args = vm_pop_stack(&vm->stack).i32;
+    vm->stack.top -= args;
+    vm_push_stack(&vm->stack, ret);
+
+    vm->ip++;
+}
+
+int main(int argc, char **argv) {
+    uint32_t opcodes[] = {
+        LOAD, -3,
+        LOAD, -4,
+        IADD,
+        SYS_WRITE,
+        CALL, 13, 0,
+        POP,
+        ICONST, 80,
+        RET,
+
+        ICONST, 3,
+        SYS_WRITE,
+        ICONST, 0,
+        RET,
+        
+        ICONST, 10, 
+        ICONST, 8, 
+        CALL, 0, 2,
+        SYS_WRITE,
+        HALT        // stop program
+    };
+
+    struct VM vm = create_vm(1, 19);
+    vm.opcodes = opcodes;
+
     instruction ops[256];
-
-    struct VMStack data;
-
-    opcodes = buf;
-    data = vm_create_stack(1028);
-    ip = opcodes;
-
     for(int i = 0; i < 256; i++) {
-        ops[i] = opcode_nop;
+        ops[i] = op_nop;
     }
 
-    ops[OP_PUSH_CHAR] = opcode_push_char;
-    ops[OP_SYS_WRITE] = opcode_sys_write;
-    ops[OP_PUSH_INT] = opcode_push_int;
-    ops[OP_ADD] = opcode_add;
+    ops[CHARCONST] = op_charconst;
+    ops[SYS_WRITE] = op_syswrite;
+    ops[ICONST] = op_iconst;
+    ops[IADD] = op_iadd;
+    ops[GLOAD] = op_gload;
+    ops[GSTORE] = op_gstore;
+    ops[JMP] = op_jmp;
+    ops[JMPT] = op_jmpt;
+    ops[JMPN] = op_jmpn;
+    ops[CALL] = op_call;
+    ops[RET] = op_ret;
+    ops[LOAD] = op_load;
 
-    while(*ip != OP_HALT) {
-        ip = ops[*ip](ip, &data);
-    }
+    while(vm.opcodes[vm.ip] != HALT) {
+        ops[vm.opcodes[vm.ip]](&vm);
+    }    
 
-    free(opcodes);
-    free(data.stack);    
+    free(vm.stack.stack);
+    free(vm.data);
 }

@@ -1,3 +1,4 @@
+  
 #ifndef VM_H
 #define VM_H
 
@@ -22,15 +23,30 @@ struct VMStack {
     struct Object* stack;
 };
 
-enum {
-    OP_PUSH_CHAR = 'c',
-    OP_SYS_WRITE = 'p',
-    OP_PUSH_INT = 'i',
-    OP_ADD = 'a',
-    OP_HALT = 'h',
+struct VM {
+    struct VMStack stack;
+    struct Object* data;
+    uint32_t* opcodes;
+    uint32_t ip;
+    int32_t fp;
+};
 
-    OP_VAR_TYPE_INT,
-    OP_VAR_TYPE_USINT
+enum OpCodes {
+    IADD,
+    ICONST,
+    POP,
+    SYS_WRITE,
+    STORE,
+    GSTORE,
+    LOAD,
+    GLOAD,
+    CHARCONST,
+    HALT,
+    JMP,
+    JMPT,
+    JMPN,
+    CALL,
+    RET
 };
 
 extern struct VMStack vm_create_stack(int size);
@@ -40,7 +56,5 @@ extern int vm_push_stack(struct VMStack* stack, struct Object object);
 extern struct Object vm_pop_stack(struct VMStack* stack);
 
 extern struct Object vm_peek_stack(struct VMStack* stack);
-
-extern void run_vm(uint32_t* buf);
 
 #endif // !VM_H
