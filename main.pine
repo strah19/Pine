@@ -1,6 +1,6 @@
 c : int = 2;
 apples := 2 + 3 * 3;
-bananas := apples = c + 4;
+bananas := apples = c = 12 + 2;
 bananas = 25;
 
 lexer : int = apples * bananas;

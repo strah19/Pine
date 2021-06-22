@@ -147,7 +147,7 @@ void assignment_statement(struct Parser* parser) {
 
     struct Symbol* var = get_global_symbol(token->token_string);  
     parser->token_index = equal_statement(parser, parser->token_index, token, &assignment_ast);
-    
+
     bc_decleration(parser->bc_builder, assignment_ast);
 
     match_token(parser, END_EXPRESSION, ";");
@@ -193,9 +193,6 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
         end_token = parser->token_index;
         return end_token;
     }
-    parser->token_index = start_of_expression;
-
-    expression_assignment(parser, &(*root)->right);
 
     return end_token;
 }

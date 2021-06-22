@@ -59,14 +59,14 @@ struct ASTNode* create_leaf_node(enum TokenType op) {
     return create_ast_node(op, NULL, NULL);
 }
 
-void log_tree(struct ASTNode* root) {
+void log_tree(struct ASTNode* root, uint32_t tree_branch) {
     if (root == NULL)
         return;
 
-    printf("Node: %d, Op: %d\n", root->int_val, root->op);
+    printf("Node: %d, Op: %d, Branch: %s\n", root->int_val, root->op, (tree_branch == 0) ? "LEFT" : "RIGHT");
 
-    log_tree(root->left);
-    log_tree(root->right);
+    log_tree(root->left, 0);
+    log_tree(root->right, 1);
 }
 
 int fig_precedence_from_op(enum TokenType op) {
@@ -142,6 +142,9 @@ void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {
 
         new_item = create_ast_node(token->type, NULL, NULL);
         fill_ast_node(token, &new_item);
+
+        if (new_item->op == EQUAL)
+            fatal_error("Equal operator can not be evaluated in an expression");
 
         if (new_item->op != LPAR) 
             if (new_item->op == RPAR) 
