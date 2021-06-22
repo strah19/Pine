@@ -1,6 +1,9 @@
-a : int = 1;
-apples : int = 2 + 3 * 3;
-bananas : int = apples = a + 2;
+c : int = 2;
+apples := 2 + 3 * 3;
+bananas := apples = c + 4;
+bananas = 25;
+
+lexer : int = apples * bananas;
 
 print apples;
 print bananas;

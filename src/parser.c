@@ -86,14 +86,9 @@ void match_token(struct Parser* parser, enum TokenType type, const char* what) {
             fatal_compiler_error("Expected", what, token->token_info.token_line);
 }
 
-void expression_assignment(struct Parser* parser, struct Token* var, struct ASTNode** root) {
+void expression_assignment(struct Parser* parser, struct ASTNode** root) {
     struct ASTNode* ast_tree;
     make_ast_from_expr(&ast_tree, parser);
-
-    struct Symbol* variable = get_global_symbol(var->token_string);
-    ast_tree = run_ast_tree(ast_tree);
-    variable->value = ast_tree->int_val;
-
     *root = ast_tree;
 }
 
@@ -104,7 +99,7 @@ void print_statement(struct Parser* parser) {
     
     struct ASTNode* ast_tree;
     make_ast_from_expr(&ast_tree, parser);
-    printf("%d\n", run_ast_tree(ast_tree)->int_val);
+
     destroy_ast_node(ast_tree);
 
     match_token(parser, END_EXPRESSION, ";");
@@ -144,6 +139,7 @@ void assignment_statement(struct Parser* parser) {
                 return;
             }
         }
+        parser->bc_builder->data_size++;
     }
 
     if (find_global_symbol(token->token_string) == -1) 
@@ -152,7 +148,6 @@ void assignment_statement(struct Parser* parser) {
     struct Symbol* var = get_global_symbol(token->token_string);  
     parser->token_index = equal_statement(parser, parser->token_index, token, &assignment_ast);
     
-    log_tree(assignment_ast);
     bc_decleration(parser->bc_builder, assignment_ast);
 
     match_token(parser, END_EXPRESSION, ";");
@@ -191,17 +186,16 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
 
         end_token = equal_statement(parser, end_token, next_var, &(*root)->right);
     }
-    if (token->type == END_EXPRESSION)
-    {
+    if (token->type == END_EXPRESSION) {
         parser->token_index = start_of_expression;
-        expression_assignment(parser, var_token, &(*root)->right);
+        expression_assignment(parser, &(*root)->right);
    
         end_token = parser->token_index;
         return end_token;
     }
     parser->token_index = start_of_expression;
 
-    expression_assignment(parser, var_token, &(*root)->right);
+    expression_assignment(parser, &(*root)->right);
 
     return end_token;
 }

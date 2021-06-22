@@ -23,6 +23,7 @@
 #include "../include/err.h"
 #include "../include/opcodes.h"
 #include "../include/sym.h"
+#include "../include/expression.h"
 
 #define INITIAL_OPCODE_SIZE 256
 
@@ -60,24 +61,32 @@ void analyize_opcode_storage(struct ByteCodeBuilder* bc_builder) {
 }
 
 void bc_equal(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
-    if (!root || root->op != EQUAL) return;
+    if (!root) return;
 
+    bc_equal(bc_builder, root->left);
     bc_equal(bc_builder, root->right);
-    
-    bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
 
-    int val;
-    if (root->right->op == ID)
-        val = (int) get_symbols()[root->right->var_id].value;
-    else
-        val = root->right->int_val;
-    bc_builder->opcodes[bc_builder->current_builder_location++] = val;
-    bc_builder->opcodes[bc_builder->current_builder_location++] = GSTORE;
-    bc_builder->opcodes[bc_builder->current_builder_location++] = root->left->var_id;
-    root->int_val = val;
+    if (root->op != EQUAL) {
+        if (root->left != NULL && root->right != NULL) {
+            root->int_val = run_bin_exp(root);
+        }
+    }
+    else {
+        get_symbols()[root->left->var_id].value = (float) root->right->int_val;
+        bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
+
+        int val;
+        if (root->right->op == ID)
+            val = (int) get_symbols()[root->right->var_id].value;
+        else
+            val = root->right->int_val;
+        bc_builder->opcodes[bc_builder->current_builder_location++] = val;
+        bc_builder->opcodes[bc_builder->current_builder_location++] = GSTORE;
+        bc_builder->opcodes[bc_builder->current_builder_location++] = root->left->var_id;
+        root->int_val = val;
+    }
 }
 
 void bc_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
     bc_equal(bc_builder, root);
-    bc_builder->data_size++;
 }

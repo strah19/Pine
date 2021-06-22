@@ -226,8 +226,6 @@ int run_bin_exp(struct ASTNode* node) {
 
 struct ASTNode* run_ast_tree(struct ASTNode* root) {
     if (root == NULL || root->left == NULL || root->right == NULL) {
-        if (root->op == ID)
-            root->int_val = (int) get_symbols()[root->var_id].value;
         return root;
     }
     

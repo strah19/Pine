@@ -29,7 +29,7 @@ extern void match_token(struct Parser* parser, enum TokenType type, const char* 
 
 static bool run_statements(struct Parser* parser);
 
-static void expression_assignment(struct Parser* parser, struct Token* var, struct ASTNode** root);
+static void expression_assignment(struct Parser* parser, struct ASTNode** root);
 
 static void print_statement(struct Parser* parser);
 
