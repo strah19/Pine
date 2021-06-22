@@ -24,17 +24,26 @@
 #include <ctype.h>
 #include <time.h>
 
-static clock_t bench_mark_clock;
-void begin_debug_benchmark() {
-    bench_mark_clock = clock();
+#define DUMP_BYTECODE
+
+struct OpcodeInfo {
+    const char* name;
+    uint32_t num_args;
+};
+
+struct OpcodeInfo opcode_debug_info[256];
+
+struct OpcodeInfo create_opcode_info(const char* name, uint32_t num_args) {
+    struct OpcodeInfo info;
+    info.name = name;
+    info.num_args = num_args;
+
+    return info;
 }
 
-float end_debug_benchmark(const char* label) {
-    clock_t end = clock();
-    double time_spent = (double)(end - bench_mark_clock);
-    printf("Benchmark time for %s is %f ms.\n", label, time_spent);
-
-    return (float) time_spent;
+void fatal_runtime_error(const char* error_msg) {
+    fprintf(stderr, "\nRuntime Error: %s.\n", error_msg);
+    exit(EXIT_FAILURE);
 }
 
 struct VMStack vm_create_stack(int size) {
@@ -52,6 +61,7 @@ struct VM create_vm(uint32_t data_size, uint32_t main) {
     vm.stack = vm_create_stack(1028);
     vm.ip = main;
     vm.data = malloc(sizeof(struct Object) * data_size);
+    vm.data_size = data_size;
     vm.fp = 0;
 
     return vm;
@@ -69,7 +79,10 @@ int vm_push_stack(struct VMStack* stack, struct Object object) {
 }
 
 struct Object vm_pop_stack(struct VMStack* stack) {
-    return stack->stack[--(stack->top)];
+    if (stack->top > 0)
+        return stack->stack[--(stack->top)];
+    else
+        fatal_runtime_error("Cannot pop stack that is already empty");
 }
 
 struct Object vm_peek_stack(struct VMStack* stack) {
@@ -180,7 +193,11 @@ void op_syswrite(struct VM* vm) {
     vm->ip++;
 }
 
+//g_load will push whatever variable data onto the stack
 void op_gload(struct VM* vm) {
+    if (vm->data_size <= vm->opcodes[vm->ip + 1]) 
+        fatal_runtime_error("Data retrieval out of bounds: cannot get data that does not exist");
+
     uint32_t addr = vm->opcodes[vm->ip + 1];
     struct Object o = vm->data[addr];
 
@@ -189,7 +206,11 @@ void op_gload(struct VM* vm) {
     vm->ip += 2;
 }
 
+//g_store will pop whats on stack and put in variable
 void op_gstore(struct VM* vm) {
+    if (vm->data_size <= vm->opcodes[vm->ip + 1]) 
+        fatal_runtime_error("Data retrieval out of bounds: cannot get data that does not exist");
+
     struct Object o = vm_pop_stack(&vm->stack);
     uint32_t addr = vm->opcodes[vm->ip + 1];
     vm->data[addr] = o;
@@ -255,77 +276,101 @@ void op_ret(struct VM* vm) {
     vm->ip++;
 }
 
-int main(int argc, char **argv) {
-    uint32_t opcodes[] = {/*
-        LOAD, -3,
-        LOAD, -4,
-        IADD,
-        SYS_WRITE,
-        CALL, 13, 0,
-        POP,
-        ICONST, 80,
-        RET,
+static instruction ops[256];
+static struct VM vm;
 
-        ICONST, 4,
-        ICONST, 4,
-        IEQ,
-        SYS_WRITE,
-        ICONST, 0,
-        RET,
-        
-        ICONST, 15, 
-        ICONST, 5, 
-        CALL, 0, 2,
-        SYS_WRITE,
-        HALT        // stop program
-        */
-       ICONST, 4,
-       ICONST, 3,
-       IEQ,
-       JMPN, 8,
-       SYS_WRITE,
-       HALT
-    };
-
-    struct VM vm = create_vm(1, 0);
-    vm.opcodes = opcodes;
-
-    instruction ops[256];
-    for(int i = 0; i < 256; i++) {
+void init_vm() {
+    for(int i = 0; i < 256; i++) 
         ops[i] = op_nop;
-    }
 
     ops[CHARCONST] = op_charconst;
-    ops[SYS_WRITE] = op_syswrite;
-    ops[ICONST] = op_iconst;
-    ops[IADD] = op_iadd;
-    ops[ISUB] = op_isub;
-    ops[IMUL] = op_imul;
-    ops[IDIV] = op_idiv;
-    ops[IMOD] = op_imod;
-    ops[IEQ] = op_ieq;
-    ops[INEQ] = op_ineq;
-    ops[GLOAD] = op_gload;
-    ops[GSTORE] = op_gstore;
-    ops[JMP] = op_jmp;
-    ops[JMPT] = op_jmpt;
-    ops[JMPN] = op_jmpn;
-    ops[CALL] = op_call;
-    ops[RET] = op_ret;
-    ops[LOAD] = op_load;
+    opcode_debug_info[CHARCONST] = create_opcode_info("CHARCONST", 1);
 
-    begin_debug_benchmark();
+    ops[SYS_WRITE] = op_syswrite;
+    opcode_debug_info[SYS_WRITE] = create_opcode_info("SYS_WRITE", 0);
+
+    ops[ICONST] = op_iconst;
+    opcode_debug_info[ICONST] = create_opcode_info("ICONST", 1);
+
+    ops[IADD] = op_iadd;
+    opcode_debug_info[IADD] = create_opcode_info("IADD", 0);
+
+    ops[ISUB] = op_isub;
+    opcode_debug_info[ISUB] = create_opcode_info("ISUB", 0);
+    
+    ops[IMUL] = op_imul;
+    opcode_debug_info[IMUL] = create_opcode_info("IMUL", 0);
+    
+    ops[IDIV] = op_idiv;
+    opcode_debug_info[IDIV] = create_opcode_info("IDIV", 0);
+    
+    ops[IMOD] = op_imod;
+    opcode_debug_info[IMOD] = create_opcode_info("IMOD", 0);
+    
+    ops[IEQ] = op_ieq;
+    opcode_debug_info[IEQ] = create_opcode_info("IEQ", 0);
+    
+    ops[INEQ] = op_ineq;
+    opcode_debug_info[INEQ] = create_opcode_info("INEQ", 0);
+    
+    ops[GLOAD] = op_gload;
+    opcode_debug_info[GLOAD] = create_opcode_info("GLOAD", 1);
+    
+    ops[GSTORE] = op_gstore;
+    opcode_debug_info[GSTORE] = create_opcode_info("GSTORE", 1);
+    
+    ops[JMP] = op_jmp;
+    opcode_debug_info[JMP] = create_opcode_info("JMP", 1);
+    
+    ops[JMPT] = op_jmpt;
+    opcode_debug_info[JMPT] = create_opcode_info("JMPT", 1);
+    
+    ops[JMPN] = op_jmpn;
+    opcode_debug_info[JMPN] = create_opcode_info("JMPN", 1);
+    
+    ops[CALL] = op_call;
+    opcode_debug_info[CALL] = create_opcode_info("CALL", 2);
+    
+    ops[RET] = op_ret;
+    opcode_debug_info[RET] = create_opcode_info("RET", 1);
+    
+    ops[LOAD] = op_load;
+    opcode_debug_info[LOAD] = create_opcode_info("LOAD", 1);
+
+    ops[STORE] = op_store;
+    opcode_debug_info[STORE] = create_opcode_info("STORE", 1);
+}
+
+void run_vm(uint32_t data_size, uint32_t* opcodes, uint32_t main_ip) {        
+    vm = create_vm(data_size, main_ip);
+    vm.opcodes = opcodes;
+
     while(vm.opcodes[vm.ip] != HALT) {
-        printf("%04x:\t%d\t", vm.ip, vm.opcodes[vm.ip]);
+        #ifdef DUMP_BYTECODE
+            printf("%04x:\t%s\t", vm.ip, opcode_debug_info[vm.opcodes[vm.ip]].name);
+            uint32_t backtrack = vm.ip;
+            uint32_t beg_opcode_args = opcode_debug_info[vm.opcodes[vm.ip]].num_args;
+            for (int i = 0; i < beg_opcode_args; i++) {
+                vm.ip++;
+                printf("%d\t", vm.opcodes[vm.ip]);
+            }
+            vm.ip = backtrack;
+        #endif
+
         ops[vm.opcodes[vm.ip]](&vm);
 
-        printf("[ ");
-        for(int i = 0; i < vm.stack.top; i++){
-            printf("%d ", vm.stack.stack[i].i32);
-        }
-        printf("]\n");
+        #ifdef DUMP_BYTECODE
+            printf("Stack: [ ");
+            for (int i = 0; i < vm.stack.top; i++)
+                printf("%d ", vm.stack.stack[i].i32);
+            printf("]\t");
+
+            printf("Data: [ ");
+            for (int i = 0; i < data_size; i++) 
+                printf("%d ", vm.data[i].i32);
+            printf("]\n");
+        #endif
     }    
-    end_debug_benchmark("VM");
 
     free(vm.stack.stack);
     free(vm.data);

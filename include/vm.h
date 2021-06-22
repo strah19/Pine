@@ -4,14 +4,21 @@
 
 #include <stdint.h>
 
+enum ObjTypes {
+    F_32BIT, I_32BIT, D_64BIT, V_PTR, I_8BIT, U_32BIT, U_8BIT
+};
+
 struct Object {
-    uint8_t type;   //Opcode is a single byte
+    uint8_t type;  //The object type
 
     union {
         uint32_t u32;
         int32_t i32;
         uint8_t i8;
         uint8_t u8;
+
+        float f32;
+        double f64;
         
         void* ptr;
     };
@@ -29,6 +36,7 @@ struct VM {
     uint32_t* opcodes;
     uint32_t ip;
     int32_t fp;
+    uint32_t data_size;
 };
 
 enum OpCodes {
@@ -66,5 +74,9 @@ extern int vm_push_stack(struct VMStack* stack, struct Object object);
 extern struct Object vm_pop_stack(struct VMStack* stack);
 
 extern struct Object vm_peek_stack(struct VMStack* stack);
+
+extern void init_vm();
+
+extern void run_vm(uint32_t data_size, uint32_t* opcodes, uint32_t main_ip);
 
 #endif // !VM_H

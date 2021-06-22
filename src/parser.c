@@ -131,7 +131,7 @@ void assignment_statement(struct Parser* parser) {
     int var_id = 0;
 
     if (peek_next_token(parser)->type == COLON) {
-        retrieve_next_token(parser);
+        retrieve_next_token(parser); 
         var_id = check_for_var_redefination(token);
         if (peek_next_token(parser)->type == INT) {
             match_token(parser, INT, "int");

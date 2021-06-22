@@ -15,6 +15,7 @@
         "pine.h": "c",
         "types.h": "c",
         "stdint.h": "c",
-        "cctype": "cpp"
+        "cctype": "cpp",
+        "cgen.h": "c"
     }
 }
