@@ -24,7 +24,7 @@
 
 #define PARSER_LOOP 1
 
-struct Parser* create_parser(struct Lexer* lexer) {
+struct Parser* create_parser(struct Lexer* lexer, struct ByteCodeBuilder* bc_builder) {
     struct Parser* parser;
     parser = malloc(sizeof(struct Parser));
 
@@ -33,6 +33,7 @@ struct Parser* create_parser(struct Lexer* lexer) {
 
     memset(parser, 0, sizeof(struct Parser));
     parser->lexer = lexer;
+    parser->bc_builder = bc_builder;
     parser->token_index = 0;
 
     return parser;
@@ -90,16 +91,10 @@ void expression_assignment(struct Parser* parser, struct Token* var, struct ASTN
     make_ast_from_expr(&ast_tree, parser);
 
     struct Symbol* variable = get_global_symbol(var->token_string);
-    if (variable == NULL) {
-        ast_tree = run_ast_tree(ast_tree);
-        add_symbol(var->token_string, ast_tree->int_val);
-    }
-    else {
-        ast_tree = run_ast_tree(ast_tree);
-        variable->value = ast_tree->int_val;
+    ast_tree = run_ast_tree(ast_tree);
+    variable->value = ast_tree->int_val;
 
-        *root = ast_tree;
-    }
+    *root = ast_tree;
 }
 
 void print_statement(struct Parser* parser) {
@@ -142,6 +137,9 @@ void assignment_statement(struct Parser* parser) {
                 assignment_ast->left->var_id = var_id;
                 assignment_ast->right = create_ast_node(INTEGER, NULL, NULL);
                 assignment_ast->right->int_val = 0;
+
+                bc_decleration(parser->bc_builder, assignment_ast);
+
                 destroy_ast_node(assignment_ast);
                 return;
             }
@@ -154,6 +152,9 @@ void assignment_statement(struct Parser* parser) {
     struct Symbol* var = get_global_symbol(token->token_string);  
     parser->token_index = equal_statement(parser, parser->token_index, token, &assignment_ast);
     
+    log_tree(assignment_ast);
+    bc_decleration(parser->bc_builder, assignment_ast);
+
     match_token(parser, END_EXPRESSION, ";");
     destroy_ast_node(assignment_ast);
 }

@@ -3,6 +3,7 @@
 
 #include "../include/lexer.h"
 #include "../include/expression.h"
+#include "../include/bytecode_builder.h"
 
 #include <stdint.h>
 
@@ -10,10 +11,11 @@
 
 struct Parser  {
     struct Lexer* lexer;
+    struct ByteCodeBuilder* bc_builder;
     uint32_t token_index;
 };
 
-extern struct Parser* create_parser(struct Lexer* lexer);
+extern struct Parser* create_parser(struct Lexer* lexer, struct ByteCodeBuilder* bc_builder);
 
 extern void destroy_parser(struct Parser* parser);
 

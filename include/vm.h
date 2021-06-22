@@ -3,6 +3,7 @@
 #define VM_H
 
 #include <stdint.h>
+#include "../include/opcodes.h"
 
 enum ObjTypes {
     F_32BIT, I_32BIT, D_64BIT, V_PTR, I_8BIT, U_32BIT, U_8BIT
@@ -37,34 +38,6 @@ struct VM {
     uint32_t ip;
     int32_t fp;
     uint32_t data_size;
-};
-
-enum OpCodes {
-    IADD,
-    ISUB,
-    IMUL,
-    IDIV,
-    IMOD,
-    IEQ,
-    INEQ,
-    ILT,
-    IGT,
-    ILTE,
-    IGTE,
-    ICONST,
-    POP,
-    SYS_WRITE,
-    STORE,
-    GSTORE,
-    LOAD,
-    GLOAD,
-    CHARCONST,
-    HALT,
-    JMP,
-    JMPT,
-    JMPN,
-    CALL,
-    RET
 };
 
 extern struct VMStack vm_create_stack(int size);

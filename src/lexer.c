@@ -51,8 +51,8 @@ void push_token(struct Lexer* lexer, enum TokenType type, const char* val, uint3
     if (lexer->size + 1 > lexer->allocated_size) {
         uint32_t new_size = (sizeof(lexer->tokens) * 2);
         lexer->tokens = realloc(lexer->tokens, (sizeof(struct Token) * lexer->size) * 2);
-    if (!lexer->tokens) 
-        fatal_error("Failed to resize lexical tokens");
+        if (!lexer->tokens) 
+            fatal_error("Failed to resize lexical tokens");
         lexer->allocated_size = lexer->size * 2;
     }
 

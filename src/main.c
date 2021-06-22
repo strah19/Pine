@@ -1,6 +1,7 @@
 #include "../include/lexer.h"
 #include "../include/expression.h"
 #include "../include/parser.h"
+#include "../include/bytecode_builder.h"
 #include "../include/vm.h"
 
 int main(int argc, char *argv[]) {
@@ -14,27 +15,21 @@ int main(int argc, char *argv[]) {
     struct Lexer *lexer;
     lexer = create_lexer(&loader);
 
-    struct Parser* parser = create_parser(lexer); 
+    struct ByteCodeBuilder* bc_builder = create_bc_builder();
+    struct Parser* parser = create_parser(lexer, bc_builder); 
 
     begin_debug_benchmark();
         run_tokenizer(lexer);
         run_parser(parser);
     end_debug_benchmark("Pine");
 
-    init_vm();
-
-    uint32_t opcodes[] = {
-        ICONST, 2,
-        ICONST, 2,
-        IADD,
-        GSTORE, 0,
-        HALT
-    };
-
-    run_vm(1, opcodes, 0);
+    finialize_bytecode(bc_builder);
+    init_vm();  
+    run_vm(bc_builder->data_size, bc_builder->opcodes, 0);
 
     destroy_parser(parser);
     destroy_lexer(lexer);
+    destroy_bc_builder(bc_builder);
     free(loader.text);
 
     return 0;

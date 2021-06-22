@@ -195,8 +195,10 @@ void op_syswrite(struct VM* vm) {
 
 //g_load will push whatever variable data onto the stack
 void op_gload(struct VM* vm) {
-    if (vm->data_size <= vm->opcodes[vm->ip + 1]) 
-        fatal_runtime_error("Data retrieval out of bounds: cannot get data that does not exist");
+    if (vm->data_size <= vm->opcodes[vm->ip + 1]) {
+        printf("Data retrieval of %d out of bounds: cannot get data that does not exist.\n", vm->opcodes[vm->ip + 1]);
+        exit(EXIT_FAILURE);
+    }
 
     uint32_t addr = vm->opcodes[vm->ip + 1];
     struct Object o = vm->data[addr];
@@ -208,8 +210,10 @@ void op_gload(struct VM* vm) {
 
 //g_store will pop whats on stack and put in variable
 void op_gstore(struct VM* vm) {
-    if (vm->data_size <= vm->opcodes[vm->ip + 1]) 
-        fatal_runtime_error("Data retrieval out of bounds: cannot get data that does not exist");
+    if (vm->data_size <= vm->opcodes[vm->ip + 1]) {
+        printf("\nData retrieval of %d out of bounds: cannot get data that does not exist.\n", vm->opcodes[vm->ip + 1]);
+        exit(EXIT_FAILURE);
+    }
 
     struct Object o = vm_pop_stack(&vm->stack);
     uint32_t addr = vm->opcodes[vm->ip + 1];
@@ -345,6 +349,7 @@ void run_vm(uint32_t data_size, uint32_t* opcodes, uint32_t main_ip) {
     vm = create_vm(data_size, main_ip);
     vm.opcodes = opcodes;
 
+    printf("Data Allocated: %d\tMain IP: %d\n", data_size, main_ip);
     while(vm.opcodes[vm.ip] != HALT) {
         #ifdef DUMP_BYTECODE
             printf("%04x:\t%s\t", vm.ip, opcode_debug_info[vm.opcodes[vm.ip]].name);
