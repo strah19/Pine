@@ -162,6 +162,7 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
 
     (*root)->left = create_ast_node(ID, NULL, NULL);
     (*root)->left->var_id = find_global_symbol(var_token->token_string);
+    (*root)->left->parent = *root;
 
     if (var_token->type != ID)
         fatal_token_error("Value needs to be modifiable lvalue", var_token);
@@ -192,6 +193,7 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
     if (token->type == END_EXPRESSION) {
         parser->token_index = start_of_expression;
         expression_assignment(parser, &(*root)->right);
+        (*root)->right->parent = *root;
    
         end_token = parser->token_index;
         return end_token;
@@ -205,18 +207,17 @@ void if_statement(struct Parser* parser) {
 
     struct ASTNode* ast_tree;
     make_ast_from_expr(&ast_tree, parser);
-
+    //run_ast_tree(ast_tree);
+    printf("IF TREE\n");
     log_tree(ast_tree, 0);
 
-    run_ast_tree(ast_tree);
-
+    bc_equal(parser->bc_builder, ast_tree);
     match_token(parser, LCURLEY_BRACKET, "{");
 
     uint32_t jmp_reference = beg_if_statement(parser->bc_builder, ast_tree);
     destroy_ast_node(ast_tree);
 
     while(peek_next_token(parser)->type != RCURLEY_BRACKET) {
-        printf("RECURSIVE\n");
         run_statements(parser);
     }
     match_token(parser, RCURLEY_BRACKET, "}");

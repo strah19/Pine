@@ -22,6 +22,10 @@ extern void bc_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* r
 
 extern void finialize_bytecode(struct ByteCodeBuilder* bc_builder);
 
+extern uint32_t calculate_bin_operator(struct ByteCodeBuilder* bc_builder, struct ASTNode* bin);
+
 extern uint32_t beg_if_statement(struct ByteCodeBuilder* bc_builder, struct ASTNode* comparative_statement);
+
+extern void bc_equal(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
 
 #endif // !BYTECODE_BUILDER_H

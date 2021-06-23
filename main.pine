@@ -1,18 +1,10 @@
-c : int = 2;
-apples := 2 + 3 * 3;
-bananas := apples = c = 12 + 2;
-bananas = 1 == 1 and 2 == 2;
+c : int = 2 + 2;
+apples := c + 2;
 
-lexer : int = apples * bananas;
-
-if lexer == 14 {
-    if lexer > 15 {
-        lexer = 9;
-    }
+if apples == 5 {
+    apples = 1;
 }
 
-print apples;
-print bananas;
 
 /*
     This is not a mistake. The ` is needed to tell the lexer when to stop reading because 
