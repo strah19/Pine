@@ -90,3 +90,14 @@ void bc_equal(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
 void bc_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
     bc_equal(bc_builder, root);
 }
+
+uint32_t beg_if_statement(struct ByteCodeBuilder* bc_builder, struct ASTNode* comparative_statement) {
+    bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
+    bc_builder->opcodes[bc_builder->current_builder_location++] = comparative_statement->int_val;
+
+    bc_builder->opcodes[bc_builder->current_builder_location++] = JMPN;
+    uint32_t ref = bc_builder->current_builder_location;
+    bc_builder->opcodes[bc_builder->current_builder_location++] = -1;
+
+    return ref;
+}

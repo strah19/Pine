@@ -137,7 +137,7 @@ void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {
     for (size_t i = parser->token_index; i < parser->lexer->size; i++) {
         struct Token *token = &parser->lexer->tokens[i];
 
-        if(token->type == END_EXPRESSION) 
+        if(token->type == END_EXPRESSION || token->type == LCURLEY_BRACKET) 
             break;
 
         new_item = create_ast_node(token->type, NULL, NULL);

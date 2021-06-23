@@ -62,6 +62,9 @@ bool run_statements(struct Parser* parser) {
     case ID:
         assignment_statement(parser);
         break;
+    case IF:
+        if_statement(parser);
+        break;
     default:
         fatal_token_error("Undefined token", token);
     }
@@ -203,21 +206,22 @@ void if_statement(struct Parser* parser) {
     struct ASTNode* ast_tree;
     make_ast_from_expr(&ast_tree, parser);
 
-    ast_tree = run_ast_tree(ast_tree);
-    int val = ast_tree->int_val;
-    destroy_ast_node(ast_tree);
+    log_tree(ast_tree, 0);
+
+    run_ast_tree(ast_tree);
 
     match_token(parser, LCURLEY_BRACKET, "{");
 
-    if(val) {
-        while(peek_next_token(parser)->type != RCURLEY_BRACKET)
-            run_statements(parser);
-    }
-    else {
-        while(peek_next_token(parser)->type != RCURLEY_BRACKET)
-            retrieve_next_token(parser);
+    uint32_t jmp_reference = beg_if_statement(parser->bc_builder, ast_tree);
+    destroy_ast_node(ast_tree);
+
+    while(peek_next_token(parser)->type != RCURLEY_BRACKET) {
+        printf("RECURSIVE\n");
+        run_statements(parser);
     }
     match_token(parser, RCURLEY_BRACKET, "}");
+
+    parser->bc_builder->opcodes[jmp_reference] = parser->bc_builder->current_builder_location;
 }
 
 void else_statement(struct Parser* parser) {

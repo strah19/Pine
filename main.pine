@@ -1,9 +1,15 @@
 c : int = 2;
 apples := 2 + 3 * 3;
 bananas := apples = c = 12 + 2;
-bananas = 25;
+bananas = 1 == 1 and 2 == 2;
 
 lexer : int = apples * bananas;
+
+if lexer == 14 {
+    if lexer > 15 {
+        lexer = 9;
+    }
+}
 
 print apples;
 print bananas;
