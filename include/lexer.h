@@ -50,6 +50,8 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {"print", PRINT, true},
     {"int", INT, true},
     {"if", IF, true},
+    {"else", ELSE, true},
+    {"elif", ELIF, true},
     {"and", AND, true},
     {"or", OR, true}
 };

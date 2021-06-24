@@ -1,12 +1,15 @@
-apples := 14;
-bananas := 2;
+apples := 5;
 
-if apples > 10 and 1 == 1 {
+if apples == 10{
     apples = 1;
+} else {
+    apples = 2;
 }
 
-if bananas > 10 and 1 == 2 {
-    bananas = 3;
+if apples == 10 {
+    apples = 2;
+} else {
+    apples = 3;
 }
 
 /*

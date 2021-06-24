@@ -21,6 +21,7 @@
 #include "../include/stack.h"
 #include "../include/sym.h"
 #include "../include/err.h"
+#include "../include/opcodes.h"
 
 #define PARSER_LOOP 1
 
@@ -64,6 +65,12 @@ bool run_statements(struct Parser* parser) {
         break;
     case IF:
         if_statement(parser);
+        break;
+    case ELSE:
+        fatal_token_error("Else without an if", token);
+        break;
+    case ELIF:
+        fatal_token_error("Elif without an if", token);
         break;
     default:
         fatal_token_error("Undefined token", token);
@@ -216,16 +223,42 @@ void if_statement(struct Parser* parser) {
     destroy_ast_node(ast_tree);
     int local_variable_frame = get_sym_index();
 
-    while(peek_next_token(parser)->type != RCURLEY_BRACKET) 
+    while(peek_next_token(parser)->type != RCURLEY_BRACKET) {
         run_statements(parser);
+    }
+    parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = JMP;
+    uint32_t main_ref = parser->bc_builder->current_builder_location;
+    parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = -1;
+
     match_token(parser, RCURLEY_BRACKET, "}");
     update_sym_index(local_variable_frame);
 
     parser->bc_builder->opcodes[jmp_reference] = parser->bc_builder->current_builder_location;
+
+    switch (peek_next_token(parser)->type) {
+        case ELIF:
+        printf("ELIF\n");
+        break;
+        case ELSE:
+        else_statement(parser);
+        break;
+    }
+
+    parser->bc_builder->opcodes[main_ref] = parser->bc_builder->current_builder_location;
 }
 
 void else_statement(struct Parser* parser) {
-    
+    match_token(parser, ELSE, "else");
+    match_token(parser, LCURLEY_BRACKET, "{");
+    int local_variable_frame = get_sym_index();
+
+    while(peek_next_token(parser)->type != RCURLEY_BRACKET) {
+        run_statements(parser);
+    }
+
+    update_sym_index(local_variable_frame);
+    match_token(parser, RCURLEY_BRACKET, "}");
+  
 }
 
 void elif_statement(struct Parser* parser) {
