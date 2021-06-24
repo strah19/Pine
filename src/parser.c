@@ -142,7 +142,8 @@ void assignment_statement(struct Parser* parser) {
                 return;
             }
         }
-        parser->bc_builder->data_size++;
+        if (get_sym_index() > parser->bc_builder->data_size)
+            parser->bc_builder->data_size++;
     }
 
     if (find_global_symbol(token->token_string) == -1) 
@@ -207,8 +208,7 @@ void if_statement(struct Parser* parser) {
 
     struct ASTNode* ast_tree;
     make_ast_from_expr(&ast_tree, parser);
-    //run_ast_tree(ast_tree);
-    printf("IF TREE\n");
+    printf("TREE\n");
     log_tree(ast_tree, 0);
 
     bc_equal(parser->bc_builder, ast_tree);
@@ -216,11 +216,12 @@ void if_statement(struct Parser* parser) {
 
     uint32_t jmp_reference = beg_if_statement(parser->bc_builder, ast_tree);
     destroy_ast_node(ast_tree);
+    int local_variable_frame = get_sym_index();
 
-    while(peek_next_token(parser)->type != RCURLEY_BRACKET) {
+    while(peek_next_token(parser)->type != RCURLEY_BRACKET) 
         run_statements(parser);
-    }
     match_token(parser, RCURLEY_BRACKET, "}");
+    update_sym_index(local_variable_frame);
 
     parser->bc_builder->opcodes[jmp_reference] = parser->bc_builder->current_builder_location;
 }

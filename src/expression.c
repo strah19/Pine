@@ -43,6 +43,7 @@ struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct 
     node->precedence = 0;
     node->var_id = 0;
     node->int_val = 0;
+    node->order = 0;
 
     return node;
 }
@@ -141,6 +142,7 @@ void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {
             break;
 
         new_item = create_ast_node(token->type, NULL, NULL);
+        new_item->order = token->token_info.token_pos * token->token_info.token_line;
         fill_ast_node(token, &new_item);
 
         if (new_item->op == EQUAL)
@@ -179,10 +181,6 @@ void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {
     *root = (*root)->right; //The AST new value will always fill into the right first
     
     parser->token_index += token_stoppage;
-}
-
-bool is_node_childern_operands(struct ASTNode* node) {
-    return ((node->left->op == INTEGER || node->left->op == ID) && (node->right->op == INTEGER || node->right->op == ID));
 }
 
 int run_bin_exp(struct ASTNode* node) {
@@ -225,21 +223,4 @@ int run_bin_exp(struct ASTNode* node) {
     }
 
     return 0;
-}
-
-struct ASTNode* run_ast_tree(struct ASTNode* root) {
-    if (root == NULL || root->left == NULL || root->right == NULL) {
-        return root;
-    }
-    
-    if(is_node_childern_operands(root)) {
-        root->int_val = run_bin_exp(root);
-        return root;
-    }
-    else {
-        root->left = run_ast_tree(root->left);
-        root->right = run_ast_tree(root->right); 
-    }
-    root->int_val = run_bin_exp(root);
-    return root;
 }

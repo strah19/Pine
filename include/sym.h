@@ -26,4 +26,8 @@ extern void log_symbols();
 
 extern struct Symbol* get_symbols();
 
+extern int get_sym_index();
+
+extern void update_sym_index(int index);
+
 #endif //!SYM_H

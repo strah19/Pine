@@ -11,6 +11,7 @@ struct ASTNode {
     struct ASTNode *left;                
     struct ASTNode *right;
     struct ASTNode *parent;
+    uint32_t order;
     
     union 
     {
@@ -32,9 +33,5 @@ extern void log_tree(struct ASTNode* root, uint32_t tree_branch);
 extern void make_ast_from_expr(struct ASTNode** root, struct Parser* parser);
 
 extern int run_bin_exp(struct ASTNode* root);
-
-extern bool is_node_childern_operands(struct ASTNode* node);
-
-extern struct ASTNode* run_ast_tree(struct ASTNode* root);
 
 #endif //!EXPRESSION_H

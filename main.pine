@@ -1,10 +1,8 @@
-c : int = 2 + 2;
-apples := c + 2;
+apples := 14;
 
-if apples == 5 {
+if apples < 10 {
     apples = 1;
 }
-
 
 /*
     This is not a mistake. The ` is needed to tell the lexer when to stop reading because 

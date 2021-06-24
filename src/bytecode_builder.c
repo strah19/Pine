@@ -93,6 +93,16 @@ uint32_t calculate_bin_operator(struct ByteCodeBuilder* bc_builder, struct ASTNo
     return HALT;
 }
 
+void push_iconst(struct ByteCodeBuilder* bc_builder, int val) {
+    bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
+    bc_builder->opcodes[bc_builder->current_builder_location++] = val; 
+}
+
+void global_load(struct ByteCodeBuilder* bc_builder, int var_id) {
+    bc_builder->opcodes[bc_builder->current_builder_location++] = GLOAD;
+    bc_builder->opcodes[bc_builder->current_builder_location++] = var_id;    
+}
+
 void bc_equal(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
     if (!root) return;
 
@@ -101,85 +111,66 @@ void bc_equal(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
 
     if (root->op != EQUAL) {
         if (root->op == INTEGER && root->parent) {
-            if (root->parent->op == EQUAL && root != root->parent->left) {
-                bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
-                bc_builder->opcodes[bc_builder->current_builder_location++] = root->int_val;
-
-            }
-               // printf("SINGULAR EXPRESSION %d\n", root->int_val);
+            if (root->parent->op == EQUAL && root != root->parent->left) 
+                push_iconst(bc_builder, root->int_val);
         }
         else if (root->op == ID && root->parent) {
-            if (root->parent->op == EQUAL && root != root->parent->left) {
-                bc_builder->opcodes[bc_builder->current_builder_location++] = GLOAD;
-                bc_builder->opcodes[bc_builder->current_builder_location++] = root->var_id;
-
-            }
-               // printf("SINGULAR EXPRESSION %d\n", root->int_val);
+            if (root->parent->op == EQUAL && root != root->parent->left) 
+                global_load(bc_builder, root->var_id);
         }
         else if (root->left != NULL && root->right != NULL) {
             if (root->left->op == ID && root->right->op == ID) {
-                bc_builder->opcodes[bc_builder->current_builder_location++] = GLOAD;
-                bc_builder->opcodes[bc_builder->current_builder_location++] = root->left->var_id;
-                bc_builder->opcodes[bc_builder->current_builder_location++] = GLOAD;
-                bc_builder->opcodes[bc_builder->current_builder_location++] = root->right->var_id;
+                if (root->left->order < root->right->order) {
+                    global_load(bc_builder, root->right->var_id);
+                    global_load(bc_builder, root->left->var_id);
+                }
+                else {
+                    global_load(bc_builder, root->left->var_id);
+                    global_load(bc_builder, root->right->var_id); 
+                }
+
                 bc_builder->opcodes[bc_builder->current_builder_location++] = calculate_bin_operator(bc_builder, root);
             }
             else if(root->right->op == ID) {
-                bc_builder->opcodes[bc_builder->current_builder_location++] = GLOAD;
-                bc_builder->opcodes[bc_builder->current_builder_location++] = root->right->var_id;
-                bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
-                bc_builder->opcodes[bc_builder->current_builder_location++] = root->left->int_val;
+                if (root->left->order < root->right->order) {
+                    global_load(bc_builder, root->right->var_id);
+                    push_iconst(bc_builder, root->left->int_val);
+                }
+                else {
+                    push_iconst(bc_builder, root->left->int_val);
+                    global_load(bc_builder, root->right->var_id);                   
+                }
                 bc_builder->opcodes[bc_builder->current_builder_location++] = calculate_bin_operator(bc_builder, root);
             }
             else if(root->left->op == ID) {
-                bc_builder->opcodes[bc_builder->current_builder_location++] = GLOAD;
-                bc_builder->opcodes[bc_builder->current_builder_location++] = root->left->var_id;
-                bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
-                bc_builder->opcodes[bc_builder->current_builder_location++] = root->right->int_val;
+                if (root->left->order < root->right->order) {
+                    push_iconst(bc_builder, root->right->int_val);
+                    global_load(bc_builder, root->left->var_id);
+                }
+                else {
+                    global_load(bc_builder, root->left->var_id);      
+                    push_iconst(bc_builder, root->right->int_val);
+                }
                 bc_builder->opcodes[bc_builder->current_builder_location++] = calculate_bin_operator(bc_builder, root);
             }
             else {
                 root->int_val = run_bin_exp(root);
-                bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
-                bc_builder->opcodes[bc_builder->current_builder_location++] = root->int_val;
+                push_iconst(bc_builder, root->int_val);
             }
         }
     }
     else {
-       // get_symbols()[root->left->var_id].value = (float) root->right->int_val;
-        //bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
-
-      //  int val;
-      //  if (root->right->op == ID)
-         //   val = (int) get_symbols()[root->right->var_id].value;
-       // else
-         //   val = root->right->int_val;
-        //bc_builder->opcodes[bc_builder->current_builder_location++] = val;
         bc_builder->opcodes[bc_builder->current_builder_location++] = GSTORE;
         bc_builder->opcodes[bc_builder->current_builder_location++] = root->left->var_id;
-        // bc_builder->opcodes[bc_builder->current_builder_location++] = GLOAD;
-        //bc_builder->opcodes[bc_builder->current_builder_location++] = root->left->var_id;
-        if (root->parent) {
-            if (root->parent->op == EQUAL) {
-                printf("CALL\n");
-               
-            }
-        }
-
-       // root->int_val = val;
     }
 }
 
 void bc_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
-    printf("TREE\n");
-    log_tree(root, 0);
     bc_equal(bc_builder, root);
+    analyize_opcode_storage(bc_builder);
 }
 
 uint32_t beg_if_statement(struct ByteCodeBuilder* bc_builder, struct ASTNode* comparative_statement) {
-   // bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
-   // bc_builder->opcodes[bc_builder->current_builder_location++] = comparative_statement->int_val;
-
     bc_builder->opcodes[bc_builder->current_builder_location++] = JMPN;
     uint32_t ref = bc_builder->current_builder_location;
     bc_builder->opcodes[bc_builder->current_builder_location++] = -1;

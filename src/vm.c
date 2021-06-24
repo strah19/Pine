@@ -169,20 +169,20 @@ void op_ineq(struct VM* vm) {
     operate_on_operands(vm, '!');
 }
 
-void op_lt(struct VM* vm) {
+void op_ilt(struct VM* vm) {
     operate_on_operands(vm, '<');
 }
 
-void op_gt(struct VM* vm) {
+void op_igt(struct VM* vm) {
     operate_on_operands(vm, '>');
 }
 
-void op_lte(struct VM* vm) {
+void op_ilte(struct VM* vm) {
     //Use a l because <= is 2 chars but don't want to do a str compare, just a simple switch
     operate_on_operands(vm, 'l');
 }
 
-void op_gte(struct VM* vm) {
+void op_igte(struct VM* vm) {
     //Use a g because >= is 2 chars but don't want to do a str compare, just a simple switch
     operate_on_operands(vm, 'g');
 }
@@ -316,6 +316,18 @@ void init_vm() {
     
     ops[INEQ] = op_ineq;
     opcode_debug_info[INEQ] = create_opcode_info("INEQ", 0);
+
+    ops[ILT] = op_ilt;
+    opcode_debug_info[ILT] = create_opcode_info("ILT", 0);
+
+    ops[IGT] = op_igt;
+    opcode_debug_info[IGT] = create_opcode_info("IGT", 0);
+
+    ops[IGTE] = op_igte;
+    opcode_debug_info[IGTE] = create_opcode_info("IGTE", 0);
+
+    ops[ILTE] = op_ilte;
+    opcode_debug_info[ILTE] = create_opcode_info("ILTE", 0);
     
     ops[GLOAD] = op_gload;
     opcode_debug_info[GLOAD] = create_opcode_info("GLOAD", 1);

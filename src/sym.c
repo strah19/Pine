@@ -64,3 +64,11 @@ void log_symbols() {
 struct Symbol* get_symbols() {
     return global_syms;
 }
+
+int get_sym_index() {
+    return global_sym_index;
+}
+
+void update_sym_index(int index) {
+    global_sym_index = index;
+}
