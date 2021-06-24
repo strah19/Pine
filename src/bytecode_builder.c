@@ -74,9 +74,9 @@ uint32_t calculate_bin_operator(struct ByteCodeBuilder* bc_builder, struct ASTNo
         case DOUBLE_EQUAL:
             return IEQ;
         case OR:
-            return HALT;
+            return IOR;
         case AND:
-            return HALT;
+            return IAND;
         case LESS_THAN:
             return ILT;
         case GREATER_THAN:
@@ -154,8 +154,10 @@ void bc_equal(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
                 bc_builder->opcodes[bc_builder->current_builder_location++] = calculate_bin_operator(bc_builder, root);
             }
             else {
-                root->int_val = run_bin_exp(root);
-                push_iconst(bc_builder, root->int_val);
+                if (root->op != AND && root->op != OR) {
+                    root->int_val = run_bin_exp(root);
+                    push_iconst(bc_builder, root->int_val);
+                }
             }
         }
     }

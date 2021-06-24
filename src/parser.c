@@ -208,8 +208,6 @@ void if_statement(struct Parser* parser) {
 
     struct ASTNode* ast_tree;
     make_ast_from_expr(&ast_tree, parser);
-    printf("TREE\n");
-    log_tree(ast_tree, 0);
 
     bc_equal(parser->bc_builder, ast_tree);
     match_token(parser, LCURLEY_BRACKET, "{");

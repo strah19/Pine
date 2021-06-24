@@ -1,11 +1,16 @@
 apples := 14;
+bananas := 2;
 
-if apples < 10 {
+if apples > 10 and 1 == 1 {
     apples = 1;
 }
 
+if bananas > 10 and 1 == 2 {
+    bananas = 3;
+}
+
 /*
-    This is not a mistake. The ` is needed to tell the lexer when to stop reading because 
+    This is not a mistake. The ` is needed to tell the lexer when to stop reading because  
     it is reading only a byte at a time and can't actually read in an EOF (which has a value
     of -1).
 */

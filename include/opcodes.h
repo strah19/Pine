@@ -13,6 +13,8 @@ enum OpCodes {
     IGT,
     ILTE,
     IGTE,
+    IAND,
+    IOR,
     ICONST,
     POP,
     SYS_WRITE,

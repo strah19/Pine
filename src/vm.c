@@ -132,6 +132,8 @@ void operate_on_operands(struct VM* vm, char operator) {
         case '>': result.i32 = (o2.i32 >  o1.i32) ? 1 : 0; break;
         case 'l': result.i32 = (o2.i32 <= o1.i32) ? 1 : 0; break;
         case 'g': result.i32 = (o2.i32 >= o1.i32) ? 1 : 0; break; 
+        case 'a' : result.i32 = (o2.i32 && o1.i32) ? 1 : 0; break;
+        case 'o' : result.i32 = (o2.i32 || o1.i32) ? 1 : 0; break;
     default:
         break;
     }
@@ -185,6 +187,14 @@ void op_ilte(struct VM* vm) {
 void op_igte(struct VM* vm) {
     //Use a g because >= is 2 chars but don't want to do a str compare, just a simple switch
     operate_on_operands(vm, 'g');
+}
+
+void op_iand(struct VM* vm) {
+    operate_on_operands(vm, 'a');
+}
+
+void op_ior(struct VM* vm) {
+    operate_on_operands(vm, 'o');
 }
 
 void op_syswrite(struct VM* vm) {
@@ -328,6 +338,12 @@ void init_vm() {
 
     ops[ILTE] = op_ilte;
     opcode_debug_info[ILTE] = create_opcode_info("ILTE", 0);
+
+    ops[IAND] = op_iand;
+    opcode_debug_info[IAND] = create_opcode_info("IAND", 0);
+
+    ops[IOR] = op_ior;
+    opcode_debug_info[IOR] = create_opcode_info("IOR", 0);
     
     ops[GLOAD] = op_gload;
     opcode_debug_info[GLOAD] = create_opcode_info("GLOAD", 1);
