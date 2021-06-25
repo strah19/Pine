@@ -223,21 +223,25 @@ void if_statement(struct Parser* parser) {
     destroy_ast_node(ast_tree);
     int local_variable_frame = get_sym_index();
 
-    while(peek_next_token(parser)->type != RCURLEY_BRACKET) {
+    uint32_t left_bracket_match = parser->token_index;
+    while(peek_next_token(parser)->type != RCURLEY_BRACKET && peek_next_token(parser)->type != T_EOF) 
         run_statements(parser);
-    }
+    if (peek_next_token(parser)->type != RCURLEY_BRACKET) 
+        fatal_token_error("Mismatched { token", &parser->lexer->tokens[left_bracket_match]);
+
     parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = JMP;
     uint32_t main_ref = parser->bc_builder->current_builder_location;
     parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = -1;
 
     match_token(parser, RCURLEY_BRACKET, "}");
+
     update_sym_index(local_variable_frame);
 
     parser->bc_builder->opcodes[jmp_reference] = parser->bc_builder->current_builder_location;
 
     switch (peek_next_token(parser)->type) {
         case ELIF:
-        printf("ELIF\n");
+        elif_statement(parser);
         break;
         case ELSE:
         else_statement(parser);
@@ -252,15 +256,53 @@ void else_statement(struct Parser* parser) {
     match_token(parser, LCURLEY_BRACKET, "{");
     int local_variable_frame = get_sym_index();
 
-    while(peek_next_token(parser)->type != RCURLEY_BRACKET) {
+    uint32_t left_bracket_match = parser->token_index;
+    while(peek_next_token(parser)->type != RCURLEY_BRACKET && peek_next_token(parser)->type != T_EOF) 
         run_statements(parser);
-    }
+    if (peek_next_token(parser)->type != RCURLEY_BRACKET) 
+        fatal_token_error("Mismatched { token", &parser->lexer->tokens[left_bracket_match]);
+    match_token(parser, RCURLEY_BRACKET, "}");
 
     update_sym_index(local_variable_frame);
-    match_token(parser, RCURLEY_BRACKET, "}");
   
 }
 
 void elif_statement(struct Parser* parser) {
+    match_token(parser, ELIF, "elif");
 
+    struct ASTNode* ast_tree;
+    make_ast_from_expr(&ast_tree, parser);
+
+    bc_equal(parser->bc_builder, ast_tree);
+    match_token(parser, LCURLEY_BRACKET, "{");
+
+    uint32_t jmp_reference = beg_if_statement(parser->bc_builder, ast_tree);
+    destroy_ast_node(ast_tree);
+    int local_variable_frame = get_sym_index();
+
+    uint32_t left_bracket_match = parser->token_index;
+    while(peek_next_token(parser)->type != RCURLEY_BRACKET && peek_next_token(parser)->type != T_EOF) 
+        run_statements(parser);
+    if (peek_next_token(parser)->type != RCURLEY_BRACKET) 
+        fatal_token_error("Mismatched { token", &parser->lexer->tokens[left_bracket_match]);
+
+    parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = JMP;
+    uint32_t main_ref = parser->bc_builder->current_builder_location;
+    parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = -1;
+
+    match_token(parser, RCURLEY_BRACKET, "}");
+
+    update_sym_index(local_variable_frame);
+
+    parser->bc_builder->opcodes[jmp_reference] = parser->bc_builder->current_builder_location;
+
+    switch (peek_next_token(parser)->type) {
+        case ELIF:
+        elif_statement(parser);
+        break;
+        case ELSE:
+        else_statement(parser);
+        break;
+    }
+    parser->bc_builder->opcodes[main_ref] = parser->bc_builder->current_builder_location;
 }
