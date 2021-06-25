@@ -19,7 +19,9 @@ while loop_var < 5 {    //This is a loop!
     loop_var = loop_var + 2;
 }
 
-_legal_var : int;
+_legal_var2 : int;
+
+_legal_var2 = 99;
 
 /*
     This is not a mistake. The ` is needed to tell the lexer when to stop reading because  

@@ -106,7 +106,7 @@ void run_tokenizer(struct Lexer *lexer) {
             current_token_str[current_token_len] = *bp;
             current_token_len++;
 
-            if (is_char_digit((char) *bp) && !is_char_digit((char) *(bp + 1))) {
+            if (is_char_digit((char) *bp) && !is_char_digit((char) *(bp + 1)) && !possible_variable) {
                 push_token(lexer, INTEGER, current_token_str, line, pos);
                 reset_lexer(&pos, &current_token_len, current_token_str);
             }
@@ -132,7 +132,7 @@ void run_tokenizer(struct Lexer *lexer) {
                     for (int i = 0; i < sizeof(TOKEN_PAIRS) / sizeof(TOKEN_PAIRS[0]); i++) {
                         if (current_token_str[0] != TOKEN_PAIRS[i].in_code_name[0])
                             continue;
-                        bool cont = (!TOKEN_PAIRS[i].check_next) ? true : !(is_char_good_for_variable_name((char)(*(bp + 1))));
+                        bool cont = (!TOKEN_PAIRS[i].check_next) ? true : !(is_char_good_for_variable_name((char)(*(bp + 1)), current_token_len));
                         if (strcmp(current_token_str, TOKEN_PAIRS[i].in_code_name) == 0 && cont) {
                             push_token(lexer, TOKEN_PAIRS[i].type, TOKEN_PAIRS[i].in_code_name, line, pos);
                             reset_lexer(&pos, &current_token_len, current_token_str);
@@ -142,8 +142,8 @@ void run_tokenizer(struct Lexer *lexer) {
                     }
 
                     if (check_for_var) {
-                        possible_variable = is_char_good_for_variable_name((char)*bp);
-                        if (possible_variable && !is_char_good_for_variable_name((char)(*(bp + 1)))) {
+                        possible_variable = is_char_good_for_variable_name((char)*bp, current_token_len);
+                        if (possible_variable && !is_char_good_for_variable_name((char)(*(bp + 1)), current_token_len)) {
                             push_token(lexer, ID, current_token_str, line, pos);
                             reset_lexer(&pos, &current_token_len, current_token_str);  
                             possible_variable = false;

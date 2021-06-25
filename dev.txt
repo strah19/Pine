@@ -52,3 +52,14 @@ GP  | Finished very basic vm.
     |
     | Completly re-did the lexer. It is much much faster now. Also re-did a bit of the vm so it can take in ints instead of reading in a byte at a time. The opcodes
     | codes will still be 1 byte but its nice to be able to pass ints as parameters. 
+-----------------------------
+
+6/15/2021 - 6/19/2021 ~Beta Pine V 0.03~
+-----------------------------
+    | Added control flow, if, else, elif, while statements. They have their own scopes and can be nested. 
+    | ByteCodeBuilder has started and can compile all code to it. This is goode because we can do things like this:
+    |                                       Pine Code
+    |                                           |
+    |                                      Pine Bytecode
+    |                                      /    |    \
+    |                                     VM   .c    .asm
