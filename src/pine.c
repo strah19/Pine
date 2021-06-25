@@ -26,7 +26,7 @@ bool is_char_digit(char character) {
 }
 
 bool is_char_good_for_variable_name(char character) {
-    return ((character >= 65 && character <= 90) || (character >= 97 && character <= 122)) ? true : false;
+    return ((character >= 65 && character <= 90) || (character >= 97 && character <= 122) || character == '_') ? true : false;
 }
 
 void remove_whitespaces(char* s) {

@@ -1,3 +1,23 @@
+apples := 2;
+
+if apples == 5 {
+    apples = 2;
+    if apples == 2 {
+        apples = 4;
+    } elif apples == 4 {
+        apples = 2;
+    }
+} elif apples == 2 {
+    apples = 1;
+} else {
+    apples = 8;
+}
+
+loop_var := 0;
+
+while loop_var < 5 {    //This is a loop!
+    loop_var = loop_var + 2;
+}
 
 /*
     This is not a mistake. The ` is needed to tell the lexer when to stop reading because  

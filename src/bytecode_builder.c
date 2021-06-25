@@ -172,7 +172,7 @@ void bc_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
     analyize_opcode_storage(bc_builder);
 }
 
-uint32_t beg_if_statement(struct ByteCodeBuilder* bc_builder, struct ASTNode* comparative_statement) {
+uint32_t get_jmp_reference(struct ByteCodeBuilder* bc_builder, struct ASTNode* comparative_statement) {
     bc_builder->opcodes[bc_builder->current_builder_location++] = JMPN;
     uint32_t ref = bc_builder->current_builder_location;
     bc_builder->opcodes[bc_builder->current_builder_location++] = -1;

@@ -43,4 +43,8 @@ static void elif_statement(struct Parser* parser);
 
 static int equal_statement(struct Parser* parser, int end_token, struct Token* var_token, struct ASTNode** root);
 
+static void while_statement(struct Parser* parser);
+
+static void break_statement(struct Parser* parser);
+
 #endif //!PARSER_H

@@ -53,7 +53,9 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {"else", ELSE, true},
     {"elif", ELIF, true},
     {"and", AND, true},
-    {"or", OR, true}
+    {"or", OR, true},
+    {"while", WHILE, true},
+    {"break", BREAK, true}
 };
 
 extern struct LexLoader create_buffer_for_lexer(const char *filepath);
