@@ -168,6 +168,7 @@ void bc_equal(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
 }
 
 void bc_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
+    log_tree(root, 0);
     bc_equal(bc_builder, root);
     analyize_opcode_storage(bc_builder);
 }

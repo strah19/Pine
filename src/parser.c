@@ -139,16 +139,22 @@ void assignment_statement(struct Parser* parser) {
         if (peek_next_token(parser)->type == INT) {
             match_token(parser, INT, "int");
             if(peek_next_token(parser)->type == END_EXPRESSION) {
-                match_token(parser, END_EXPRESSION, ";");
                 assignment_ast = create_ast_node(EQUAL, NULL, NULL);
                 assignment_ast->left = create_ast_node(ID, NULL, NULL);
                 assignment_ast->left->var_id = var_id;
                 assignment_ast->right = create_ast_node(INTEGER, NULL, NULL);
                 assignment_ast->right->int_val = 0;
 
+                assignment_ast->left->parent = assignment_ast;
+                assignment_ast->right->parent = assignment_ast;
+
+                if (get_sym_index() > parser->bc_builder->data_size)
+                    parser->bc_builder->data_size++;
                 bc_decleration(parser->bc_builder, assignment_ast);
 
+                match_token(parser, END_EXPRESSION, ";");
                 destroy_ast_node(assignment_ast);
+
                 return;
             }
         }
