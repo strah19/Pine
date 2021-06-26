@@ -18,7 +18,7 @@ extern void destroy_bc_builder(struct ByteCodeBuilder* bc_builder);
 
 extern void analyize_opcode_storage(struct ByteCodeBuilder* bc_builder);
 
-extern void bc_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
+extern void build_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
 
 extern void finialize_bytecode(struct ByteCodeBuilder* bc_builder);
 
@@ -26,6 +26,6 @@ extern uint32_t calculate_bin_operator(struct ByteCodeBuilder* bc_builder, struc
 
 extern uint32_t get_jmp_reference(struct ByteCodeBuilder* bc_builder, struct ASTNode* comparative_statement);
 
-extern void bc_equal(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
+extern void build_expression(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
 
 #endif // !BYTECODE_BUILDER_H

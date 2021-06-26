@@ -153,7 +153,7 @@ void assignment_statement(struct Parser* parser) {
 
                 if (get_sym_index() > parser->bc_builder->data_size)
                     parser->bc_builder->data_size++;
-                bc_decleration(parser->bc_builder, assignment_ast);
+                build_decleration(parser->bc_builder, assignment_ast);
 
                 match_token(parser, END_EXPRESSION, ";");
                 destroy_ast_node(assignment_ast);
@@ -171,7 +171,7 @@ void assignment_statement(struct Parser* parser) {
     struct Symbol* var = get_symbol(token->token_string, VAR);  
     parser->token_index = equal_statement(parser, parser->token_index, token, &assignment_ast);
 
-    bc_decleration(parser->bc_builder, assignment_ast);
+    build_decleration(parser->bc_builder, assignment_ast);
 
     match_token(parser, END_EXPRESSION, ";");
     destroy_ast_node(assignment_ast);
@@ -228,7 +228,7 @@ void generic_condition(struct Parser* parser, uint32_t condition_type, const cha
     struct ASTNode* ast_tree;
     make_ast_from_expr(&ast_tree, parser);
 
-    bc_equal(parser->bc_builder, ast_tree);
+    build_expression(parser->bc_builder, ast_tree);
     match_token(parser, LCURLEY_BRACKET, "{");
 
     uint32_t jmp_reference = get_jmp_reference(parser->bc_builder, ast_tree);
@@ -293,7 +293,7 @@ void while_statement(struct Parser* parser) {
     struct ASTNode* ast_tree;
     make_ast_from_expr(&ast_tree, parser);
 
-    bc_equal(parser->bc_builder, ast_tree);
+    build_expression(parser->bc_builder, ast_tree);
     match_token(parser, LCURLEY_BRACKET, "{");
 
     uint32_t jmp_reference = get_jmp_reference(parser->bc_builder, ast_tree);

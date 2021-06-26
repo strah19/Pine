@@ -23,6 +23,10 @@ _legal_var2 : int;
 
 _legal_var2 = 99;
 
+new_var := 2;
+
+new_var = new_var + _legal_var2;
+
 void func() { }
 
 /*
