@@ -18,9 +18,11 @@ struct Symbol {
 
 extern int find_global_symbol(char* name);
 
-extern int add_symbol(char* name, float value);
+extern int add_symbol(char* name, float value, enum SymType type);
 
 extern struct Symbol* get_global_symbol(char* name);
+
+extern struct Symbol* get_global_symbol_funcs(char* name);
 
 extern void log_symbols();
 

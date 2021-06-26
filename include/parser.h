@@ -47,4 +47,6 @@ static void while_statement(struct Parser* parser);
 
 static void break_statement(struct Parser* parser);
 
+static void func(struct Parser* parser);
+
 #endif //!PARSER_H

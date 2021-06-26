@@ -32,15 +32,18 @@ static int global_sym_index = 0;
 
 int find_global_symbol(char* name) {
     for (int i = 0; i < global_sym_index; i++)  
-        if(strcmp(global_syms[i].name, name) == 0)
-            return i;
+        if (global_syms[i].name[0] == name[0])
+            if (strcmp(global_syms[i].name, name) == 0)
+                return i;
     return -1;
 }
 
-int add_symbol(char* name, float value) {
+int add_symbol(char* name, float value, enum SymType type) {
     if(find_global_symbol(name) == -1) {
         global_syms[global_sym_index].name = name;
         global_syms[global_sym_index].value = value;
+        global_syms[global_sym_index].type = type;
+
         global_sym_index++;
     }
     else  {
@@ -53,6 +56,18 @@ int add_symbol(char* name, float value) {
 
 struct Symbol* get_global_symbol(char* name) {
     int index = find_global_symbol(name);
+    return (index != -1) ? &global_syms[index] : NULL;
+}
+
+struct Symbol* get_global_symbol_funcs(char* name) {
+    int index = -1;
+    for (int i = 0; i < global_sym_index; i++)  
+        if (global_syms[i].name[0] == name[0] && global_syms[i].type == FUNC) {
+            if (strcmp(global_syms[i].name, name) == 0) {
+                index = i;
+                break;
+            }
+        }
     return (index != -1) ? &global_syms[index] : NULL;
 }
 

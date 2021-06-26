@@ -75,6 +75,9 @@ bool run_statements(struct Parser* parser) {
     case WHILE:
         while_statement(parser);
         break;
+    case VOID:  //This is currently not robust enough.
+        func(parser);   
+        break;
     default:
         fatal_token_error("Undefined token", token);
     }
@@ -120,7 +123,7 @@ void print_statement(struct Parser* parser) {
 
 int check_for_var_redefination(struct Token* token) {
     if (find_global_symbol(token->token_string) == -1) 
-        return add_symbol(token->token_string, 0.0);
+        return add_symbol(token->token_string, 0.0, VAR);
     else
         fatal_token_error("Redefination of variable", token);
     return -1;
@@ -316,6 +319,27 @@ void while_statement(struct Parser* parser) {
     parser->bc_builder->opcodes[jmp_reference] = parser->bc_builder->current_builder_location;
 }
 
-static void break_statement(struct Parser* parser) {
+void break_statement(struct Parser* parser) {
 
+}
+
+void func(struct Parser* parser) {
+    match_token(parser, VOID, "void");
+
+    struct Token* token_symbol = peek_next_token(parser);
+    match_token(parser, ID, "function identifier");
+    struct Symbol* symbol = get_global_symbol_funcs(token_symbol->token_string);
+    
+    if (!symbol) 
+        add_symbol(token_symbol->token_string, 0.0, FUNC);
+    else
+        fatal_token_error("Redefination of function", token_symbol);
+
+    match_token(parser, LPAR, "(");
+    match_token(parser, RPAR, ")");
+
+    match_token(parser, LCURLEY_BRACKET, "{");
+    match_token(parser, RCURLEY_BRACKET, "}");
+
+    log_symbols();
 }
