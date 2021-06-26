@@ -25,6 +25,23 @@
 
 #define PARSER_LOOP 1
 
+void run_scope(struct Parser* parser);
+bool run_statements(struct Parser* parser);
+
+void expression_assignment(struct Parser* parser, struct ASTNode** root);
+uint32_t comparison_statement(struct Parser* parser);
+void print_statement(struct Parser* parser);
+void assignment_statement(struct Parser* parser);
+
+void if_statement(struct Parser* parser);
+void else_statement(struct Parser* parser);
+void elif_statement(struct Parser* parser);
+int equal_statement(struct Parser* parser, int end_token, struct Token* var_token, struct ASTNode** root);
+void while_statement(struct Parser* parser);
+void break_statement(struct Parser* parser);
+
+void function_defination(struct Parser* parser);
+
 struct Parser* create_parser(struct Lexer* lexer, struct ByteCodeBuilder* bc_builder) {
     struct Parser* parser;
     parser = malloc(sizeof(struct Parser));
@@ -76,7 +93,7 @@ bool run_statements(struct Parser* parser) {
         while_statement(parser);
         break;
     case VOID:  //This is currently not robust enough.
-        func(parser);   
+        function_defination(parser);   
         break;
     default:
         fatal_token_error("Undefined token", token);
@@ -222,30 +239,39 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
     return end_token;
 }
 
-void generic_condition(struct Parser* parser, uint32_t condition_type, const char* name) {
-    match_token(parser, condition_type, name);
-
-    struct ASTNode* ast_tree;
-    make_ast_from_expr(&ast_tree, parser);
-
-    build_expression(parser->bc_builder, ast_tree);
+void run_scope(struct Parser* parser) {
     match_token(parser, LCURLEY_BRACKET, "{");
-
-    uint32_t jmp_reference = get_jmp_reference(parser->bc_builder, ast_tree);
-    destroy_ast_node(ast_tree);
-    int local_variable_frame = get_sym_index();
-
     uint32_t left_bracket_match = parser->token_index;
     while(peek_next_token(parser)->type != RCURLEY_BRACKET && peek_next_token(parser)->type != T_EOF) 
         run_statements(parser);
     if (peek_next_token(parser)->type != RCURLEY_BRACKET) 
-        fatal_token_error("Mismatched { token", &parser->lexer->tokens[left_bracket_match]);
+        fatal_token_error("Mismatched { token", &parser->lexer->tokens[left_bracket_match]);    
+    match_token(parser, RCURLEY_BRACKET, "}");
+}
+
+uint32_t comparison_statement(struct Parser* parser) {
+    struct ASTNode* ast_tree;
+    make_ast_from_expr(&ast_tree, parser);
+
+    build_expression(parser->bc_builder, ast_tree);
+
+    uint32_t jmp_reference = get_jmp_reference(parser->bc_builder, ast_tree);
+    destroy_ast_node(ast_tree);    
+
+    return jmp_reference;
+}
+
+void generic_condition(struct Parser* parser, uint32_t condition_type, const char* name) {
+    match_token(parser, condition_type, name);
+
+    uint32_t jmp_reference = comparison_statement(parser);
+    int local_variable_frame = get_sym_index();
+
+    run_scope(parser);
 
     parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = JMP;
     uint32_t main_ref = parser->bc_builder->current_builder_location;
     parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = -1;
-
-    match_token(parser, RCURLEY_BRACKET, "}");
 
     update_sym_index(local_variable_frame);
 
@@ -268,18 +294,11 @@ void if_statement(struct Parser* parser) {
 
 void else_statement(struct Parser* parser) {
     match_token(parser, ELSE, "else");
-    match_token(parser, LCURLEY_BRACKET, "{");
     int local_variable_frame = get_sym_index();
 
-    uint32_t left_bracket_match = parser->token_index;
-    while(peek_next_token(parser)->type != RCURLEY_BRACKET && peek_next_token(parser)->type != T_EOF) 
-        run_statements(parser);
-    if (peek_next_token(parser)->type != RCURLEY_BRACKET) 
-        fatal_token_error("Mismatched { token", &parser->lexer->tokens[left_bracket_match]);
-    match_token(parser, RCURLEY_BRACKET, "}");
+    run_scope(parser);
 
     update_sym_index(local_variable_frame);
-  
 }
 
 void elif_statement(struct Parser* parser) {
@@ -290,26 +309,10 @@ void while_statement(struct Parser* parser) {
     match_token(parser, WHILE, "while");
  
     uint32_t start_ref = parser->bc_builder->current_builder_location;
-    struct ASTNode* ast_tree;
-    make_ast_from_expr(&ast_tree, parser);
-
-    build_expression(parser->bc_builder, ast_tree);
-    match_token(parser, LCURLEY_BRACKET, "{");
-
-    uint32_t jmp_reference = get_jmp_reference(parser->bc_builder, ast_tree);
-    destroy_ast_node(ast_tree);
+    uint32_t jmp_reference = comparison_statement(parser);
     int local_variable_frame = get_sym_index();
 
-    uint32_t left_bracket_match = parser->token_index;
-
-    while(peek_next_token(parser)->type != RCURLEY_BRACKET && peek_next_token(parser)->type != T_EOF) {
-        run_statements(parser);
-        break_statement(parser);
-    }
-    if (peek_next_token(parser)->type != RCURLEY_BRACKET) 
-        fatal_token_error("Mismatched { token", &parser->lexer->tokens[left_bracket_match]);
-
-    match_token(parser, RCURLEY_BRACKET, "}");
+    run_scope(parser);
 
     update_sym_index(local_variable_frame);
 
@@ -323,17 +326,11 @@ void break_statement(struct Parser* parser) {
 
 }
 
-void func(struct Parser* parser) {
+void function_defination(struct Parser* parser) {
     match_token(parser, VOID, "void");
 
     struct Token* token_symbol = peek_next_token(parser);
     match_token(parser, ID, "function identifier");
-  //  struct Symbol* symbol = add(token_symbol->token_string);
-    
-    //if (!symbol) 
-    //    add_symbol(token_symbol->token_string, 0.0, FUNC);
-    //else
-     //   fatal_token_error("Redefination of function", token_symbol);
 
     match_token(parser, LPAR, "(");
     match_token(parser, RPAR, ")");
