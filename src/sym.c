@@ -27,63 +27,58 @@
 
 #define NSYMBOL 1024
 
-static struct Symbol global_syms[NSYMBOL];
-static int global_sym_index = 0;
+static struct Symbol syms[NSYMBOL];
+static uint32_t sym_index = 0;
 
-int find_global_symbol(char* name) {
-    for (int i = 0; i < global_sym_index; i++)  
-        if (global_syms[i].name[0] == name[0])
-            if (strcmp(global_syms[i].name, name) == 0)
+uint32_t search_all_symbol(char* name) {
+    for (int i = 0; i < sym_index; i++)  
+        if (syms[i].name[0] == name[0])
+            if (strcmp(syms[i].name, name) == 0)
                 return i;
     return -1;
 }
 
-int add_symbol(char* name, float value, enum SymType type) {
-    if(find_global_symbol(name) == -1) {
-        global_syms[global_sym_index].name = name;
-        global_syms[global_sym_index].value = value;
-        global_syms[global_sym_index].type = type;
+uint32_t search_type_symbol(char* name, enum SymType type) {
+    for (int i = 0; i < sym_index; i++)  
+        if (syms[i].name[0] == name[0] && syms[i].type == type) 
+            if (strcmp(syms[i].name, name) == 0) 
+                return i;
+    return -1;
+}
 
-        global_sym_index++;
+uint32_t add_symbol(char* name, enum SymType type) {
+    if(search_type_symbol(name, type) == -1) {
+        syms[sym_index].name = name;
+        syms[sym_index].type = type;
+
+        sym_index++;
     }
     else  {
         fprintf(stderr, "Error: Symbol '%s' is already defined.\n", name);
         exit(EXIT_FAILURE);
     }
 
-    return global_sym_index - 1;
+    return sym_index - 1;
 }
 
-struct Symbol* get_global_symbol(char* name) {
-    int index = find_global_symbol(name);
-    return (index != -1) ? &global_syms[index] : NULL;
-}
-
-struct Symbol* get_global_symbol_funcs(char* name) {
-    int index = -1;
-    for (int i = 0; i < global_sym_index; i++)  
-        if (global_syms[i].name[0] == name[0] && global_syms[i].type == FUNC) {
-            if (strcmp(global_syms[i].name, name) == 0) {
-                index = i;
-                break;
-            }
-        }
-    return (index != -1) ? &global_syms[index] : NULL;
+struct Symbol* get_symbol(char* name, enum SymType type) {
+    uint32_t index = search_type_symbol(name, type);
+    return (index != -1) ? &syms[index] : NULL;
 }
 
 void log_symbols() {
-    for (int i = 0; i < global_sym_index; i++)  
-       printf("Symbol: '%s', Index: %d\n", global_syms[i].name, i);   
+    for (int i = 0; i < sym_index; i++)  
+       printf("Symbol: '%s', Index: %d\n", syms[i].name, i);   
 }
 
 struct Symbol* get_symbols() {
-    return global_syms;
+    return syms;
 }
 
-int get_sym_index() {
-    return global_sym_index;
+uint32_t get_sym_index() {
+    return sym_index;
 }
 
-void update_sym_index(int index) {
-    global_sym_index = index;
+void update_sym_index(uint32_t index) {
+    sym_index = index;
 }

@@ -122,8 +122,8 @@ void print_statement(struct Parser* parser) {
 }
 
 int check_for_var_redefination(struct Token* token) {
-    if (find_global_symbol(token->token_string) == -1) 
-        return add_symbol(token->token_string, 0.0, VAR);
+    if (search_type_symbol(token->token_string, VAR) == -1) 
+        return add_symbol(token->token_string, VAR);
     else
         fatal_token_error("Redefination of variable", token);
     return -1;
@@ -165,10 +165,10 @@ void assignment_statement(struct Parser* parser) {
             parser->bc_builder->data_size++;
     }
 
-    if (find_global_symbol(token->token_string) == -1) 
+    if (search_type_symbol(token->token_string, VAR) == -1) 
             fatal_token_error("Undefined variable", token);
 
-    struct Symbol* var = get_global_symbol(token->token_string);  
+    struct Symbol* var = get_symbol(token->token_string, VAR);  
     parser->token_index = equal_statement(parser, parser->token_index, token, &assignment_ast);
 
     bc_decleration(parser->bc_builder, assignment_ast);
@@ -181,7 +181,7 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
     *root = create_ast_node(EQUAL, NULL, NULL);
 
     (*root)->left = create_ast_node(ID, NULL, NULL);
-    (*root)->left->var_id = find_global_symbol(var_token->token_string);
+    (*root)->left->var_id = search_type_symbol(var_token->token_string, VAR);
     (*root)->left->parent = *root;
 
     if (var_token->type != ID)
@@ -328,12 +328,12 @@ void func(struct Parser* parser) {
 
     struct Token* token_symbol = peek_next_token(parser);
     match_token(parser, ID, "function identifier");
-    struct Symbol* symbol = get_global_symbol_funcs(token_symbol->token_string);
+  //  struct Symbol* symbol = add(token_symbol->token_string);
     
-    if (!symbol) 
-        add_symbol(token_symbol->token_string, 0.0, FUNC);
-    else
-        fatal_token_error("Redefination of function", token_symbol);
+    //if (!symbol) 
+    //    add_symbol(token_symbol->token_string, 0.0, FUNC);
+    //else
+     //   fatal_token_error("Redefination of function", token_symbol);
 
     match_token(parser, LPAR, "(");
     match_token(parser, RPAR, ")");

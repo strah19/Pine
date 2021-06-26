@@ -116,7 +116,7 @@ void fill_ast_node(struct Token* token, struct ASTNode** node) {
         (*node)->precedence = NUMERIC_PRECEDENCE;
     }
     else if(token->type == ID) {
-        int var_id = find_global_symbol(token->token_string);
+        int var_id = search_type_symbol(token->token_string, VAR);
         if (var_id == -1)
             fatal_token_error("Undefined variable", token);
         (*node)->var_id = var_id;
@@ -186,13 +186,13 @@ void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {
 int run_bin_exp(struct ASTNode* node) {
     int left_val = 0, right_val = 0;
 
-    if (node->left->op == ID) 
-        left_val = (int) get_symbols()[node->left->var_id].value;
-    else
-        left_val = node->left->int_val;
-   if (node->right->op == ID) 
-        right_val = (int) get_symbols()[node->right->var_id].value;
-    else
+   // if (node->left->op == ID) 
+   //     left_val = (int) get_symbols()[node->left->var_id].value;
+   // else
+       left_val = node->left->int_val;
+   //if (node->right->op == ID) 
+     //   right_val = (int) get_symbols()[node->right->var_id].value;
+    //else
         right_val = node->right->int_val;
 
     switch(node->op) {
