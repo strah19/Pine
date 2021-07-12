@@ -32,6 +32,7 @@ void expression_assignment(struct Parser* parser, struct ASTNode** root);
 uint32_t comparison_statement(struct Parser* parser);
 void print_statement(struct Parser* parser);
 void assignment_statement(struct Parser* parser);
+void id_found(struct Parser* parser);
 
 void if_statement(struct Parser* parser);
 void else_statement(struct Parser* parser);
@@ -78,7 +79,7 @@ bool run_statements(struct Parser* parser) {
         print_statement(parser);
         break;
     case ID:
-        assignment_statement(parser);
+        id_found(parser);
         break;
     case IF:
         if_statement(parser);
@@ -91,9 +92,6 @@ bool run_statements(struct Parser* parser) {
         break;
     case WHILE:
         while_statement(parser);
-        break;
-    case VOID:  //This is currently not robust enough.
-        function_defination(parser);   
         break;
     default:
         fatal_token_error("Undefined token", token);
@@ -119,6 +117,13 @@ void match_token(struct Parser* parser, enum TokenType type, const char* what) {
             fatal_compiler_error("Expected", what, token->token_info.token_line);
 }
 
+void id_found(struct Parser* parser) {
+    if (parser->lexer->tokens[parser->token_index + 1].token_string[0] == '(') 
+        function_defination(parser);
+    else
+        assignment_statement(parser);
+}
+
 void expression_assignment(struct Parser* parser, struct ASTNode** root) {
     struct ASTNode* ast_tree;
     make_ast_from_expr(&ast_tree, parser);
@@ -140,7 +145,7 @@ void print_statement(struct Parser* parser) {
 
 int check_for_var_redefination(struct Token* token) {
     if (search_type_symbol(token->token_string, VAR) == -1) 
-        return add_symbol(token->token_string, VAR);
+        return add_symbol(token->token_string, VAR)->id;
     else
         fatal_token_error("Redefination of variable", token);
     return -1;
@@ -327,16 +332,10 @@ void break_statement(struct Parser* parser) {
 }
 
 void function_defination(struct Parser* parser) {
-    match_token(parser, VOID, "void");
-
     struct Token* token_symbol = peek_next_token(parser);
     match_token(parser, ID, "function identifier");
 
     match_token(parser, LPAR, "(");
     match_token(parser, RPAR, ")");
 
-    match_token(parser, LCURLEY_BRACKET, "{");
-    match_token(parser, RCURLEY_BRACKET, "}");
-
-    log_symbols();
 }

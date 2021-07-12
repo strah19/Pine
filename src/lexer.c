@@ -81,6 +81,7 @@ void run_tokenizer(struct Lexer *lexer) {
     uint8_t single_line = 0;
 
     bool possible_variable = false;
+    bool in_str = false;
 
     while (*bp != '`' || (comment_counter != 0 || single_line != 0)) {
         if (*bp == '\n') {
@@ -102,7 +103,26 @@ void run_tokenizer(struct Lexer *lexer) {
             bp++;
             single_line = 1;
         }
-        else if(*bp != ' ' && *bp != '\n' && !comment_counter && !single_line) {
+        else if (in_str) {
+            if (*bp == '"' && *(bp - 1) != '%') {
+                in_str = false;
+                push_token(lexer, STR, current_token_str, line, pos);
+            }
+            else {
+                if (*bp == '%' && *(bp + 1) == '"') {
+                    current_token_str[current_token_len] = '"';
+                    current_token_len++;
+                }
+                else if (*bp != '"') {
+                    current_token_str[current_token_len] = *bp;
+                    current_token_len++;
+                }
+            }
+        }
+        else if (*bp == '"') {
+            in_str = true;
+        }
+        else if(*bp != ' ' && *bp != '\n' && !comment_counter && !single_line && !in_str) {
             current_token_str[current_token_len] = *bp;
             current_token_len++;
 

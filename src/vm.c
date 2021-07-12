@@ -197,9 +197,20 @@ void op_ior(struct VM* vm) {
     operate_on_operands(vm, 'o');
 }
 
+void print_data(struct Object* o) {
+    switch (o->type) {
+    case ICONST:
+        printf("%d", o->i32);
+        break;
+    case CHARCONST:
+        printf("%c", (char) o->u8);
+        break;
+    }
+}
+
 void op_syswrite(struct VM* vm) {
     struct Object o = vm_pop_stack(&vm->stack);
-   // printf("\n%d\n", o.i32);
+    print_data(&o);
     vm->ip++;
 }
 
@@ -373,6 +384,18 @@ void init_vm() {
     opcode_debug_info[STORE] = create_opcode_info("STORE", 1);
 }
 
+void color_red() {
+    printf("\033[1;31m");
+}
+
+void color_green() {
+    printf("\033[0;32m");
+}
+
+void color_reset() {
+    printf("\033[0m");
+}
+
 void run_vm(uint32_t data_size, uint32_t* opcodes, uint32_t main_ip) {        
     vm = create_vm(data_size, main_ip);
     vm.opcodes = opcodes;
@@ -380,7 +403,9 @@ void run_vm(uint32_t data_size, uint32_t* opcodes, uint32_t main_ip) {
     printf("Data Allocated: %d\tMain IP: %d\n", data_size, main_ip);
     while(vm.opcodes[vm.ip] != HALT) {
         #ifdef DUMP_BYTECODE
+            color_red();
             printf("%04x:\t%s\t", vm.ip, opcode_debug_info[vm.opcodes[vm.ip]].name);
+            color_reset();
             uint32_t backtrack = vm.ip;
             uint32_t beg_opcode_args = opcode_debug_info[vm.opcodes[vm.ip]].num_args;
             for (int i = 0; i < beg_opcode_args; i++) {
@@ -393,6 +418,7 @@ void run_vm(uint32_t data_size, uint32_t* opcodes, uint32_t main_ip) {
         ops[vm.opcodes[vm.ip]](&vm);
 
         #ifdef DUMP_BYTECODE
+            color_green();
             printf("Stack: [ ");
             for (int i = 0; i < vm.stack.top; i++)
                 printf("%d ", vm.stack.stack[i].i32);
@@ -402,6 +428,7 @@ void run_vm(uint32_t data_size, uint32_t* opcodes, uint32_t main_ip) {
             for (int i = 0; i < data_size; i++) 
                 printf("%d ", vm.data[i].i32);
             printf("]\n");
+            color_reset();
         #endif
     }    
 

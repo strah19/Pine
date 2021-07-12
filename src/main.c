@@ -3,6 +3,7 @@
 #include "../include/parser.h"
 #include "../include/bytecode_builder.h"
 #include "../include/vm.h"
+#include "../include/sym.h"
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -31,6 +32,7 @@ int main(int argc, char *argv[]) {
     destroy_lexer(lexer);
     destroy_bc_builder(bc_builder);
     free(loader.text);
+    destroy_symbols();
 
     return 0;
 }

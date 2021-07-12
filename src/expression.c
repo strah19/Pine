@@ -186,14 +186,8 @@ void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {
 int run_bin_exp(struct ASTNode* node) {
     int left_val = 0, right_val = 0;
 
-   // if (node->left->op == ID) 
-   //     left_val = (int) get_symbols()[node->left->var_id].value;
-   // else
-       left_val = node->left->int_val;
-   //if (node->right->op == ID) 
-     //   right_val = (int) get_symbols()[node->right->var_id].value;
-    //else
-        right_val = node->right->int_val;
+    left_val = node->left->int_val;
+    right_val = node->right->int_val;
 
     switch(node->op) {
     case ADD:
@@ -209,6 +203,7 @@ int run_bin_exp(struct ASTNode* node) {
     case OR:
         return (left_val || right_val);
     case AND:
+
         return (left_val && right_val);
     case LESS_THAN:
         return (left_val < right_val);

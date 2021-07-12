@@ -10,7 +10,7 @@ enum ObjTypes {
 };
 
 struct Object {
-    uint8_t type;  //The object type
+    uint8_t type;  //The object data type
 
     union {
         uint32_t u32;

@@ -26,20 +26,29 @@ struct VarSym {
 };
 
 struct Symbol {
-    char* name;
-    enum SymType type;
+    struct Symbol* next;
 
+    //Name is the key
+    char* name;
+
+    //Function data or variable is used as the value
+    enum SymType type;
+    uint32_t id;
     union {
         struct FuncSym function;
         struct VarSym var;
     };
 };
 
-extern uint32_t search_all_symbol(char* name);
+extern struct Symbol* lookup(char* s);
+
+extern struct Symbol* install(char* symbol_name);
+
+extern void destroy_symbols();
 
 extern uint32_t search_type_symbol(char* name, enum SymType type);
 
-extern uint32_t add_symbol(char* name, enum SymType type);
+extern struct Symbol* add_symbol(char* name, enum SymType type);
 
 extern struct Symbol* get_symbol(char* name, enum SymType type);
 
