@@ -34,6 +34,11 @@ unsigned hash(char* s);
 struct Symbol* lookup(char* s);
 struct Symbol* install(char* symbol_name);
 
+struct VariableType var_types[] = {
+    {"int", INT, 4, INTEGER},
+    {"char", CHAR, 1, STR}
+};
+
 unsigned hash(char* s) {
     unsigned hashval;
 
@@ -116,4 +121,12 @@ uint32_t get_sym_index() {
 
 void update_sym_index(uint32_t index) {
     sym_index = index;
+}
+
+struct VariableType* get_variable_types(enum TokenType type) {
+    for (int i = 0; i < sizeof(var_types) / sizeof(var_types[0]); i++) {
+        if (var_types[i].type == type)
+            return &var_types[i];
+    }
+    return NULL;
 }

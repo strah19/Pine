@@ -2,27 +2,24 @@
 #define SYM_H
 
 #include <stdint.h>
+#include "../include/token.h"
 
 enum SymType {
     VAR, FUNC
 };
 
-enum VarTypes {
-    TYPE_INT_LIT, TYPE_VOID, TYPE_NONE
+struct VarSym {
+    enum TokenType type;
+    uint32_t size;
+    enum TokenType value_type;
 };
 
 struct FuncSym {
     uint32_t bytecode_address;
     uint32_t index;
     uint32_t arg_nums;
-    enum VarTypes return_type;
-    enum VarTypes* arg_types;
-};
-
-struct VarSym {
-    enum VarTypes type;
-    uint32_t index;
-    uint32_t size;
+    struct VarSym return_info;
+    struct VarSym* arg_info;
 };
 
 struct Symbol {
@@ -35,9 +32,16 @@ struct Symbol {
     enum SymType type;
     uint32_t id;
     union {
-        struct FuncSym function;
         struct VarSym var;
+        struct FuncSym function;
     };
+};
+
+struct VariableType {
+    char* name;
+    enum TokenType type;
+    uint32_t size;
+    enum TokenType value_type;
 };
 
 extern struct Symbol* lookup(char* s);
@@ -59,5 +63,7 @@ extern uint32_t get_sym_index();
 extern void update_sym_index(uint32_t index);
 
 extern void log_symbols();
+
+extern struct VariableType* get_variable_types(enum TokenType type);
 
 #endif //!SYM_H

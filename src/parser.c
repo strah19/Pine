@@ -161,13 +161,16 @@ void assignment_statement(struct Parser* parser) {
     if (peek_next_token(parser)->type == COLON) {
         retrieve_next_token(parser); 
         var_id = check_for_var_redefination(token);
-        if (peek_next_token(parser)->type == INT) {
-            match_token(parser, INT, "int");
+
+        struct VariableType* var_type = get_variable_types(peek_next_token(parser)->type);
+
+        if (var_type != NULL) {
+            match_token(parser, var_type->type, var_type->name);
             if(peek_next_token(parser)->type == END_EXPRESSION) {
                 assignment_ast = create_ast_node(EQUAL, NULL, NULL);
                 assignment_ast->left = create_ast_node(ID, NULL, NULL);
                 assignment_ast->left->var_id = var_id;
-                assignment_ast->right = create_ast_node(INTEGER, NULL, NULL);
+                assignment_ast->right = create_ast_node(var_type->value_type, NULL, NULL);
                 assignment_ast->right->int_val = 0;
 
                 assignment_ast->left->parent = assignment_ast;
