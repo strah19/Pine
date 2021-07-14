@@ -107,9 +107,10 @@ void run_tokenizer(struct Lexer *lexer) {
             if (*bp == '"' && *(bp - 1) != '%') {
                 in_str = false;
                 push_token(lexer, STR, current_token_str, line, pos);
+                reset_lexer(&pos, &current_token_len, current_token_str);
             }
             else {
-                if (*bp == '%' && *(bp + 1) == '"') {
+                if (*bp == '\\' && *(bp + 1) == '"') {
                     current_token_str[current_token_len] = '"';
                     current_token_len++;
                 }
@@ -126,7 +127,7 @@ void run_tokenizer(struct Lexer *lexer) {
             current_token_str[current_token_len] = *bp;
             current_token_len++;
 
-            if (is_char_digit((char) *bp) && !is_char_digit((char) *(bp + 1)) && !possible_variable) {
+            if (is_char_digit(*bp) && !is_char_digit(*(bp + 1)) && !possible_variable) {
                 push_token(lexer, INTEGER, current_token_str, line, pos);
                 reset_lexer(&pos, &current_token_len, current_token_str);
             }
@@ -137,12 +138,12 @@ void run_tokenizer(struct Lexer *lexer) {
                     bp++;
                 }
                 else if (*bp == '<' && *(bp + 1) == '=') {
-                    push_token(lexer, DOUBLE_EQUAL, "<=", line, pos);
+                    push_token(lexer, LESS_THAN_EQUAL, "<=", line, pos);
                     reset_lexer(&pos, &current_token_len, current_token_str);
                     bp++;
                 }
                 else if (*bp == '>' && *(bp + 1) == '=') {
-                    push_token(lexer, DOUBLE_EQUAL, ">=", line, pos);
+                    push_token(lexer, GREATER_THAN_EQUAL, ">=", line, pos);
                     reset_lexer(&pos, &current_token_len, current_token_str);
                     bp++;
                 }
@@ -157,6 +158,7 @@ void run_tokenizer(struct Lexer *lexer) {
                             push_token(lexer, TOKEN_PAIRS[i].type, TOKEN_PAIRS[i].in_code_name, line, pos);
                             reset_lexer(&pos, &current_token_len, current_token_str);
                             check_for_var = false;
+                            possible_variable = false;
                             break;
                         }    
                     }

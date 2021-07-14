@@ -75,9 +75,6 @@ bool run_statements(struct Parser* parser) {
     if (token->type == T_EOF)
         return false;
     switch (token->type) {
-    case PRINT: //temporary, till Pine supports functions.
-        print_statement(parser);
-        break;
     case ID:
         id_found(parser);
         break;
@@ -159,13 +156,14 @@ void assignment_statement(struct Parser* parser) {
     int var_id = 0;
 
     if (peek_next_token(parser)->type == COLON) {
-        retrieve_next_token(parser); 
+        retrieve_next_token(parser);
         var_id = check_for_var_redefination(token);
 
         struct VariableType* var_type = get_variable_types(peek_next_token(parser)->type);
 
         if (var_type != NULL) {
             match_token(parser, var_type->type, var_type->name);
+
             if(peek_next_token(parser)->type == END_EXPRESSION) {
                 assignment_ast = create_ast_node(EQUAL, NULL, NULL);
                 assignment_ast->left = create_ast_node(ID, NULL, NULL);
@@ -180,6 +178,7 @@ void assignment_statement(struct Parser* parser) {
                     parser->bc_builder->data_size++;
                 build_decleration(parser->bc_builder, assignment_ast);
 
+                log_ast(assignment_ast);
                 match_token(parser, END_EXPRESSION, ";");
                 destroy_ast_node(assignment_ast);
 
@@ -193,12 +192,23 @@ void assignment_statement(struct Parser* parser) {
     if (search_type_symbol(token->token_string, VAR) == -1) 
             fatal_token_error("Undefined variable", token);
 
+    /*  
+        Get the types of an expression and run them through the symantic analyzer: check for
+        compatibility, manual conversions, or coded conversions, and warnings (All this should 
+        happen when we make an expression/AST). Then the byte builder can just use the data in the 
+        AST and build our program (It uses the AST to figure out when to use iconst or char_const, etc.).
+        For IDS in the AST, we can use the new type system to get type information for conversions. If a conversion
+        is not manual, it has to actually be in the bytecode.
+    */
+
     struct Symbol* var = get_symbol(token->token_string, VAR);  
     parser->token_index = equal_statement(parser, parser->token_index, token, &assignment_ast);
 
     build_decleration(parser->bc_builder, assignment_ast);
 
     match_token(parser, END_EXPRESSION, ";");
+    log_ast(assignment_ast);
+
     destroy_ast_node(assignment_ast);
 }
 

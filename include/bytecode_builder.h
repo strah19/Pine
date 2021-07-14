@@ -16,7 +16,7 @@ extern struct ByteCodeBuilder* create_bc_builder();
 
 extern void destroy_bc_builder(struct ByteCodeBuilder* bc_builder);
 
-extern void analyize_opcode_storage(struct ByteCodeBuilder* bc_builder);
+extern void analyze_opcode_storage(struct ByteCodeBuilder* bc_builder);
 
 extern void build_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
 

@@ -64,10 +64,15 @@ void log_tree(struct ASTNode* root, uint32_t tree_branch) {
     if (root == NULL)
         return;
 
-    printf("Node: %d, Op: %d, Branch: %s\n", root->int_val, root->op, (tree_branch == 0) ? "LEFT" : "RIGHT");
+    printf("Node: %d, Op: %d, Branch: %s\n", root->int_val, root->op, (tree_branch == LEFT_NODE) ? "LEFT" : "RIGHT");
 
-    log_tree(root->left, 0);
-    log_tree(root->right, 1);
+    log_tree(root->left, LEFT_NODE);
+    log_tree(root->right, RIGHT_NODE);
+}
+
+void log_ast(struct ASTNode* root) {
+    printf("AST:\n");
+    log_tree(root, LEFT_NODE);
 }
 
 int fig_precedence_from_op(enum TokenType op) {
@@ -114,6 +119,12 @@ void fill_ast_node(struct Token* token, struct ASTNode** node) {
         char *pend;
         (*node)->int_val = (int) strtof(token->token_string, &pend);
         (*node)->precedence = NUMERIC_PRECEDENCE;
+    }
+    else if (token->type == STR) {
+        if (token->token_string[1] == '\0') {
+            (*node)->char_val = token->token_string[0];
+            (*node)->precedence = NUMERIC_PRECEDENCE;
+        }
     }
     else if(token->type == ID) {
         int var_id = search_type_symbol(token->token_string, VAR);
@@ -183,6 +194,12 @@ void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {
     parser->token_index += token_stoppage;
 }
 
+/*
+* @TODO: Update 'run_bin_exp' for new type system. This is where we would check for any conversion info in the AST node and handle it, 
+* the parser would handle the actual syntax while what needs to be converted will be held in the nodes for further use down the pipeline.
+* 
+*/
+
 int run_bin_exp(struct ASTNode* node) {
     int left_val = 0, right_val = 0;
 
@@ -203,7 +220,6 @@ int run_bin_exp(struct ASTNode* node) {
     case OR:
         return (left_val || right_val);
     case AND:
-
         return (left_val && right_val);
     case LESS_THAN:
         return (left_val < right_val);

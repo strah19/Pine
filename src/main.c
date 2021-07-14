@@ -21,18 +21,19 @@ int main(int argc, char *argv[]) {
 
     begin_debug_benchmark();
         run_tokenizer(lexer);
+        log_token_data(lexer);
         run_parser(parser);
     end_debug_benchmark("Pine");
-
+    
     finialize_bytecode(bc_builder);
     init_vm();  
     run_vm(bc_builder->data_size, bc_builder->opcodes, 0);
+    
 
     destroy_parser(parser);
     destroy_lexer(lexer);
     destroy_bc_builder(bc_builder);
     free(loader.text);
-    destroy_symbols();
 
     return 0;
 }

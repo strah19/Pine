@@ -5,7 +5,7 @@
 #include "../include/token.h"
 
 enum SymType {
-    VAR, FUNC
+    VAR, FUNC, OBJ, ENUM
 };
 
 struct VarSym {
@@ -43,12 +43,6 @@ struct VariableType {
     uint32_t size;
     enum TokenType value_type;
 };
-
-extern struct Symbol* lookup(char* s);
-
-extern struct Symbol* install(char* symbol_name);
-
-extern void destroy_symbols();
 
 extern uint32_t search_type_symbol(char* name, enum SymType type);
 
