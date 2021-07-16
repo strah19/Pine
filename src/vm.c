@@ -33,6 +33,16 @@ struct OpcodeInfo {
 
 struct OpcodeInfo opcode_debug_info[256];
 
+struct OutputInfo {
+    struct Object o;
+    int loc;
+};
+
+#define MAX_OUTPUT 1000
+
+struct OutputInfo output[MAX_OUTPUT];
+int output_index = 0;
+
 struct OpcodeInfo create_opcode_info(const char* name, uint32_t num_args) {
     struct OpcodeInfo info;
     info.name = name;
@@ -121,23 +131,23 @@ void operate_on_operands(struct VM* vm, char operator) {
     result.type = o2.type;  
 
     switch (operator) {
-        case '+': result.i32 = o2.i32 +  o1.i32; break;
-        case '-': result.i32 = o2.i32 -  o1.i32; break;
-        case '*': result.i32 = o2.i32 *  o1.i32; break;
-        case '/': result.i32 = o2.i32 /  o1.i32; break;
-        case '%': result.i32 = o2.i32 %  o1.i32; break;
-        case '=': result.i32 = (o2.i32 == o1.i32) ? 1 : 0; break;
-        case '!': result.i32 = (o2.i32 != o1.i32) ? 1 : 0; break;
-        case '<': result.i32 = (o2.i32 <  o1.i32) ? 1 : 0; break;
-        case '>': result.i32 = (o2.i32 >  o1.i32) ? 1 : 0; break;
-        case 'l': result.i32 = (o2.i32 <= o1.i32) ? 1 : 0; break;
-        case 'g': result.i32 = (o2.i32 >= o1.i32) ? 1 : 0; break; 
-        case 'a' : result.i32 = (o2.i32 && o1.i32) ? 1 : 0; break;
-        case 'o' : result.i32 = (o2.i32 || o1.i32) ? 1 : 0; break;
+        case '+': result.i32 = o1.i32 +  o2.i32; break;
+        case '-': result.i32 = o1.i32 -  o2.i32; break;
+        case '*': result.i32 = o1.i32 *  o2.i32; break;
+        case '/': result.i32 = o1.i32 /  o2.i32; break;
+        case '%': result.i32 = o1.i32 %  o2.i32; break;
+        case '=': result.i32 = (o1.i32 == o2.i32) ? 1 : 0; break;
+        case '!': result.i32 = (o1.i32 != o2.i32) ? 1 : 0; break;
+        case '<': result.i32 = (o1.i32 <  o2.i32) ? 1 : 0; break;
+        case '>': result.i32 = (o1.i32 >  o2.i32) ? 1 : 0; break;
+        case 'l': result.i32 = (o1.i32 <= o2.i32) ? 1 : 0; break;
+        case 'g': result.i32 = (o1.i32 >= o2.i32) ? 1 : 0; break; 
+        case 'a' : result.i32 = (o1.i32 && o2.i32) ? 1 : 0; break;
+        case 'o' : result.i32 = (o1.i32 || o2.i32) ? 1 : 0; break;
     default:
         break;
     }
-
+    
     vm_push_stack(&vm->stack, result);
     vm->ip++;
 }
@@ -210,7 +220,13 @@ void print_data(struct Object* o) {
 
 void op_syswrite(struct VM* vm) {
     struct Object o = vm_pop_stack(&vm->stack);
-    print_data(&o);
+    //print_data(&o);
+    
+    if (output_index == MAX_OUTPUT)
+        output_index = 0;
+
+    output[output_index].loc = vm->ip;
+    output[output_index++].o = o;
     vm->ip++;
 }
 
@@ -431,6 +447,12 @@ void run_vm(uint32_t data_size, uint32_t* opcodes, uint32_t main_ip) {
             color_reset();
         #endif
     }    
+
+    printf("VM Output: \n");
+    for (int i = 0; i < output_index; i++) {
+        print_data(&output[i].o);
+        printf("\n");
+    }
 
     free(vm.stack.stack);
     free(vm.data);

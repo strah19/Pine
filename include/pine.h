@@ -13,9 +13,9 @@ extern bool is_char_good_for_variable_name(char character, uint32_t token_len);
 
 extern void remove_whitespaces(char* s);
 
-extern int max(int num1, int num2);
+extern int maxim(int num1, int num2);
 
-extern int min(int num1, int num2);
+extern int minim(int num1, int num2);
 
 extern void begin_debug_benchmark();
 

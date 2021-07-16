@@ -20,6 +20,8 @@
 #include "../include/pine.h"
 
 #include <time.h>
+#include <stdio.h>
+#include <ctype.h>
 
 bool is_char_digit(char character) {
     return (character >= 48 && character <= 57);
@@ -30,18 +32,15 @@ bool is_char_good_for_variable_name(char character, uint32_t token_len) {
 }
 
 void remove_whitespaces(char* s) {
-    const char* d = s;
-    do {
-        while (*d == ' ') 
-            ++d;
-    } while (*s++ = *d++);
+    char* d = s;
+    do while (isspace(*s)) s++; while (*d++ = *s++);
 }
 
-int max(int num1, int num2) {
+int maxim(int num1, int num2) {
     return (num1 > num2 ) ? num1 : num2;
 }
 
-int min(int num1, int num2) {
+int minim(int num1, int num2) {
     return (num1 > num2 ) ? num2 : num1;
 }
 

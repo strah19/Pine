@@ -14,7 +14,7 @@
 -------------------------------------------------------------
 
 
-6/14/2021 ~Beta Pine V 0.01~
+6/14/2021 ~Beta Pine v0.01~
 -----------------------------
 *   | Created this initial file, sort of like a first commit. Was able to refactor all the expression code (got rid of shunt yard) and
     | started to investigate into possible lexer optimizations. Around 95% of current compile time (which is just lexing and parsing) 
@@ -27,7 +27,7 @@ BUG | Could be a possible memory leak form the ASTNodes. Freeing children nodes 
     | upcoming weeks.
 -----------------------------
 
-6/15/2021 - 6/19/2021 ~Beta Pine V 0.02~
+6/15/2021 - 6/19/2021 ~Beta Pine v0.02~
 -----------------------------
 TD  | Work on the bytecode builder. Taking the AST Tree after a single parse statement and convert and store it as byte code in the 
     | bytecode_builder file. Then, after the entire program has been parsed, run the bytecode in the virtual machine.
@@ -54,7 +54,7 @@ GP  | Finished very basic vm.
     | codes will still be 1 byte but its nice to be able to pass ints as parameters. 
 -----------------------------
 
-6/15/2021 - 6/19/2021 ~Beta Pine V 0.03~
+6/15/2021 - 6/19/2021 ~Beta Pine v0.03~
 -----------------------------
     | Added control flow, if, else, elif, while statements. They have their own scopes and can be nested. 
     | ByteCodeBuilder has started and can compile all code to it. This is goode because we can do things like this:
@@ -63,3 +63,10 @@ GP  | Finished very basic vm.
     |                                      Pine Bytecode
     |                                      /    |    \
     |                                     VM   .c    .asm
+-----------------------------
+
+7/16/2021 ~Beta Pine v0.04~
+-----------------------------
+TD  | Make sure an expression does not leave extra data in the stack. (DONE)
+TD  | Actually make the semantic analyzer. (STARTED)
+TD  | Type inferencing.

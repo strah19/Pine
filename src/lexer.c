@@ -103,72 +103,74 @@ void run_tokenizer(struct Lexer *lexer) {
             bp++;
             single_line = 1;
         }
-        else if (in_str) {
-            if (*bp == '"' && *(bp - 1) != '%') {
-                in_str = false;
-                push_token(lexer, STR, current_token_str, line, pos);
-                reset_lexer(&pos, &current_token_len, current_token_str);
-            }
-            else {
-                if (*bp == '\\' && *(bp + 1) == '"') {
-                    current_token_str[current_token_len] = '"';
-                    current_token_len++;
-                }
-                else if (*bp != '"') {
-                    current_token_str[current_token_len] = *bp;
-                    current_token_len++;
-                }
-            }
-        }
-        else if (*bp == '"') {
-            in_str = true;
-        }
-        else if(*bp != ' ' && *bp != '\n' && !comment_counter && !single_line && !in_str) {
-            current_token_str[current_token_len] = *bp;
-            current_token_len++;
-
-            if (is_char_digit(*bp) && !is_char_digit(*(bp + 1)) && !possible_variable) {
-                push_token(lexer, INTEGER, current_token_str, line, pos);
-                reset_lexer(&pos, &current_token_len, current_token_str);
-            }
-            else {
-                if (*bp == '=' && *(bp + 1) == '=') {
-                    push_token(lexer, DOUBLE_EQUAL, "==", line, pos);
+        else if (!comment_counter && !single_line) {
+            if (in_str) {
+                if (*bp == '"' && *(bp - 1) != '%') {
+                    in_str = false;
+                    push_token(lexer, STR, current_token_str, line, pos);
                     reset_lexer(&pos, &current_token_len, current_token_str);
-                    bp++;
                 }
-                else if (*bp == '<' && *(bp + 1) == '=') {
-                    push_token(lexer, LESS_THAN_EQUAL, "<=", line, pos);
-                    reset_lexer(&pos, &current_token_len, current_token_str);
-                    bp++;
-                }
-                else if (*bp == '>' && *(bp + 1) == '=') {
-                    push_token(lexer, GREATER_THAN_EQUAL, ">=", line, pos);
-                    reset_lexer(&pos, &current_token_len, current_token_str);
-                    bp++;
-                }
-
                 else {
-                    bool check_for_var = true;
-                    for (int i = 0; i < sizeof(TOKEN_PAIRS) / sizeof(TOKEN_PAIRS[0]); i++) {
-                        if (current_token_str[0] != TOKEN_PAIRS[i].in_code_name[0])
-                            continue;
-                        bool cont = (!TOKEN_PAIRS[i].check_next) ? true : !(is_char_good_for_variable_name((char)(*(bp + 1)), current_token_len));
-                        if (strcmp(current_token_str, TOKEN_PAIRS[i].in_code_name) == 0 && cont) {
-                            push_token(lexer, TOKEN_PAIRS[i].type, TOKEN_PAIRS[i].in_code_name, line, pos);
-                            reset_lexer(&pos, &current_token_len, current_token_str);
-                            check_for_var = false;
-                            possible_variable = false;
-                            break;
-                        }    
+                    if (*bp == '\\' && *(bp + 1) == '"') {
+                        current_token_str[current_token_len] = '"';
+                        current_token_len++;
+                    }
+                    else if (*bp != '"') {
+                        current_token_str[current_token_len] = *bp;
+                        current_token_len++;
+                    }
+                }
+            }
+            else if (*bp == '"') {
+                in_str = true;
+            }
+            else if (*bp != ' ' && *bp != '\n' && *bp != '\t' && !in_str) {
+                current_token_str[current_token_len] = *bp;
+                current_token_len++;
+
+                if (is_char_digit(*bp) && !is_char_digit(*(bp + 1)) && !possible_variable) {
+                    push_token(lexer, INTEGER, current_token_str, line, pos);
+                    reset_lexer(&pos, &current_token_len, current_token_str);
+                }
+                else {
+                    if (*bp == '=' && *(bp + 1) == '=') {
+                        push_token(lexer, DOUBLE_EQUAL, "==", line, pos);
+                        reset_lexer(&pos, &current_token_len, current_token_str);
+                        bp++;
+                    }
+                    else if (*bp == '<' && *(bp + 1) == '=') {
+                        push_token(lexer, LESS_THAN_EQUAL, "<=", line, pos);
+                        reset_lexer(&pos, &current_token_len, current_token_str);
+                        bp++;
+                    }
+                    else if (*bp == '>' && *(bp + 1) == '=') {
+                        push_token(lexer, GREATER_THAN_EQUAL, ">=", line, pos);
+                        reset_lexer(&pos, &current_token_len, current_token_str);
+                        bp++;
                     }
 
-                    if (check_for_var) {
-                        possible_variable = is_char_good_for_variable_name((char)*bp, current_token_len);
-                        if (possible_variable && !is_char_good_for_variable_name((char)(*(bp + 1)), current_token_len)) {
-                            push_token(lexer, ID, current_token_str, line, pos);
-                            reset_lexer(&pos, &current_token_len, current_token_str);  
-                            possible_variable = false;
+                    else {
+                        bool check_for_var = true;
+                        for (int i = 0; i < sizeof(TOKEN_PAIRS) / sizeof(TOKEN_PAIRS[0]); i++) {
+                            if (current_token_str[0] != TOKEN_PAIRS[i].in_code_name[0])
+                                continue;
+                            bool cont = (TOKEN_PAIRS[i].check_next) ? !is_char_good_for_variable_name((char)(*(bp + 1)), current_token_len) : true;
+                            if (strcmp(current_token_str, TOKEN_PAIRS[i].in_code_name) == 0 && cont) {
+                                push_token(lexer, TOKEN_PAIRS[i].type, TOKEN_PAIRS[i].in_code_name, line, pos);
+                                reset_lexer(&pos, &current_token_len, current_token_str);
+                                check_for_var = false;
+                                possible_variable = false;
+                                break;
+                            }
+                        }
+
+                        if (check_for_var && !isdigit(current_token_str[0])) {
+                            possible_variable = is_char_good_for_variable_name((char)*bp, current_token_len);
+                            if (possible_variable && !is_char_good_for_variable_name((char)(*(bp + 1)), current_token_len)) {
+                                push_token(lexer, ID, current_token_str, line, pos);
+                                reset_lexer(&pos, &current_token_len, current_token_str);
+                                possible_variable = false;
+                            }
                         }
                     }
                 }

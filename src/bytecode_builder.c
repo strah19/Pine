@@ -51,7 +51,7 @@ void finialize_bytecode(struct ByteCodeBuilder* bc_builder) {
     bc_builder->opcodes[bc_builder->current_builder_location++] = HALT;
 }
 
-void analyize_opcode_storage(struct ByteCodeBuilder* bc_builder) {
+void analyze_opcode_storage(struct ByteCodeBuilder* bc_builder) {
     if (bc_builder->current_builder_location + 1 > bc_builder->opcode_size) {
         bc_builder->opcodes = realloc(bc_builder->opcodes, (sizeof(uint32_t) * bc_builder->opcode_size) * 2);
         if (!bc_builder->opcodes) 
@@ -60,7 +60,7 @@ void analyize_opcode_storage(struct ByteCodeBuilder* bc_builder) {
     }
 }
 
-uint32_t calculate_bin_operator(struct ByteCodeBuilder* bc_builder, struct ASTNode* bin) {
+uint32_t calculate_opcode_operator(struct ByteCodeBuilder* bc_builder, struct ASTNode* bin) {
     if (bin && bin->left && bin->right) {
         switch(bin->op) {
             case ADD: return IADD;
@@ -81,64 +81,22 @@ uint32_t calculate_bin_operator(struct ByteCodeBuilder* bc_builder, struct ASTNo
     return HALT;
 }
 
-void push_iconst(struct ByteCodeBuilder* bc_builder, int val) {
-    bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
-    bc_builder->opcodes[bc_builder->current_builder_location++] = val; 
+void push_node(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
+    switch (root->type) {
+    case INTEGER:
+        bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
+        bc_builder->opcodes[bc_builder->current_builder_location++] = root->int_val;
+        break;
+    case CHAR:
+        bc_builder->opcodes[bc_builder->current_builder_location++] = CHARCONST;
+        bc_builder->opcodes[bc_builder->current_builder_location++] = root->char_val;
+        break;
+    }
 }
 
 void global_load(struct ByteCodeBuilder* bc_builder, int var_id) {
     bc_builder->opcodes[bc_builder->current_builder_location++] = GLOAD;
     bc_builder->opcodes[bc_builder->current_builder_location++] = var_id;    
-}
-
-void load_iconst_to_global(struct ByteCodeBuilder* bc_builder, struct ASTNode* var, struct ASTNode* val) {
-    push_iconst(bc_builder, val->int_val);
-    global_load(bc_builder, var->var_id);    
-}
-
-void load_global_to_iconst(struct ByteCodeBuilder* bc_builder, struct ASTNode* var, struct ASTNode* val) {
-    global_load(bc_builder, var->var_id);    
-    push_iconst(bc_builder, val->int_val);
-}
-
-void load_global_to_global(struct ByteCodeBuilder* bc_builder, struct ASTNode* var1, struct ASTNode* var2) {
-    global_load(bc_builder, var1->var_id);    
-    global_load(bc_builder, var2->var_id);
-}
-
-void single_int_assignment(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
-    if (root->parent->op == EQUAL && root != root->parent->left) 
-        push_iconst(bc_builder, root->int_val);    
-}
-
-void single_var_assignment(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
-    if (root->parent->op == EQUAL && root != root->parent->left) 
-        global_load(bc_builder, root->var_id);    
-}
-
-void var_to_var_assignment(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
-    if (root->left->order < root->right->order)
-        load_global_to_global(bc_builder, root->right, root->left);
-    else
-        load_global_to_global(bc_builder, root->left, root->right);
-
-    bc_builder->opcodes[bc_builder->current_builder_location++] = calculate_bin_operator(bc_builder, root);
-}
-
-void iconst_to_var_assignment(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
-    if (root->left->order < root->right->order)
-        load_global_to_iconst(bc_builder, root->right, root->left);
-    else              
-        load_iconst_to_global(bc_builder, root->right, root->left);
-    bc_builder->opcodes[bc_builder->current_builder_location++] = calculate_bin_operator(bc_builder, root);    
-}
-
-void var_to_iconst_assignment(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
-    if (root->left->order < root->right->order) 
-        load_iconst_to_global(bc_builder, root->left, root->right);
-    else 
-        load_global_to_iconst(bc_builder, root->left, root->right);
-    bc_builder->opcodes[bc_builder->current_builder_location++] = calculate_bin_operator(bc_builder, root);   
 }
 
 void build_expression(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
@@ -148,24 +106,12 @@ void build_expression(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) 
     build_expression(bc_builder, root->right);
 
     if (root->op != EQUAL) {
-        if (root->op == INTEGER && root->parent) 
-            single_int_assignment(bc_builder, root);
-        else if (root->op == ID && root->parent) 
-            single_var_assignment(bc_builder, root);
-        else if (root->left != NULL && root->right != NULL) {
-            if (root->left->op == ID && root->right->op == ID) 
-                var_to_var_assignment(bc_builder, root);
-            else if (root->right->op == ID) 
-                iconst_to_var_assignment(bc_builder, root);
-            else if (root->left->op == ID) 
-                var_to_iconst_assignment(bc_builder, root);
-            else {
-                if (root->op != AND && root->op != OR) {
-                    root->int_val = run_bin_exp(root);
-                    push_iconst(bc_builder, root->int_val);
-                }
-            }
-        }
+        if (root->op == ID) 
+            global_load(bc_builder, root->var_id);
+        else if ((root->op == INTEGER || root->op == STR)) 
+            push_node(bc_builder, root);
+        else 
+            bc_builder->opcodes[bc_builder->current_builder_location++] = calculate_opcode_operator(bc_builder, root);
     }
     else {
         bc_builder->opcodes[bc_builder->current_builder_location++] = GSTORE;
@@ -174,8 +120,16 @@ void build_expression(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) 
 }
 
 void build_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
-    build_expression(bc_builder, root);
-    analyize_opcode_storage(bc_builder);
+    push_node(bc_builder, root->left);
+
+    bc_builder->opcodes[bc_builder->current_builder_location++] = GSTORE;
+    bc_builder->opcodes[bc_builder->current_builder_location++] = root->left->var_id;
+}
+
+void build_assignment(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
+    build_expression(bc_builder, root->right);
+    bc_builder->opcodes[bc_builder->current_builder_location++] = GSTORE;
+    bc_builder->opcodes[bc_builder->current_builder_location++] = root->left->var_id;
 }
 
 uint32_t get_jmp_reference(struct ByteCodeBuilder* bc_builder, struct ASTNode* comparative_statement) {

@@ -22,6 +22,7 @@
 #include "../include/sym.h"
 #include "../include/err.h"
 #include "../include/opcodes.h"
+#include "../include/sem.h"
 
 #define PARSER_LOOP 1
 
@@ -75,6 +76,9 @@ bool run_statements(struct Parser* parser) {
     if (token->type == T_EOF)
         return false;
     switch (token->type) {
+    case PRINT:
+        print_statement(parser);
+        break;
     case ID:
         id_found(parser);
         break;
@@ -115,10 +119,7 @@ void match_token(struct Parser* parser, enum TokenType type, const char* what) {
 }
 
 void id_found(struct Parser* parser) {
-    if (parser->lexer->tokens[parser->token_index + 1].token_string[0] == '(') 
-        function_defination(parser);
-    else
-        assignment_statement(parser);
+    assignment_statement(parser);
 }
 
 void expression_assignment(struct Parser* parser, struct ASTNode** root) {
@@ -129,13 +130,15 @@ void expression_assignment(struct Parser* parser, struct ASTNode** root) {
 
 void print_statement(struct Parser* parser) {
     match_token(parser, PRINT, "print");
-
-    struct Token* token = peek_next_token(parser);
     
-    struct ASTNode* ast_tree;
-    make_ast_from_expr(&ast_tree, parser);
+    struct ASTNode* ast;
+    make_ast_from_expr(&ast, parser);
+    log_ast(ast);
+    build_expression(parser->bc_builder, ast);
 
-    destroy_ast_node(ast_tree);
+    parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = SYS_WRITE;
+
+    destroy_ast_node(ast);
 
     match_token(parser, END_EXPRESSION, ";");
 }
@@ -148,76 +151,64 @@ int check_for_var_redefination(struct Token* token) {
     return -1;
 }
 
-void assignment_statement(struct Parser* parser) {
-    struct ASTNode* assignment_ast = NULL;
+void fill_var_sym_data(int var_id, struct VariableType* var_type) {
+    get_symbols()[var_id].var.type = var_type->type;
+    get_symbols()[var_id].var.size = var_type->size;
+    get_symbols()[var_id].var.value_type = var_type->value_type;
+}
 
-    struct Token* token = peek_next_token(parser);
+void assignment_statement(struct Parser* parser) {
+    struct ASTNode* ast = NULL;
+
+    struct Token* var_token = peek_next_token(parser);
     match_token(parser, ID, "identifier");
-    int var_id = 0;
+
+    struct VariableType* var_type = get_variable_types(parser->lexer->tokens[parser->token_index + 1].type);
+    int var_id = -1;
 
     if (peek_next_token(parser)->type == COLON) {
-        retrieve_next_token(parser);
-        var_id = check_for_var_redefination(token);
+        match_token(parser, peek_next_token(parser)->type, ":");
 
-        struct VariableType* var_type = get_variable_types(peek_next_token(parser)->type);
+        if(peek_next_token(parser)->type != EQUAL)
+            retrieve_next_token(parser);
 
-        if (var_type != NULL) {
-            match_token(parser, var_type->type, var_type->name);
+        var_id = check_for_var_redefination(var_token);
+        fill_var_sym_data(var_id, var_type);
 
-            if(peek_next_token(parser)->type == END_EXPRESSION) {
-                assignment_ast = create_ast_node(EQUAL, NULL, NULL);
-                assignment_ast->left = create_ast_node(ID, NULL, NULL);
-                assignment_ast->left->var_id = var_id;
-                assignment_ast->right = create_ast_node(var_type->value_type, NULL, NULL);
-                assignment_ast->right->int_val = 0;
-
-                assignment_ast->left->parent = assignment_ast;
-                assignment_ast->right->parent = assignment_ast;
-
-                if (get_sym_index() > parser->bc_builder->data_size)
-                    parser->bc_builder->data_size++;
-                build_decleration(parser->bc_builder, assignment_ast);
-
-                log_ast(assignment_ast);
-                match_token(parser, END_EXPRESSION, ";");
-                destroy_ast_node(assignment_ast);
-
-                return;
-            }
-        }
         if (get_sym_index() > parser->bc_builder->data_size)
             parser->bc_builder->data_size++;
+
+        if (peek_next_token(parser)->type == END_EXPRESSION) {
+            match_token(parser, peek_next_token(parser)->type, ";");
+
+            ast = create_ast_node(EQUAL, create_ast_node_fill(ID, NULL, NULL, ast, var_type->value_type), create_ast_node_fill(var_type->value_type, NULL, NULL, ast, var_type->value_type));
+            ast->left->var_id = var_id;
+
+            build_decleration(parser->bc_builder, ast);
+            destroy_ast_node(ast);
+            return;
+        }
     }
+    else if (search_type_symbol(var_token->token_string, VAR) == -1)
+        fatal_token_error("Undefined variable", var_token);
+    
+    parser->token_index = equal_statement(parser, parser->token_index, var_token, &ast);
 
-    if (search_type_symbol(token->token_string, VAR) == -1) 
-            fatal_token_error("Undefined variable", token);
-
-    /*  
-        Get the types of an expression and run them through the symantic analyzer: check for
-        compatibility, manual conversions, or coded conversions, and warnings (All this should 
-        happen when we make an expression/AST). Then the byte builder can just use the data in the 
-        AST and build our program (It uses the AST to figure out when to use iconst or char_const, etc.).
-        For IDS in the AST, we can use the new type system to get type information for conversions. If a conversion
-        is not manual, it has to actually be in the bytecode.
-    */
-
-    struct Symbol* var = get_symbol(token->token_string, VAR);  
-    parser->token_index = equal_statement(parser, parser->token_index, token, &assignment_ast);
-
-    build_decleration(parser->bc_builder, assignment_ast);
 
     match_token(parser, END_EXPRESSION, ";");
-    log_ast(assignment_ast);
+    
+    begin_sem();
+    validate_ast(ast);
 
-    destroy_ast_node(assignment_ast);
+    build_assignment(parser->bc_builder, ast);
+    destroy_ast_node(ast);
 }
 
 int equal_statement(struct Parser* parser, int end_token, struct Token* var_token, struct ASTNode** root) {
     *root = create_ast_node(EQUAL, NULL, NULL);
 
-    (*root)->left = create_ast_node(ID, NULL, NULL);
+    (*root)->left = create_ast_node_fill(ID, NULL, NULL, *root, get_symbols()[search_type_symbol(var_token->token_string, VAR)].var.value_type);
     (*root)->left->var_id = search_type_symbol(var_token->token_string, VAR);
-    (*root)->left->parent = *root;
 
     if (var_token->type != ID)
         fatal_token_error("Value needs to be modifiable lvalue", var_token);

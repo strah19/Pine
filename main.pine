@@ -1,3 +1,8 @@
-integer : int = 1;
-character : char = integer + "a";
+c : char = "a";
+
+while c <= "z" {
+	print c;
+	c = c + 1;
+}
+
 `

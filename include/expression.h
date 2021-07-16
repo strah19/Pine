@@ -16,6 +16,8 @@ struct ASTNode {
     struct ASTNode *parent;
     uint32_t order;
     
+    enum TokenType type;
+    
     union 
     {
        int int_val;
@@ -28,11 +30,11 @@ struct Parser;
 
 extern struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct ASTNode* right);
 
+extern struct ASTNode* create_ast_node_fill(enum TokenType op, struct ASTNode* left, struct ASTNode* right, struct ASTNode* parent, enum TokenType type);
+
 extern void destroy_ast_node(struct ASTNode* root);
 
 extern struct ASTNode* create_leaf_node(enum TokenType op);
-
-extern void log_tree(struct ASTNode* root, uint32_t tree_branch);
 
 extern void log_ast(struct ASTNode* root);
 

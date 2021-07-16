@@ -32,7 +32,7 @@ static uint32_t sym_index = 0;
 
 struct VariableType var_types[] = {
     {"int", INT, 4, INTEGER},
-    {"char", CHAR, 1, STR}
+    {"char", CHAR, 1, CHAR}
 };
 
 uint32_t search_type_symbol(char* name, enum SymType type) {
@@ -65,7 +65,7 @@ struct Symbol* get_symbol(char* name, enum SymType type) {
 
 void log_symbols() {
     for (int i = 0; i < sym_index; i++)
-        printf("Symbol: '%s', Index: %d\n", sym_table[i].name, i);
+        printf("Symbol: '%s', Index: %d, Type: %d\n", sym_table[i].name, i, sym_table[i].var.type);
 }
 
 struct Symbol* get_symbols() {

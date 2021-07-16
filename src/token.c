@@ -39,7 +39,7 @@ struct Token create_token(enum TokenType type, const char *in_source_token, uint
     struct Token token;
 
     strcpy(token.token_string, in_source_token);
-    remove_whitespaces(token.token_string);
+    remove_whitespaces((char*)token.token_string);
     token.token_info.token_line = line;
     token.token_info.token_pos = pos;
 

@@ -18,13 +18,15 @@ extern void destroy_bc_builder(struct ByteCodeBuilder* bc_builder);
 
 extern void analyze_opcode_storage(struct ByteCodeBuilder* bc_builder);
 
-extern void build_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
+extern void build_assignment(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
 
 extern void finialize_bytecode(struct ByteCodeBuilder* bc_builder);
 
-extern uint32_t calculate_bin_operator(struct ByteCodeBuilder* bc_builder, struct ASTNode* bin);
+extern uint32_t calculate_opcode_operator(struct ByteCodeBuilder* bc_builder, struct ASTNode* bin);
 
 extern uint32_t get_jmp_reference(struct ByteCodeBuilder* bc_builder, struct ASTNode* comparative_statement);
+
+extern void build_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
 
 extern void build_expression(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
 
