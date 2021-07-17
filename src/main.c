@@ -21,7 +21,6 @@ int main(int argc, char *argv[]) {
 
     begin_debug_benchmark();
         run_tokenizer(lexer);
-        log_token_data(lexer);
         run_parser(parser);
     end_debug_benchmark("Pine");
     

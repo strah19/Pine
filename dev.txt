@@ -70,3 +70,7 @@ GP  | Finished very basic vm.
 TD  | Make sure an expression does not leave extra data in the stack. (DONE)
 TD  | Actually make the semantic analyzer. (STARTED)
 TD  | Type inferencing.
+TD  | Expression errors.
+TD  | Try adding other int values (signed/unsigned)
+TD  | Added consts
+TD  | Create an interface for system calls.

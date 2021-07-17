@@ -12,6 +12,7 @@ struct VarSym {
     enum TokenType type;
     uint32_t size;
     enum TokenType value_type;
+    bool is_const;
 };
 
 struct FuncSym {

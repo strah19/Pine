@@ -1,3 +1,5 @@
+
+// Print the letters a through z.
 c : char = "a";
 
 while c <= "z" {
@@ -5,4 +7,14 @@ while c <= "z" {
 	c = c + 1;
 }
 
+INTEGER : const int = 23;
+
+j : int = INTEGER;
+k : int = 2;
+
+a : int = k = j;
+
+print k;
+
+// Shows the end of the code
 `

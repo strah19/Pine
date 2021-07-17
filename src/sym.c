@@ -47,6 +47,7 @@ struct Symbol* add_symbol(char* name, enum SymType type) {
     if (search_type_symbol(name, type) == -1) {
         sym_table[sym_index].name = name;
         sym_table[sym_index].type = type;
+        sym_table[sym_index].id = sym_index;
 
         sym_index++;
     }
@@ -55,7 +56,7 @@ struct Symbol* add_symbol(char* name, enum SymType type) {
         exit(EXIT_FAILURE);
     }
 
-    return  &sym_table[sym_index];
+    return  &sym_table[sym_index - 1];
 }
 
 struct Symbol* get_symbol(char* name, enum SymType type) {

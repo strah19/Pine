@@ -128,12 +128,13 @@ void expression_assignment(struct Parser* parser, struct ASTNode** root) {
     *root = ast_tree;
 }
 
+//Temporary: will create an actually interface for the system calls.
 void print_statement(struct Parser* parser) {
     match_token(parser, PRINT, "print");
     
     struct ASTNode* ast;
     make_ast_from_expr(&ast, parser);
-    log_ast(ast);
+
     build_expression(parser->bc_builder, ast);
 
     parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = SYS_WRITE;
@@ -163,22 +164,30 @@ void assignment_statement(struct Parser* parser) {
     struct Token* var_token = peek_next_token(parser);
     match_token(parser, ID, "identifier");
 
-    struct VariableType* var_type = get_variable_types(parser->lexer->tokens[parser->token_index + 1].type);
     int var_id = -1;
+    bool is_const = false;
 
     if (peek_next_token(parser)->type == COLON) {
         match_token(parser, peek_next_token(parser)->type, ":");
 
-        if(peek_next_token(parser)->type != EQUAL)
-            retrieve_next_token(parser);
+        if (peek_next_token(parser)->type == CONST) {
+            is_const = true;
+            match_token(parser, CONST, "const");
+        }
+        struct VariableType* var_type = get_variable_types(peek_next_token(parser)->type);
+        retrieve_next_token(parser);
 
         var_id = check_for_var_redefination(var_token);
+
         fill_var_sym_data(var_id, var_type);
 
         if (get_sym_index() > parser->bc_builder->data_size)
             parser->bc_builder->data_size++;
 
         if (peek_next_token(parser)->type == END_EXPRESSION) {
+            if (is_const) 
+                fatal_token_error("Need to give const a value", peek_next_token(parser));
+
             match_token(parser, peek_next_token(parser)->type, ";");
 
             ast = create_ast_node(EQUAL, create_ast_node_fill(ID, NULL, NULL, ast, var_type->value_type), create_ast_node_fill(var_type->value_type, NULL, NULL, ast, var_type->value_type));
@@ -193,10 +202,13 @@ void assignment_statement(struct Parser* parser) {
         fatal_token_error("Undefined variable", var_token);
     
     parser->token_index = equal_statement(parser, parser->token_index, var_token, &ast);
-
+    
+    if (is_const) {
+        get_symbols()[var_id].var.is_const = is_const;
+    }
 
     match_token(parser, END_EXPRESSION, ";");
-    
+
     begin_sem();
     validate_ast(ast);
 
@@ -212,6 +224,8 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
 
     if (var_token->type != ID)
         fatal_token_error("Value needs to be modifiable lvalue", var_token);
+    else if (get_symbols()[search_type_symbol(var_token->token_string, VAR)].var.is_const)
+        fatal_token_error("Value cannot be a const", var_token);
     else if ((*root)->left->var_id == -1)
         fatal_token_error("Undefined variable", var_token);
 

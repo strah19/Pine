@@ -108,6 +108,7 @@ void op_nop(struct VM* vm) {
 void op_charconst(struct VM* vm) {
     struct Object o;
     o.type = CHARCONST;
+
     o.u8 = (char) vm->opcodes[vm->ip + 1];
     vm_push_stack(&vm->stack, o);
     vm->ip += 2;
