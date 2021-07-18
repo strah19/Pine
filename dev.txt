@@ -72,5 +72,6 @@ TD  | Actually make the semantic analyzer. (STARTED)
 TD  | Type inferencing.
 TD  | Expression errors.
 TD  | Try adding other int values (signed/unsigned)
-TD  | Added consts
+TD  | Added consts. (DONE)
 TD  | Create an interface for system calls.
+TD  | Add floats.

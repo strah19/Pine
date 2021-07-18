@@ -23,6 +23,8 @@ extern void run_parser(struct Parser* parser);
 
 extern struct Token* peek_next_token(struct Parser* parser);  //Only see current token.
 
+extern struct Token* peek_offset_token(struct Parser* parser, int offset);  //Only see token from current via offset.
+
 extern struct Token* retrieve_next_token(struct Parser* parser);  //Get current token and then increment to next token.
 
 extern void match_token(struct Parser* parser, enum TokenType type, const char* what);

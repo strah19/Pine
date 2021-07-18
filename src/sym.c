@@ -29,6 +29,7 @@
 
 static struct Symbol sym_table[TABLE_SIZE];
 static uint32_t sym_index = 0;
+static uint32_t var_id_counter = 0;
 
 struct VariableType var_types[] = {
     {"int", INT, 4, INTEGER},
@@ -47,7 +48,11 @@ struct Symbol* add_symbol(char* name, enum SymType type) {
     if (search_type_symbol(name, type) == -1) {
         sym_table[sym_index].name = name;
         sym_table[sym_index].type = type;
-        sym_table[sym_index].id = sym_index;
+        sym_table[sym_index].index = sym_index;
+
+        if (type == VAR) {
+            sym_table[sym_index].var.id = var_id_counter++;
+        }
 
         sym_index++;
     }

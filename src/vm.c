@@ -287,6 +287,11 @@ void op_jmpn(struct VM* vm) {
     else vm->ip += 2;
 }
 
+void op_pop(struct VM* vm) {
+    vm_pop_stack(&vm->stack);
+    vm->ip++;
+}
+
 void op_call(struct VM* vm) {
     struct Object address;
     struct Object num_args;
@@ -333,6 +338,9 @@ void init_vm() {
 
     ops[ICONST] = op_iconst;
     opcode_debug_info[ICONST] = create_opcode_info("ICONST", 1);
+
+    ops[POP] = op_pop;
+    opcode_debug_info[POP] = create_opcode_info("POP", 0);
 
     ops[IADD] = op_iadd;
     opcode_debug_info[IADD] = create_opcode_info("IADD", 0);
@@ -392,7 +400,7 @@ void init_vm() {
     opcode_debug_info[CALL] = create_opcode_info("CALL", 2);
     
     ops[RET] = op_ret;
-    opcode_debug_info[RET] = create_opcode_info("RET", 1);
+    opcode_debug_info[RET] = create_opcode_info("RET", 0);
     
     ops[LOAD] = op_load;
     opcode_debug_info[LOAD] = create_opcode_info("LOAD", 1);
@@ -447,7 +455,7 @@ void run_vm(uint32_t data_size, uint32_t* opcodes, uint32_t main_ip) {
             printf("]\n");
             color_reset();
         #endif
-    }    
+    } 
 
     printf("VM Output: \n");
     for (int i = 0; i < output_index; i++) {

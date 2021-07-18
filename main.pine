@@ -1,5 +1,6 @@
 
 // Print the letters a through z.
+/*
 c : char = "a";
 
 while c <= "z" {
@@ -16,5 +17,30 @@ a : int = k = j;
 
 print k;
 
+*/
+
+add() : func {
+print "a";
+}
+
+add();
+
+a : int = 1;
+b : int = 2;
+c : int = 3;
+
+c = a = b;
+
+print a;
+print b;
+print c;
+
 // Shows the end of the code
+
+/*
+	add(int : a, int : b) : fun -> int {
+		return a + b;
+	}
+*/
+
 `

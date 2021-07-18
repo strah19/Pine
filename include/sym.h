@@ -13,14 +13,15 @@ struct VarSym {
     uint32_t size;
     enum TokenType value_type;
     bool is_const;
+    uint32_t id;
 };
 
 struct FuncSym {
     uint32_t bytecode_address;
-    uint32_t index;
     uint32_t arg_nums;
     struct VarSym return_info;
     struct VarSym* arg_info;
+    bool created;
 };
 
 struct Symbol {
@@ -31,7 +32,7 @@ struct Symbol {
 
     //Function data or variable is used as the value
     enum SymType type;
-    uint32_t id;
+    uint32_t index;
     union {
         struct VarSym var;
         struct FuncSym function;

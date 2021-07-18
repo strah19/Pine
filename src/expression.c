@@ -71,7 +71,7 @@ void log_tree(struct ASTNode* root, uint32_t tree_branch) {
     if (root == NULL)
         return;
 
-    printf("\tNode: %d, Op: %d, Type: %d, Branch: %s\n", root->int_val, root->op, root->type, (tree_branch == LEFT_NODE) ? "LEFT" : "RIGHT");
+    printf("\tNode: %d, Op: %d, Type: %d, Branch: %s, Parent: %d\n", root->int_val, root->op, root->type, (tree_branch == LEFT_NODE) ? "LEFT" : "RIGHT", (root->parent) ? true : false);
 
     log_tree(root->left, LEFT_NODE);
     log_tree(root->right, RIGHT_NODE);
@@ -126,7 +126,7 @@ void fill_ast_node(struct Token* token, struct ASTNode** node) {
     }
     else if(token->type == ID) {
         int var_id = search_type_symbol(token->token_string, VAR);
-        (*node)->var_id = var_id;
+        (*node)->var_id = get_symbols()[var_id].var.id;
         (*node)->precedence = NUMERIC_PRECEDENCE;
         (*node)->type = get_symbols()[var_id].var.value_type;
     }

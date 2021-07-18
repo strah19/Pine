@@ -1,2 +1,1 @@
-mingw32-make
-.\Pine.exe main.pine
+mingw32-make && .\Pine.exe main.pine

@@ -24,8 +24,22 @@ int main(int argc, char *argv[]) {
         run_parser(parser);
     end_debug_benchmark("Pine");
     
+    log_bytecode_in_file(bc_builder);
     finialize_bytecode(bc_builder);
     init_vm();  
+
+
+    uint32_t opcodes[] = {
+        JMP, 5,
+        ICONST, 0,
+        RET,
+
+        CALL, 2, 0,
+        POP,
+
+        HALT
+    };
+
     run_vm(bc_builder->data_size, bc_builder->opcodes, 0);
     
 

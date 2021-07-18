@@ -25,6 +25,8 @@
 #include "../include/sym.h"
 #include "../include/expression.h"
 
+#include <stdio.h>
+
 #define INITIAL_OPCODE_SIZE 256
 
 struct ByteCodeBuilder* create_bc_builder() {
@@ -106,7 +108,9 @@ void build_expression(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) 
     build_expression(bc_builder, root->right);
 
     if (root->op != EQUAL) {
-        if (root->op == ID) 
+        if (root->parent->parent && root->parent->left == root)
+        { }
+        else if (root->op == ID) 
             global_load(bc_builder, root->var_id);
         else if ((root->op == INTEGER || root->op == STR)) 
             push_node(bc_builder, root);
@@ -116,6 +120,10 @@ void build_expression(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) 
     else {
         bc_builder->opcodes[bc_builder->current_builder_location++] = GSTORE;
         bc_builder->opcodes[bc_builder->current_builder_location++] = root->left->var_id;
+
+        if (root->parent != NULL) {
+            global_load(bc_builder, root->left->var_id);
+        }
     }
 }
 
@@ -132,10 +140,27 @@ void build_assignment(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) 
     bc_builder->opcodes[bc_builder->current_builder_location++] = root->left->var_id;
 }
 
-uint32_t get_jmp_reference(struct ByteCodeBuilder* bc_builder, struct ASTNode* comparative_statement) {
+uint32_t get_jmp_reference(struct ByteCodeBuilder* bc_builder) {
     bc_builder->opcodes[bc_builder->current_builder_location++] = JMPN;
     uint32_t ref = bc_builder->current_builder_location;
     bc_builder->opcodes[bc_builder->current_builder_location++] = -1;
 
     return ref;
+}
+
+void log_bytecode_in_file(struct ByteCodeBuilder* bc_builder) {
+    FILE* file = fopen("bytecodes.txt", "w");
+
+    uint32_t* opcodes = bc_builder->opcodes;
+
+    if (file) {
+        size_t n = sizeof(opcodes) / sizeof(uint32_t);
+
+        for (int i = 0; i < bc_builder->current_builder_location; i++) {
+            fprintf(file, "%d ", opcodes[i]);
+        }
+    }
+    else {
+        fatal_error("Could not open file for bytecode dump");
+    }
 }
