@@ -29,12 +29,20 @@ int main(int argc, char *argv[]) {
     init_vm();  
 
 
-    uint32_t opcodes[] = {
-        JMP, 5,
+    int32_t opcodes[] = {
+        JMP, 14,
+        ICONST, 2,
+        LOAD, -3,
+        LOAD, -4,
+        IADD,
+        IADD,
+        SYS_WRITE,
         ICONST, 0,
         RET,
 
-        CALL, 2, 0,
+        ICONST, 2,
+        ICONST, 10,
+        CALL, 2, 2,
         POP,
 
         HALT

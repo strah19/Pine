@@ -53,6 +53,9 @@ struct Symbol* add_symbol(char* name, enum SymType type) {
         if (type == VAR) {
             sym_table[sym_index].var.id = var_id_counter++;
         }
+        else if (type == FUNC) {
+            sym_table[sym_index].function.arg_nums = 0;
+        }
 
         sym_index++;
     }

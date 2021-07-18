@@ -34,7 +34,7 @@ struct VMStack {
 struct VM {
     struct VMStack stack;
     struct Object* data;
-    uint32_t* opcodes;
+    int32_t* opcodes;
     uint32_t ip;
     int32_t fp;
     uint32_t data_size;
@@ -50,6 +50,6 @@ extern struct Object vm_peek_stack(struct VMStack* stack);
 
 extern void init_vm();
 
-extern void run_vm(uint32_t data_size, uint32_t* opcodes, uint32_t main_ip);
+extern void run_vm(uint32_t data_size, int32_t* opcodes, uint32_t main_ip);
 
 #endif // !VM_H

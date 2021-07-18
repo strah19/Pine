@@ -141,7 +141,7 @@ void print_statement(struct Parser* parser) {
     struct ASTNode* ast;
     make_ast_from_expr(&ast, parser);
 
-    build_expression(parser->bc_builder, ast);
+    build_print(parser->bc_builder, ast);
 
     parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = SYS_WRITE;
 
@@ -208,8 +208,7 @@ void assignment_statement(struct Parser* parser) {
         fatal_token_error("Undefined variable", var_token);
 
     parser->token_index = equal_statement(parser, parser->token_index, var_token, &ast);
-    
-    log_ast(ast);
+   
 
     if (is_const) {
         get_symbols()[var_id].var.is_const = is_const;
@@ -220,6 +219,7 @@ void assignment_statement(struct Parser* parser) {
     begin_sem();
     validate_ast(ast);
 
+    log_ast(ast);
     build_assignment(parser->bc_builder, ast);
     destroy_ast_node(ast);
 }
@@ -381,6 +381,31 @@ void function_definition(struct Parser* parser) {
         //This is the actual definition.
 
         match_token(parser, LPAR, "(");
+        int id = -3;
+        while (peek_next_token(parser)->type != RPAR) {
+            struct Token* var_token = peek_next_token(parser);
+            match_token(parser, ID, "identifier");
+
+            bool is_const = false;
+            match_token(parser, peek_next_token(parser)->type, ":");
+
+            if (peek_next_token(parser)->type == CONST) {
+                is_const = true;
+                match_token(parser, CONST, "const");
+            }
+
+            struct VariableType* var_type = get_variable_types(peek_next_token(parser)->type);
+            retrieve_next_token(parser);
+           
+            get_symbols()[func].function.arg_info[get_symbols()[func].function.arg_nums].is_const = is_const;
+            get_symbols()[func].function.arg_info[get_symbols()[func].function.arg_nums].type = var_type->type;
+            get_symbols()[func].function.arg_info[get_symbols()[func].function.arg_nums].value_type = var_type->value_type;
+            get_symbols()[func].function.arg_info[get_symbols()[func].function.arg_nums].size = var_type->size;
+            get_symbols()[func].function.arg_info[get_symbols()[func].function.arg_nums++].id = id--;      
+
+            if(peek_next_token(parser)->type != RPAR)
+                match_token(parser, COMMA, ",");
+        }
         match_token(parser, RPAR, ")");
 
         match_token(parser, COLON, ":");
@@ -395,7 +420,7 @@ void function_definition(struct Parser* parser) {
         run_scope(parser);
 
         parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = ICONST;
-        parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = 0;
+        parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = get_symbols()[func].function.arg_nums;
         parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = RET;
         parser->bc_builder->opcodes[jmp_reference] = parser->bc_builder->current_builder_location;
 
@@ -404,6 +429,5 @@ void function_definition(struct Parser* parser) {
         //Load up the sym data
         get_symbols()[func].function.created = true;
         get_symbols()[func].function.bytecode_address = start_of_function;
-        get_symbols()[func].function.arg_nums = 0;
     }
 }

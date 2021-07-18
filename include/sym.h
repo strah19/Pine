@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include "../include/token.h"
 
+#define MAX_ARGS 16
+
 enum SymType {
     VAR, FUNC, OBJ, ENUM
 };
@@ -20,7 +22,7 @@ struct FuncSym {
     uint32_t bytecode_address;
     uint32_t arg_nums;
     struct VarSym return_info;
-    struct VarSym* arg_info;
+    struct VarSym arg_info[MAX_ARGS];
     bool created;
 };
 

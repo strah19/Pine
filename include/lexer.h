@@ -46,6 +46,7 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {"+", ADD, false},
     {"*", MULTIPLE, false},
     {"/", DIVIDE, false},
+    {",", COMMA, false},
     {"print", PRINT, true},
     {"int", INT, true},
     {"if", IF, true},

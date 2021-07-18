@@ -5,7 +5,7 @@
 #include "../include/expression.h"
 
 struct ByteCodeBuilder {
-    uint32_t* opcodes;
+    int32_t* opcodes;
     uint32_t current_builder_location;
     uint32_t opcode_size;
 
@@ -29,6 +29,8 @@ extern uint32_t get_jmp_reference(struct ByteCodeBuilder* bc_builder);
 extern void build_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
 
 extern void build_expression(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
+
+extern void build_print(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
 
 extern void log_bytecode_in_file(struct ByteCodeBuilder* bc_builder);
 

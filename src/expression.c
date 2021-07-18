@@ -120,6 +120,7 @@ void fill_ast_node(struct Token* token, struct ASTNode** node) {
             (*node)->char_val = token->token_string[0];
             (*node)->precedence = NUMERIC_PRECEDENCE;
             (*node)->type = CHAR;
+            (*node)->op = CHAR;
         }
         else 
             (*node)->type = STR;
@@ -130,8 +131,12 @@ void fill_ast_node(struct Token* token, struct ASTNode** node) {
         (*node)->precedence = NUMERIC_PRECEDENCE;
         (*node)->type = get_symbols()[var_id].var.value_type;
     }
-    else 
+    else {
         (*node)->precedence = fig_precedence_from_op(token->type);
+        if ((*node)->precedence == -1) {
+            fatal_token_error("Unknown value in expression", token);
+        }
+    }
 }
 
 void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {

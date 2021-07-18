@@ -71,6 +71,7 @@ struct VM create_vm(uint32_t data_size, uint32_t main) {
     vm.stack = vm_create_stack(1028);
     vm.ip = main;
     vm.data = malloc(sizeof(struct Object) * data_size);
+    memset(vm.data, 0, sizeof(struct Object) * data_size);
     vm.data_size = data_size;
     vm.fp = 0;
 
@@ -421,7 +422,7 @@ void color_reset() {
     printf("\033[0m");
 }
 
-void run_vm(uint32_t data_size, uint32_t* opcodes, uint32_t main_ip) {        
+void run_vm(uint32_t data_size, int32_t* opcodes, uint32_t main_ip) {
     vm = create_vm(data_size, main_ip);
     vm.opcodes = opcodes;
 
