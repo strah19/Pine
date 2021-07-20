@@ -30,14 +30,29 @@
 static struct Symbol sym_table[TABLE_SIZE];
 static uint32_t sym_index = 0;
 static uint32_t var_id_counter = 0;
+static struct FuncSym* function = NULL;
 
 struct VariableType var_types[] = {
     {"int", INT, 4, INTEGER},
     {"char", CHAR, 1, CHAR}
 };
 
+void set_current_function(struct FuncSym* func) {
+    function = func;
+}
+
+struct FuncSym* get_function() {
+    return function;
+}
+
 uint32_t search_type_symbol(char* name, enum SymType type) {
-    for (int i = 0; i < sym_index; i++)
+    if (function) 
+        for (int j = 0; j < function->arg_nums; j++) 
+            if (function->arg_info[j].name[0] == name[0]) 
+                if (strcmp(function->arg_info[j].name, name) == 0) 
+                    return function->arg_info[j].var_info.id;
+
+    for (int i = 0; i < sym_index; i++) 
         if (sym_table[i].name[0] == name[0] && sym_table[i].type == type)
             if (strcmp(sym_table[i].name, name) == 0)
                 return i;

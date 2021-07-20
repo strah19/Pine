@@ -28,29 +28,8 @@ int main(int argc, char *argv[]) {
     finialize_bytecode(bc_builder);
     init_vm();  
 
-
-    int32_t opcodes[] = {
-        JMP, 14,
-        ICONST, 2,
-        LOAD, -3,
-        LOAD, -4,
-        IADD,
-        IADD,
-        SYS_WRITE,
-        ICONST, 0,
-        RET,
-
-        ICONST, 2,
-        ICONST, 10,
-        CALL, 2, 2,
-        POP,
-
-        HALT
-    };
-
     run_vm(bc_builder->data_size, bc_builder->opcodes, 0);
     
-
     destroy_parser(parser);
     destroy_lexer(lexer);
     destroy_bc_builder(bc_builder);

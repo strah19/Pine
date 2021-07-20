@@ -10,6 +10,8 @@ enum SymType {
     VAR, FUNC, OBJ, ENUM
 };
 
+struct Symbol;
+
 struct VarSym {
     enum TokenType type;
     uint32_t size;
@@ -18,17 +20,20 @@ struct VarSym {
     uint32_t id;
 };
 
+struct ArgSym {
+    struct VarSym var_info;
+    char* name;
+};
+
 struct FuncSym {
     uint32_t bytecode_address;
     uint32_t arg_nums;
     struct VarSym return_info;
-    struct VarSym arg_info[MAX_ARGS];
+    struct ArgSym arg_info[MAX_ARGS];
     bool created;
 };
 
 struct Symbol {
-    struct Symbol* next;
-
     //Name is the key
     char* name;
 
@@ -63,5 +68,9 @@ extern void update_sym_index(uint32_t index);
 extern void log_symbols();
 
 extern struct VariableType* get_variable_types(enum TokenType type);
+
+extern void set_current_function(struct FuncSym* func);
+
+extern struct FuncSym* get_function();
 
 #endif //!SYM_H

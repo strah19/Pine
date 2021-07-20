@@ -127,9 +127,16 @@ void fill_ast_node(struct Token* token, struct ASTNode** node) {
     }
     else if(token->type == ID) {
         int var_id = search_type_symbol(token->token_string, VAR);
-        (*node)->var_id = get_symbols()[var_id].var.id;
+
+        if (check_id_arg(var_id)) {
+            (*node)->var_id = get_function()->arg_info[get_arg_id(var_id)].var_info.id;
+            (*node)->type = get_function()->arg_info[get_arg_id(var_id)].var_info.value_type;
+        }
+        else {
+            (*node)->var_id = get_symbols()[var_id].var.id;
+            (*node)->type = get_symbols()[var_id].var.value_type;
+        }
         (*node)->precedence = NUMERIC_PRECEDENCE;
-        (*node)->type = get_symbols()[var_id].var.value_type;
     }
     else {
         (*node)->precedence = fig_precedence_from_op(token->type);
@@ -149,7 +156,8 @@ void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {
     for (size_t i = parser->token_index; i < parser->lexer->size; i++) {
         struct Token *token = &parser->lexer->tokens[i];
 
-        if(token->type == END_EXPRESSION || token->type == LCURLEY_BRACKET) 
+        //This is BAD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if(token->type == END_EXPRESSION || token->type == LCURLEY_BRACKET || token->type == RPAR || token->type == COMMA)
             break;
 
         new_item = create_ast_node(token->type, NULL, NULL);

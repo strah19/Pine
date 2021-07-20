@@ -30,8 +30,6 @@ extern void build_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode
 
 extern void build_expression(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
 
-extern void build_print(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
-
 extern void log_bytecode_in_file(struct ByteCodeBuilder* bc_builder);
 
 #endif // !BYTECODE_BUILDER_H

@@ -133,11 +133,11 @@ void operate_on_operands(struct VM* vm, char operator) {
     result.type = o2.type;  
 
     switch (operator) {
-        case '+': result.i32 = o1.i32 +  o2.i32; break;
-        case '-': result.i32 = o1.i32 -  o2.i32; break;
-        case '*': result.i32 = o1.i32 *  o2.i32; break;
-        case '/': result.i32 = o1.i32 /  o2.i32; break;
-        case '%': result.i32 = o1.i32 %  o2.i32; break;
+        case '+': result.i32 = o2.i32 +  o1.i32; break;
+        case '-': result.i32 = o2.i32 -  o1.i32; break;
+        case '*': result.i32 = o2.i32 *  o1.i32; break;
+        case '/': result.i32 = o2.i32 /  o1.i32; break;
+        case '%': result.i32 = o2.i32 %  o1.i32; break;
         case '=': result.i32 = (o1.i32 == o2.i32) ? 1 : 0; break;
         case '!': result.i32 = (o1.i32 != o2.i32) ? 1 : 0; break;
         case '<': result.i32 = (o1.i32 <  o2.i32) ? 1 : 0; break;
@@ -269,7 +269,7 @@ void op_load(struct VM* vm) {
 void op_store(struct VM* vm) {
     vm->ip++;
     int32_t offset = vm->opcodes[vm->ip++];
-    vm->stack.stack[(vm->fp - 1) + offset] = vm->stack.stack[vm->stack.top--];
+    vm->stack.stack[(vm->fp - 1) + offset] = vm_pop_stack(&vm->stack);
 }
 
 void op_jmp(struct VM* vm) {

@@ -1,3 +1,4 @@
+/*
 a : int = 1 + 2 + 2;
 b : int = 2;
 c : int = 4;
@@ -6,9 +7,52 @@ a = b = c;
 
 print a + b + c;
 print "a";
+*/
 
-add(a : int, b : int) : func {
-	print a + b;
+add(num1: int, num2: int) : func {
+	print num1 + num2;	
 }
+
+subtract(num1: int, num2: int) : func {
+	print num1 - num2;	
+}
+
+multiply(num1: int, num2: int) : func {
+	print num1 * num2;	
+}
+
+divide(num1: int, num2: int) : func {
+	print num1 / num2;	
+}
+
+is_a(character : char) : func {
+	character = "a";
+	if character == "a" {
+		print "a";
+	}
+}
+
+isdigit(character : char) : func {
+	if character >= "0" and character <= "9" {
+		print 1;
+	}
+	else {
+		print 0;
+	}
+}
+
+test(c : const int) : func {
+	print c;
+}
+
+add(2, 4);
+multiply(4, 2);
+subtract(7, 2);
+
+is_a("c");
+
+isdigit("-");
+
+test(3);
 
 `

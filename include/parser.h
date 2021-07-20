@@ -29,4 +29,8 @@ extern struct Token* retrieve_next_token(struct Parser* parser);  //Get current 
 
 extern void match_token(struct Parser* parser, enum TokenType type, const char* what);
 
+extern bool check_id_arg(int id);
+
+extern int get_arg_id(int id);
+
 #endif //!PARSER_H
