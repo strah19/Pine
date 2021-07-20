@@ -5,6 +5,7 @@
 #include "../include/token.h"
 
 #define MAX_ARGS 16
+#define UNKNOWN_ID -1
 
 enum SymType {
     VAR, FUNC, OBJ, ENUM
@@ -72,5 +73,7 @@ extern struct VariableType* get_variable_types(enum TokenType type);
 extern void set_current_function(struct FuncSym* func);
 
 extern struct FuncSym* get_function();
+
+extern void fill_func_info(struct ArgSym* arg, struct VariableType* var_type, int* id, bool is_const, const char* token_str);
 
 #endif //!SYM_H

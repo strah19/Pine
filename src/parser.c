@@ -29,11 +29,11 @@
 void run_scope(struct Parser* parser);
 bool run_statements(struct Parser* parser);
 
-void expression_assignment(struct Parser* parser, struct ASTNode** root);
 uint32_t comparison_statement(struct Parser* parser);
-void print_statement(struct Parser* parser);
 void assignment_statement(struct Parser* parser);
-void id_found(struct Parser* parser);
+void expression_assignment(struct Parser* parser, struct ASTNode** root);
+void print_statement(struct Parser* parser);
+
 
 void if_statement(struct Parser* parser);
 void else_statement(struct Parser* parser);
@@ -41,7 +41,14 @@ void elif_statement(struct Parser* parser);
 int equal_statement(struct Parser* parser, int end_token, struct Token* var_token, struct ASTNode** root);
 void while_statement(struct Parser* parser);
 
-void function_definition(struct Parser* parser);
+void function_statement(struct Parser* parser);
+void function_definition(struct Parser* parser, int func_id);
+void function_call(struct Parser* parser, int func_id);
+
+bool find_const(struct Parser* parser);
+void match_token(struct Parser* parser, enum TokenType type);
+void id_found(struct Parser* parser);
+int check_for_var_redefination(struct Token* token);
 
 struct Parser* create_parser(struct Lexer* lexer, struct ByteCodeBuilder* bc_builder) {
     struct Parser* parser;
@@ -63,10 +70,9 @@ void destroy_parser(struct Parser* parser) {
 }
 
 void run_parser(struct Parser* parser) {
-    while (PARSER_LOOP) {
+    while (PARSER_LOOP) 
         if(!run_statements(parser))
             break;
-    }
 }
 
 bool run_statements(struct Parser* parser) {
@@ -74,6 +80,7 @@ bool run_statements(struct Parser* parser) {
     
     if (token->type == T_EOF)
         return false;
+
     switch (token->type) {
     case PRINT:
         print_statement(parser);
@@ -85,16 +92,16 @@ bool run_statements(struct Parser* parser) {
         if_statement(parser);
         break;
     case ELSE:
-        fatal_token_error("Else without an if", token);
+        fatal_token_error(ELSE_WITHOUT_IF_ERROR, token);
         break;
     case ELIF:
-        fatal_token_error("Elif without an if", token);
+        fatal_token_error(ELIF_WITHOUT_IF_ERROR, token);
         break;
     case WHILE:
         while_statement(parser);
         break;
     default:
-        fatal_token_error("Undefined token", token);
+        fatal_token_error(UNDEFINED_TOKEN_ERROR, token);
     }
 
     return true;
@@ -112,18 +119,18 @@ struct Token* peek_offset_token(struct Parser* parser, int offset) {
     return (parser->token_index + offset <= parser->lexer->size) ? &parser->lexer->tokens[parser->token_index + offset] : NULL;
 }
 
-void match_token(struct Parser* parser, enum TokenType type, const char* what) {
+void match_token(struct Parser* parser, enum TokenType type) {
     struct Token* token = peek_next_token(parser);
     if (token) 
         if (token->type == type)
             retrieve_next_token(parser);
         else 
-            fatal_compiler_error("Expected", what, token->token_info.token_line);
+            fatal_compiler_error("Expected", convert_type_to_str(type), token->token_info.token_line);
 }
 
 void id_found(struct Parser* parser) {
     if (peek_offset_token(parser, 1)->type == LPAR)
-        function_definition(parser);
+        function_statement(parser);
     else
         assignment_statement(parser);
 }
@@ -136,34 +143,39 @@ int get_arg_id(int id) {
     return (abs(id) - 3);
 }
 
+bool find_const(struct Parser* parser) {
+    if (peek_next_token(parser)->type == CONST) {
+        match_token(parser, CONST);
+        return true;
+    }
+    return false;
+}
+
 void expression_assignment(struct Parser* parser, struct ASTNode** root) {
     struct ASTNode* ast_tree;
     make_ast_from_expr(&ast_tree, parser);
     *root = ast_tree;
 }
 
-//Temporary: will create an actually interface for the system calls.
 void print_statement(struct Parser* parser) {
-    match_token(parser, PRINT, "print");
+    match_token(parser, PRINT);
     
     struct ASTNode* ast;
     make_ast_from_expr(&ast, parser);
 
     build_expression(parser->bc_builder, ast);
-
     parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = SYS_WRITE;
 
     destroy_ast_node(ast);
-
-    match_token(parser, END_EXPRESSION, ";");
+    match_token(parser, END_EXPRESSION);
 }
 
 int check_for_var_redefination(struct Token* token) {
-    if (search_type_symbol(token->token_string, VAR) == -1) 
+    if (search_type_symbol(token->token_string, VAR) == UNKNOWN_ID)
         return add_symbol(token->token_string, VAR)->index;
     else
-        fatal_token_error("Redefinition of variable", token);
-    return -1;
+        fatal_token_error(VAR_REDEFINITION_ERROR, token);
+    return UNKNOWN_ID;
 }
 
 void fill_var_sym_data(int var_id, struct VariableType* var_type) {
@@ -176,18 +188,15 @@ void assignment_statement(struct Parser* parser) {
     struct ASTNode* ast = NULL;
 
     struct Token* var_token = peek_next_token(parser);
-    match_token(parser, ID, "identifier");
+    match_token(parser, ID);
 
-    int var_id = -1;
+    int var_id = UNKNOWN_ID;
     bool is_const = false;
 
     if (peek_next_token(parser)->type == COLON) {
-        match_token(parser, peek_next_token(parser)->type, ":");
+        match_token(parser, peek_next_token(parser)->type);
+        is_const = find_const(parser);
 
-        if (peek_next_token(parser)->type == CONST) {
-            is_const = true;
-            match_token(parser, CONST, "const");
-        }
         struct VariableType* var_type = get_variable_types(peek_next_token(parser)->type);
         retrieve_next_token(parser);
 
@@ -200,9 +209,9 @@ void assignment_statement(struct Parser* parser) {
 
         if (peek_next_token(parser)->type == END_EXPRESSION) {
             if (is_const) 
-                fatal_token_error("Need to give const a value", peek_next_token(parser));
+                fatal_token_error(CONST_MUST_BE_DEFINED_ERROR, peek_next_token(parser));
 
-            match_token(parser, peek_next_token(parser)->type, ";");
+            match_token(parser, peek_next_token(parser)->type);
 
             ast = create_ast_node(EQUAL, create_ast_node_fill(ID, NULL, NULL, ast, var_type->value_type), create_ast_node_fill(var_type->value_type, NULL, NULL, ast, var_type->value_type));
             ast->left->var_id = get_symbols()[var_id].var.id;
@@ -212,15 +221,15 @@ void assignment_statement(struct Parser* parser) {
             return;
         }
     }
-    else if (search_type_symbol(var_token->token_string, VAR) == -1)
-        fatal_token_error("Undefined variable", var_token);
+    else if (search_type_symbol(var_token->token_string, VAR) == UNKNOWN_ID)
+        fatal_token_error(UNDEFINED_ID_ERROR, var_token);
 
     parser->token_index = equal_statement(parser, parser->token_index, var_token, &ast);
 
     if (is_const) 
         get_symbols()[var_id].var.is_const = is_const;
 
-    match_token(parser, END_EXPRESSION, ";");
+    match_token(parser, END_EXPRESSION);
 
     begin_sem();
     validate_ast(ast);
@@ -238,8 +247,8 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
     else
         (*root)->left = create_ast_node_fill(ID, NULL, NULL, *root, get_symbols()[search_type_symbol(var_token->token_string, VAR)].var.value_type);
 
-    if (id == -1)
-        fatal_token_error("Undefined variable", var_token);
+    if (id == UNKNOWN_ID)
+        fatal_token_error(UNDEFINED_ID_ERROR, var_token);
 
     if (check_id_arg(id))
         (*root)->left->var_id = get_function()->arg_info[get_arg_id(id)].var_info.id;
@@ -247,7 +256,7 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
         (*root)->left->var_id = get_symbols()[id].var.id;
 
     if (var_token->type != ID)
-        fatal_token_error("Value needs to be modifiable lvalue", var_token);
+        fatal_token_error(MUST_BE_LVALUE_ERROR, var_token);
     if (check_id_arg(id)) {
         if (get_function()->arg_info[get_arg_id(id)].var_info.is_const)
             fatal_token_error(LVALUE_CONST_ERROR, var_token);
@@ -256,7 +265,7 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
         if (get_symbols()[search_type_symbol(var_token->token_string, VAR)].var.is_const)
             fatal_token_error(LVALUE_CONST_ERROR, var_token);
 
-    match_token(parser, EQUAL, "=");
+    match_token(parser, EQUAL);
 
     struct Token* token = peek_next_token(parser);
 
@@ -273,7 +282,7 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
         struct Token* next_var = &parser->lexer->tokens[parser->token_index - 1];
         struct Token* lval_check = &parser->lexer->tokens[parser->token_index - 2];
             if (next_var->type != ID && lval_check->type != EQUAL) 
-                fatal_token_error("Value needs to be a modifiable lvalue", next_var);
+                fatal_token_error(MUST_BE_LVALUE_ERROR, next_var);
 
         end_token = equal_statement(parser, end_token, next_var, &(*root)->right);
         (*root)->right->parent = *root;
@@ -291,13 +300,13 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
 }
 
 void run_scope(struct Parser* parser) {
-    match_token(parser, LCURLEY_BRACKET, "{");
+    match_token(parser, LCURLEY_BRACKET);
     uint32_t left_bracket_match = parser->token_index;
     while(peek_next_token(parser)->type != RCURLEY_BRACKET && peek_next_token(parser)->type != T_EOF) 
         run_statements(parser);
     if (peek_next_token(parser)->type != RCURLEY_BRACKET) 
-        fatal_token_error("Mismatched { token", &parser->lexer->tokens[left_bracket_match]);    
-    match_token(parser, RCURLEY_BRACKET, "}");
+        fatal_token_error(MISMATCHED_LCURLY_ERROR, &parser->lexer->tokens[left_bracket_match]);
+    match_token(parser, RCURLEY_BRACKET);
 }
 
 uint32_t comparison_statement(struct Parser* parser) {
@@ -306,14 +315,14 @@ uint32_t comparison_statement(struct Parser* parser) {
 
     build_expression(parser->bc_builder, ast_tree);
 
-    uint32_t jmp_reference = get_jmp_reference(parser->bc_builder);
+    uint32_t jmp_reference = get_jmpn_reference(parser->bc_builder);
     destroy_ast_node(ast_tree);    
 
     return jmp_reference;
 }
 
-void generic_condition(struct Parser* parser, uint32_t condition_type, const char* name) {
-    match_token(parser, condition_type, name);
+void generic_condition(struct Parser* parser, uint32_t condition_type) {
+    match_token(parser, condition_type);
 
     uint32_t jmp_reference = comparison_statement(parser);
     int local_variable_frame = get_sym_index();
@@ -322,7 +331,7 @@ void generic_condition(struct Parser* parser, uint32_t condition_type, const cha
 
     parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = JMP;
     uint32_t main_ref = parser->bc_builder->current_builder_location;
-    parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = -1;
+    parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = UNKNOWN_ID;
 
     update_sym_index(local_variable_frame);
 
@@ -340,11 +349,11 @@ void generic_condition(struct Parser* parser, uint32_t condition_type, const cha
 }
 
 void if_statement(struct Parser* parser) {
-    generic_condition(parser, IF, "if");
+    generic_condition(parser, IF);
 }
 
 void else_statement(struct Parser* parser) {
-    match_token(parser, ELSE, "else");
+    match_token(parser, ELSE);
     int local_variable_frame = get_sym_index();
 
     run_scope(parser);
@@ -353,11 +362,11 @@ void else_statement(struct Parser* parser) {
 }
 
 void elif_statement(struct Parser* parser) {
-    generic_condition(parser, ELIF, "elif");
+    generic_condition(parser, ELIF);
 }
 
 void while_statement(struct Parser* parser) {
-    match_token(parser, WHILE, "while");
+    match_token(parser, WHILE);
  
     uint32_t start_ref = parser->bc_builder->current_builder_location;
     uint32_t jmp_reference = comparison_statement(parser);
@@ -373,106 +382,82 @@ void while_statement(struct Parser* parser) {
     parser->bc_builder->opcodes[jmp_reference] = parser->bc_builder->current_builder_location;
 }
 
-void function_definition(struct Parser* parser) {
+void function_statement(struct Parser* parser) {
     struct Token* function_token = peek_next_token(parser);
-    match_token(parser, ID, "function identifier");
+    match_token(parser, ID);
 
-    int func = search_type_symbol(function_token->token_string, FUNC);
+    int func_id = search_type_symbol(function_token->token_string, FUNC);
 
-    if (func == -1)
-        func = add_symbol(function_token->token_string, FUNC)->index;
-    else if(!get_symbols()[func].function.created)
-        fatal_token_error("Redefinition of function", function_token);
+    if (func_id == UNKNOWN_ID)
+        func_id = add_symbol(function_token->token_string, FUNC)->index;
+    else if (!get_symbols()[func_id].function.created)
+        fatal_token_error(FUNC_REDEFINITION_ERROR, function_token);
 
-    if (get_symbols()[func].function.created) {
-        //This is the call of the function.
+    if (get_symbols()[func_id].function.created)
+        function_call(parser, func_id);
+    else
+        function_definition(parser, func_id);
+}
 
-        int arg_tracker = 0;
+void function_definition(struct Parser* parser, int func_id) {
+    match_token(parser, LPAR);
+    int id = ARG_OFFSET;
+    get_symbols()[func_id].function.arg_nums = 0;
 
-        match_token(parser, LPAR, "(");
-        while (peek_next_token(parser)->type != RPAR) {
-            struct ASTNode* ast;
-            make_ast_from_expr(&ast, parser);
+    while (peek_next_token(parser)->type != RPAR) {
+        struct Token* var_token = peek_next_token(parser);
+        match_token(parser, ID);
+        match_token(parser, COLON);
 
-            build_expression(parser->bc_builder, ast);
+        bool is_const = find_const(parser);
 
+        struct VariableType* var_type = get_variable_types(peek_next_token(parser)->type);
+        retrieve_next_token(parser);
 
+        fill_func_info(&get_symbols()[func_id].function.arg_info[get_symbols()[func_id].function.arg_nums++], var_type, &id, is_const, var_token->token_string);
 
-            destroy_ast_node(ast);
-
-            if (peek_next_token(parser)->type != RPAR) {
-                match_token(parser, COMMA, ",");
-            }
-            arg_tracker++;
-        }
-
-        if (arg_tracker != get_symbols()[func].function.arg_nums) {
-            fatal_error("Wrong number of arguments to function");
-        }
-
-        match_token(parser, RPAR, ")");
-        match_token(parser, END_EXPRESSION, ";");
-
-        parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = CALL;
-        parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = get_symbols()[func].function.bytecode_address;
-        parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = get_symbols()[func].function.arg_nums;
-        parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = POP;
+        if (peek_next_token(parser)->type != RPAR)
+            match_token(parser, COMMA);
     }
-    else {
-        //This is the actual definition.
+    match_token(parser, RPAR);
 
-        match_token(parser, LPAR, "(");
-        int id = -3;
-        get_symbols()[func].function.arg_nums = 0;
-        while (peek_next_token(parser)->type != RPAR) {
-            struct Token* var_token = peek_next_token(parser);
-            match_token(parser, ID, "identifier");
+    int local_variable_frame = get_sym_index();
+    uint32_t jmp_reference = get_jmp_reference(parser->bc_builder);
+    uint32_t start_of_function = parser->bc_builder->current_builder_location;
 
-            bool is_const = false;
-            match_token(parser, COLON, ":");
+    set_current_function(&get_symbols()[func_id].function);
+    run_scope(parser);
+    set_current_function(NULL);
 
-            if (peek_next_token(parser)->type == CONST) {
-                is_const = true;
-                match_token(parser, CONST, "const");
-            }
+    build_function_return(parser->bc_builder, jmp_reference);
 
-            struct VariableType* var_type = get_variable_types(peek_next_token(parser)->type);
-            retrieve_next_token(parser);
-           
-            get_symbols()[func].function.arg_info[get_symbols()[func].function.arg_nums].var_info.is_const = is_const;
-            get_symbols()[func].function.arg_info[get_symbols()[func].function.arg_nums].var_info.type = var_type->type;
-            get_symbols()[func].function.arg_info[get_symbols()[func].function.arg_nums].var_info.value_type = var_type->value_type;
-            get_symbols()[func].function.arg_info[get_symbols()[func].function.arg_nums].var_info.size = var_type->size;
-            get_symbols()[func].function.arg_info[get_symbols()[func].function.arg_nums].var_info.id = id--;
-            get_symbols()[func].function.arg_info[get_symbols()[func].function.arg_nums++].name = var_token->token_string;
+    update_sym_index(local_variable_frame);
 
-            if(peek_next_token(parser)->type != RPAR)
-                match_token(parser, COMMA, ",");
-        }
-        match_token(parser, RPAR, ")");
+    get_symbols()[func_id].function.created = true;
+    get_symbols()[func_id].function.bytecode_address = start_of_function;
+}
 
-        match_token(parser, COLON, ":");
-        match_token(parser, T_FUNC, "func");
+void function_call(struct Parser* parser, int func_id) {
+    int arg_tracker = 0;
 
-        int local_variable_frame = get_sym_index();
-        parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = JMP;
-        uint32_t jmp_reference = parser->bc_builder->current_builder_location;
-        parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = -1;
-        uint32_t start_of_function = parser->bc_builder->current_builder_location;
+    match_token(parser, LPAR);
+    while (peek_next_token(parser)->type != RPAR) {
+        struct ASTNode* ast;
 
-        set_current_function(&get_symbols()[func].function);
-        run_scope(parser);
-        set_current_function(NULL);
+        make_ast_from_expr(&ast, parser);
+        build_expression(parser->bc_builder, ast);
+        destroy_ast_node(ast);
 
-        parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = ICONST;
-        parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = 0;
-        parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = RET;
-        parser->bc_builder->opcodes[jmp_reference] = parser->bc_builder->current_builder_location;
-
-        update_sym_index(local_variable_frame);
-
-        //Load up the sym data
-        get_symbols()[func].function.created = true;
-        get_symbols()[func].function.bytecode_address = start_of_function;
+        if (peek_next_token(parser)->type != RPAR) 
+            match_token(parser, COMMA);
+        arg_tracker++;
     }
+
+    if (arg_tracker != get_symbols()[func_id].function.arg_nums) 
+        fatal_error(MISMATCHED_ARG_NUMS_ERROR);
+
+    match_token(parser, RPAR);
+    match_token(parser, END_EXPRESSION);
+    
+    build_function_call(parser->bc_builder, func_id);
 }

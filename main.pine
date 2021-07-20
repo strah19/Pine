@@ -9,30 +9,58 @@ print a + b + c;
 print "a";
 */
 
-add(num1: int, num2: int) : func {
+//This would be the same as typedef in C
+//<define> boolean : int;
+
+/*
+<define> boolean : int;
+<define> boolean : int = (true : false);
+
+<import> module;
+<run> method;
+
+<if> comparison
+<end> 
+
+function returns:
+
+add(num1: int, num2: int) -> boolean {
+	return num1 + num2;
+}
+
+add(num1: int, num2: int) {
+	
+}
+
+*/
+
+true  : const int = 1;
+false : const int = 0;
+
+add(num1: int, num2: int) {
 	print num1 + num2;	
 }
 
-subtract(num1: int, num2: int) : func {
+subtract(num1: int, num2: int) {
 	print num1 - num2;	
 }
 
-multiply(num1: int, num2: int) : func {
+multiply(num1: int, num2: int) {
 	print num1 * num2;	
 }
 
-divide(num1: int, num2: int) : func {
+divide(num1: int, num2: int) {
 	print num1 / num2;	
 }
 
-is_a(character : char) : func {
+is_a(character: char) {
 	character = "a";
 	if character == "a" {
 		print "a";
 	}
 }
 
-isdigit(character : char) : func {
+isdigit(character : char) {
 	if character >= "0" and character <= "9" {
 		print 1;
 	}
@@ -41,11 +69,12 @@ isdigit(character : char) : func {
 	}
 }
 
-test(c : const int) : func {
+test(c : const int) {
 	print c;
 }
 
 add(2, 4);
+
 multiply(4, 2);
 subtract(7, 2);
 

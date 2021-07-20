@@ -56,11 +56,11 @@ uint32_t search_type_symbol(char* name, enum SymType type) {
         if (sym_table[i].name[0] == name[0] && sym_table[i].type == type)
             if (strcmp(sym_table[i].name, name) == 0)
                 return i;
-    return -1;
+    return UNKNOWN_ID;
 }
 
 struct Symbol* add_symbol(char* name, enum SymType type) {
-    if (search_type_symbol(name, type) == -1) {
+    if (search_type_symbol(name, type) == UNKNOWN_ID) {
         sym_table[sym_index].name = name;
         sym_table[sym_index].type = type;
         sym_table[sym_index].index = sym_index;
@@ -84,7 +84,7 @@ struct Symbol* add_symbol(char* name, enum SymType type) {
 
 struct Symbol* get_symbol(char* name, enum SymType type) {
     uint32_t index = search_type_symbol(name, type);
-    return (index != -1) ? &sym_table[index] : NULL;
+    return (index != UNKNOWN_ID) ? &sym_table[index] : NULL;
 }
 
 void log_symbols() {
@@ -110,4 +110,13 @@ struct VariableType* get_variable_types(enum TokenType type) {
             return &var_types[i];
     }
     return NULL;
+}
+
+void fill_func_info(struct ArgSym* arg, struct VariableType* var_type, int* id, bool is_const, const char* token_str) {
+    arg->var_info.is_const = is_const;
+    arg->var_info.type = var_type->type;
+    arg->var_info.value_type = var_type->value_type;
+    arg->var_info.size = var_type->size;
+    arg->var_info.id = (*id)--;
+    arg->name = (char*) token_str;
 }

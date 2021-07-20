@@ -30,9 +30,9 @@ int main(int argc, char *argv[]) {
 
     run_vm(bc_builder->data_size, bc_builder->opcodes, 0);
     
-    destroy_parser(parser);
     destroy_lexer(lexer);
     destroy_bc_builder(bc_builder);
+    destroy_parser(parser);
     free(loader.text);
 
     return 0;

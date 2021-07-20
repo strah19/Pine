@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include "../include/expression.h"
 
+#define ARG_OFFSET -3
+
 struct ByteCodeBuilder {
     int32_t* opcodes;
     uint32_t current_builder_location;
@@ -24,11 +26,17 @@ extern void finialize_bytecode(struct ByteCodeBuilder* bc_builder);
 
 extern uint32_t calculate_opcode_operator(struct ByteCodeBuilder* bc_builder, struct ASTNode* bin);
 
+extern uint32_t get_jmpn_reference(struct ByteCodeBuilder* bc_builder);
+
 extern uint32_t get_jmp_reference(struct ByteCodeBuilder* bc_builder);
 
 extern void build_decleration(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
 
 extern void build_expression(struct ByteCodeBuilder* bc_builder, struct ASTNode* root);
+
+extern void build_function_call(struct ByteCodeBuilder* bc_builder, int func_id);
+
+extern void build_function_return(struct ByteCodeBuilder* bc_builder, int jmp_reference);
 
 extern void log_bytecode_in_file(struct ByteCodeBuilder* bc_builder);
 

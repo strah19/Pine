@@ -58,8 +58,7 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {"break", BREAK, true},
     {"void", VOID, true},
     {"char", CHAR, true},
-    {"const", CONST, true},
-    {"func", T_FUNC, true}
+    {"const", CONST, true}
 };
 
 extern struct LexLoader create_buffer_for_lexer(const char *filepath);
@@ -73,5 +72,7 @@ extern void run_tokenizer(struct Lexer *lexer);
 extern void log_token_data(struct Lexer *lexer);
 
 extern void clear_lexer_data(struct Lexer* lexer);
+
+extern const char* convert_type_to_str(enum TokenType type);
 
 #endif // LEXER_H

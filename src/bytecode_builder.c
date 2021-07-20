@@ -156,10 +156,18 @@ void build_assignment(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) 
     store_variable(bc_builder, root->left->var_id);
 }
 
-uint32_t get_jmp_reference(struct ByteCodeBuilder* bc_builder) {
+uint32_t get_jmpn_reference(struct ByteCodeBuilder* bc_builder) {
     bc_builder->opcodes[bc_builder->current_builder_location++] = JMPN;
     uint32_t ref = bc_builder->current_builder_location;
-    bc_builder->opcodes[bc_builder->current_builder_location++] = -1;
+    bc_builder->opcodes[bc_builder->current_builder_location++] = UNKNOWN_ID;
+
+    return ref;
+}
+
+uint32_t get_jmp_reference(struct ByteCodeBuilder* bc_builder) {
+    bc_builder->opcodes[bc_builder->current_builder_location++] = JMP;
+    uint32_t ref = bc_builder->current_builder_location;
+    bc_builder->opcodes[bc_builder->current_builder_location++] = UNKNOWN_ID;
 
     return ref;
 }
@@ -172,11 +180,25 @@ void log_bytecode_in_file(struct ByteCodeBuilder* bc_builder) {
     if (file) {
         size_t n = sizeof(opcodes) / sizeof(uint32_t);
 
-        for (int i = 0; i < bc_builder->current_builder_location; i++) {
+        for (int i = 0; i < bc_builder->current_builder_location; i++)
             fprintf(file, "%d ", opcodes[i]);
-        }
     }
-    else {
+    else 
         fatal_error("Could not open file for bytecode dump");
-    }
+
+    fclose(file);
+}
+
+void build_function_return(struct ByteCodeBuilder* bc_builder, int jmp_reference) {
+    bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
+    bc_builder->opcodes[bc_builder->current_builder_location++] = 0;
+    bc_builder->opcodes[bc_builder->current_builder_location++] = RET;
+    bc_builder->opcodes[jmp_reference] = bc_builder->current_builder_location;
+}
+
+void build_function_call(struct ByteCodeBuilder* bc_builder, int func_id) {
+    bc_builder->opcodes[bc_builder->current_builder_location++] = CALL;
+    bc_builder->opcodes[bc_builder->current_builder_location++] = get_symbols()[func_id].function.bytecode_address;
+    bc_builder->opcodes[bc_builder->current_builder_location++] = get_symbols()[func_id].function.arg_nums;
+    bc_builder->opcodes[bc_builder->current_builder_location++] = POP;
 }

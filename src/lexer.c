@@ -225,3 +225,40 @@ void clear_lexer_data(struct Lexer *lexer) {
     lexer->current_possible_token[0] = '\0';
     reset_token_counter();
 }
+
+const char* convert_type_to_str(enum TokenType type) {
+    switch (type) {
+    case LCURLEY_BRACKET: return "{"    ;
+    case RCURLEY_BRACKET: return "}"    ;
+    case LPAR: return "("    ;
+    case RPAR: return ")"    ;
+    case END_EXPRESSION: return ";"    ;
+    case LBRACKET: return "["    ;
+    case RBRACKET: return "]"    ;
+    case LESS_THAN: return "<"    ;
+    case GREATER_THAN: return ">"    ;
+    case TO_THE_POWER_OF: return "^"    ;
+    case COLON: return ":"    ;
+    case EQUAL: return "="    ;
+    case DOUBLE_EQUAL: return "!="   ;
+    case SUBTRACT: return "-"    ;
+    case ADD: return "+"    ;
+    case MULTIPLE: return "*"    ;
+    case DIVIDE: return "/"    ;
+    case COMMA: return ","    ;
+    case PRINT: return "print";
+    case INT: return "int"  ;
+    case IF: return "if" ;
+    case ELSE: return "else" ;
+    case ELIF: return "elif" ;
+    case AND: return "and"  ;
+    case OR: return "or"   ;
+    case WHILE: return "while";
+    case BREAK: return "break";
+    case VOID: return "void" ;
+    case CHAR: return "char" ;
+    case CONST: return "const";
+    }
+
+    return "";
+}
