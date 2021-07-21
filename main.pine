@@ -34,54 +34,14 @@ add(num1: int, num2: int) {
 
 */
 
-true  : const int = 1;
-false : const int = 0;
-
-add(num1: int, num2: int) {
-	print num1 + num2;	
-}
-
-subtract(num1: int, num2: int) {
-	print num1 - num2;	
-}
-
-multiply(num1: int, num2: int) {
-	print num1 * num2;	
-}
-
-divide(num1: int, num2: int) {
-	print num1 / num2;	
-}
-
-is_a(character: char) {
-	character = "a";
-	if character == "a" {
-		print "a";
+range(start: int, end: const int) {
+	start = start + 1;
+	print start;
+	if start < end {
+		range(start, end);
 	}
 }
 
-isdigit(character : char) {
-	if character >= "0" and character <= "9" {
-		print 1;
-	}
-	else {
-		print 0;
-	}
-}
-
-test(c : const int) {
-	print c;
-}
-
-add(2, 4);
-
-multiply(4, 2);
-subtract(7, 2);
-
-is_a("c");
-
-isdigit("-");
-
-test(3);
+range(0, 10);
 
 `

@@ -120,3 +120,11 @@ void fill_func_info(struct ArgSym* arg, struct VariableType* var_type, int* id, 
     arg->var_info.id = (*id)--;
     arg->name = (char*) token_str;
 }
+
+void fill_return_info(struct FuncSym* func, enum TokenType type, uint32_t size, enum TokenType value, bool is_const, int id) {
+    func->return_info.id = id;
+    func->return_info.type = type;
+    func->return_info.size = size;
+    func->return_info.value_type = value;
+    func->return_info.is_const = is_const;
+}

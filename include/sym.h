@@ -76,4 +76,6 @@ extern struct FuncSym* get_function();
 
 extern void fill_func_info(struct ArgSym* arg, struct VariableType* var_type, int* id, bool is_const, const char* token_str);
 
+extern void fill_return_info(struct FuncSym* func, enum TokenType type, uint32_t size, enum TokenType value, bool is_const, int id);
+
 #endif //!SYM_H

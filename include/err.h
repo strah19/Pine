@@ -22,5 +22,9 @@ extern void token_warning(const char* warning, struct Token* token);
 #define UNDEFINED_TOKEN_ERROR "Undefined token"
 #define MISMATCHED_ARG_NUMS_ERROR "Wrong number of arguments to function"
 #define MISMATCHED_LCURLY_ERROR "Mismatched { token"
+#define UNKNOWN_TYPE_ERROR "Unknown variable type"
+#define RETURN_WITHOUT_FUN_ERROR "Cannot call return when not in function"
+#define RETURN_WITHOUT_VALUE_IN_NONE_VOID_FUN_ERROR "Cannot call 'return;' in a none void function"
+#define FUNC_IN_FUNC_ERROR "Cannot define a function inside a function"
 
 #endif //!ERR_H

@@ -36,7 +36,7 @@ extern void build_expression(struct ByteCodeBuilder* bc_builder, struct ASTNode*
 
 extern void build_function_call(struct ByteCodeBuilder* bc_builder, int func_id);
 
-extern void build_function_return(struct ByteCodeBuilder* bc_builder, int jmp_reference);
+extern void build_function_return(struct ByteCodeBuilder* bc_builder);
 
 extern void log_bytecode_in_file(struct ByteCodeBuilder* bc_builder);
 

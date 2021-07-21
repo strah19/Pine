@@ -189,11 +189,10 @@ void log_bytecode_in_file(struct ByteCodeBuilder* bc_builder) {
     fclose(file);
 }
 
-void build_function_return(struct ByteCodeBuilder* bc_builder, int jmp_reference) {
+void build_function_return(struct ByteCodeBuilder* bc_builder) {
     bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
     bc_builder->opcodes[bc_builder->current_builder_location++] = 0;
     bc_builder->opcodes[bc_builder->current_builder_location++] = RET;
-    bc_builder->opcodes[jmp_reference] = bc_builder->current_builder_location;
 }
 
 void build_function_call(struct ByteCodeBuilder* bc_builder, int func_id) {

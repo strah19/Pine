@@ -148,7 +148,11 @@ void run_tokenizer(struct Lexer *lexer) {
                         reset_lexer(&pos, &current_token_len, current_token_str);
                         bp++;
                     }
-
+                    else if (*bp == '-' && *(bp + 1) == '>') {
+                        push_token(lexer, ARROW_PTR, "->", line, pos);
+                        reset_lexer(&pos, &current_token_len, current_token_str);
+                        bp++;
+                    }
                     else {
                         bool check_for_var = true;
                         for (int i = 0; i < sizeof(TOKEN_PAIRS) / sizeof(TOKEN_PAIRS[0]); i++) {
@@ -228,35 +232,36 @@ void clear_lexer_data(struct Lexer *lexer) {
 
 const char* convert_type_to_str(enum TokenType type) {
     switch (type) {
-    case LCURLEY_BRACKET: return "{"    ;
-    case RCURLEY_BRACKET: return "}"    ;
-    case LPAR: return "("    ;
-    case RPAR: return ")"    ;
-    case END_EXPRESSION: return ";"    ;
-    case LBRACKET: return "["    ;
-    case RBRACKET: return "]"    ;
-    case LESS_THAN: return "<"    ;
-    case GREATER_THAN: return ">"    ;
-    case TO_THE_POWER_OF: return "^"    ;
-    case COLON: return ":"    ;
-    case EQUAL: return "="    ;
-    case DOUBLE_EQUAL: return "!="   ;
-    case SUBTRACT: return "-"    ;
-    case ADD: return "+"    ;
-    case MULTIPLE: return "*"    ;
-    case DIVIDE: return "/"    ;
-    case COMMA: return ","    ;
+    case LCURLEY_BRACKET: return "{";
+    case RCURLEY_BRACKET: return "}";
+    case LPAR: return "(";
+    case RPAR: return ")";
+    case END_EXPRESSION: return ";";
+    case LBRACKET: return "[";
+    case RBRACKET: return "]";
+    case LESS_THAN: return "<";
+    case GREATER_THAN: return ">";
+    case TO_THE_POWER_OF: return "^";
+    case COLON: return ":";
+    case EQUAL: return "=";
+    case DOUBLE_EQUAL: return "!=";
+    case SUBTRACT: return "-";
+    case ADD: return "+";
+    case MULTIPLE: return "*";
+    case DIVIDE: return "/";
+    case COMMA: return ",";
+    case ARROW_PTR: return "->";
     case PRINT: return "print";
-    case INT: return "int"  ;
-    case IF: return "if" ;
-    case ELSE: return "else" ;
-    case ELIF: return "elif" ;
-    case AND: return "and"  ;
-    case OR: return "or"   ;
+    case INT: return "int";
+    case IF: return "if";
+    case ELSE: return "else";
+    case ELIF: return "elif";
+    case AND: return "and";
+    case OR: return "or";
     case WHILE: return "while";
     case BREAK: return "break";
-    case VOID: return "void" ;
-    case CHAR: return "char" ;
+    case VOID: return "void";
+    case CHAR: return "char";
     case CONST: return "const";
     }
 

@@ -44,6 +44,7 @@ void while_statement(struct Parser* parser);
 void function_statement(struct Parser* parser);
 void function_definition(struct Parser* parser, int func_id);
 void function_call(struct Parser* parser, int func_id);
+void return_statement(struct Parser* parser);
 
 bool find_const(struct Parser* parser);
 void match_token(struct Parser* parser, enum TokenType type);
@@ -99,6 +100,9 @@ bool run_statements(struct Parser* parser) {
         break;
     case WHILE:
         while_statement(parser);
+        break;
+    case RETURN:
+        return_statement(parser);
         break;
     default:
         fatal_token_error(UNDEFINED_TOKEN_ERROR, token);
@@ -198,6 +202,10 @@ void assignment_statement(struct Parser* parser) {
         is_const = find_const(parser);
 
         struct VariableType* var_type = get_variable_types(peek_next_token(parser)->type);
+
+        if (var_type == NULL)
+            fatal_token_error(UNKNOWN_TYPE_ERROR, peek_next_token(parser));
+
         retrieve_next_token(parser);
 
         var_id = check_for_var_redefination(var_token);
@@ -388,8 +396,11 @@ void function_statement(struct Parser* parser) {
 
     int func_id = search_type_symbol(function_token->token_string, FUNC);
 
-    if (func_id == UNKNOWN_ID)
+    if (func_id == UNKNOWN_ID) {
+        if (get_function())
+            fatal_token_error(FUNC_IN_FUNC_ERROR, function_token);
         func_id = add_symbol(function_token->token_string, FUNC)->index;
+    }
     else if (!get_symbols()[func_id].function.created)
         fatal_token_error(FUNC_REDEFINITION_ERROR, function_token);
 
@@ -403,6 +414,9 @@ void function_definition(struct Parser* parser, int func_id) {
     match_token(parser, LPAR);
     int id = ARG_OFFSET;
     get_symbols()[func_id].function.arg_nums = 0;
+    get_symbols()[func_id].function.created = true;
+
+    fill_return_info(&get_symbols()[func_id].function, NONE, 0, NONE, false, UNKNOWN_ID);
 
     while (peek_next_token(parser)->type != RPAR) {
         struct Token* var_token = peek_next_token(parser);
@@ -421,36 +435,50 @@ void function_definition(struct Parser* parser, int func_id) {
     }
     match_token(parser, RPAR);
 
+    if (peek_next_token(parser)->type == ARROW_PTR) {
+        match_token(parser, ARROW_PTR);
+
+        struct VariableType* var_type = get_variable_types(peek_next_token(parser)->type);
+
+        if (var_type == NULL)
+            fatal_token_error(UNKNOWN_TYPE_ERROR, peek_next_token(parser));
+
+        match_token(parser, peek_next_token(parser)->type);
+
+        fill_return_info(&get_symbols()[func_id].function, var_type->type, var_type->size, var_type->value_type, false, UNKNOWN_ID);
+    }
+
     int local_variable_frame = get_sym_index();
     uint32_t jmp_reference = get_jmp_reference(parser->bc_builder);
     uint32_t start_of_function = parser->bc_builder->current_builder_location;
+    get_symbols()[func_id].function.bytecode_address = start_of_function;
 
     set_current_function(&get_symbols()[func_id].function);
     run_scope(parser);
     set_current_function(NULL);
 
-    build_function_return(parser->bc_builder, jmp_reference);
+    build_function_return(parser->bc_builder);
 
+    parser->bc_builder->opcodes[jmp_reference] = parser->bc_builder->current_builder_location;
     update_sym_index(local_variable_frame);
-
-    get_symbols()[func_id].function.created = true;
-    get_symbols()[func_id].function.bytecode_address = start_of_function;
 }
 
 void function_call(struct Parser* parser, int func_id) {
     int arg_tracker = 0;
 
     match_token(parser, LPAR);
+    struct ASTNode* ast[MAX_ARGS];
     while (peek_next_token(parser)->type != RPAR) {
-        struct ASTNode* ast;
-
-        make_ast_from_expr(&ast, parser);
-        build_expression(parser->bc_builder, ast);
-        destroy_ast_node(ast);
+        make_ast_from_expr(&ast[arg_tracker], parser);
 
         if (peek_next_token(parser)->type != RPAR) 
             match_token(parser, COMMA);
         arg_tracker++;
+    }
+
+    for (int i = arg_tracker - 1; i >= 0; i--) {
+        build_expression(parser->bc_builder, ast[i]);
+        destroy_ast_node(ast[i]);
     }
 
     if (arg_tracker != get_symbols()[func_id].function.arg_nums) 
@@ -460,4 +488,21 @@ void function_call(struct Parser* parser, int func_id) {
     match_token(parser, END_EXPRESSION);
     
     build_function_call(parser->bc_builder, func_id);
+}
+
+void return_statement(struct Parser* parser) {
+    if (get_function() == NULL)
+        fatal_error(RETURN_WITHOUT_FUN_ERROR);
+
+    match_token(parser, RETURN);
+    if (peek_next_token(parser)->type == END_EXPRESSION) {
+        struct FuncSym* function = get_function();
+
+        if (function->return_info.type != NONE) {
+            fatal_error(RETURN_WITHOUT_VALUE_IN_NONE_VOID_FUN_ERROR);
+        }
+
+        match_token(parser, END_EXPRESSION);
+        build_function_return(parser->bc_builder);
+    }
 }

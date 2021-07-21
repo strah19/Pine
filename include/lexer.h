@@ -47,6 +47,7 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {"*", MULTIPLE, false},
     {"/", DIVIDE, false},
     {",", COMMA, false},
+    {"->", ARROW_PTR, false},
     {"print", PRINT, true},
     {"int", INT, true},
     {"if", IF, true},
@@ -58,7 +59,8 @@ static const struct TokenPair TOKEN_PAIRS[] = {
     {"break", BREAK, true},
     {"void", VOID, true},
     {"char", CHAR, true},
-    {"const", CONST, true}
+    {"const", CONST, true},
+    {"return", RETURN, true}
 };
 
 extern struct LexLoader create_buffer_for_lexer(const char *filepath);

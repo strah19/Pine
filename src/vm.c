@@ -133,11 +133,11 @@ void operate_on_operands(struct VM* vm, char operator) {
     result.type = o2.type;  
 
     switch (operator) {
-        case '+': result.i32 = o2.i32 +  o1.i32; break;
-        case '-': result.i32 = o2.i32 -  o1.i32; break;
-        case '*': result.i32 = o2.i32 *  o1.i32; break;
-        case '/': result.i32 = o2.i32 /  o1.i32; break;
-        case '%': result.i32 = o2.i32 %  o1.i32; break;
+        case '+': result.i32 = o1.i32 +  o2.i32; break;
+        case '-': result.i32 = o1.i32 -  o2.i32; break;
+        case '*': result.i32 = o1.i32 *  o2.i32; break;
+        case '/': result.i32 = o1.i32 /  o2.i32; break;
+        case '%': result.i32 = o1.i32 %  o2.i32; break;
         case '=': result.i32 = (o1.i32 == o2.i32) ? 1 : 0; break;
         case '!': result.i32 = (o1.i32 != o2.i32) ? 1 : 0; break;
         case '<': result.i32 = (o1.i32 <  o2.i32) ? 1 : 0; break;
