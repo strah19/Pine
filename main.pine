@@ -35,13 +35,26 @@ add(num1: int, num2: int) {
 */
 
 range(start: int, end: const int) {
-	start = start + 1;
 	print start;
-	if start < end {
+	start = start + 1;
+	if start <= end {
 		range(start, end);
 	}
 }
 
-range(0, 10);
+lrange(start: int, end: const int) {
+	while start <= end {
+		print start;
+		start = start + 1;
+	}
+}
+
+add(num1: int, num2: int) -> int {
+	return num1 + num2;
+}
+
+add(10, 10);
+
+v : int = 2;
 
 `

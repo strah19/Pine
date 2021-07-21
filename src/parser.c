@@ -43,8 +43,8 @@ void while_statement(struct Parser* parser);
 
 void function_statement(struct Parser* parser);
 void function_definition(struct Parser* parser, int func_id);
-void function_call(struct Parser* parser, int func_id);
 void return_statement(struct Parser* parser);
+void function_call(struct Parser* parser, int func_id);
 
 bool find_const(struct Parser* parser);
 void match_token(struct Parser* parser, enum TokenType type);
@@ -457,7 +457,7 @@ void function_definition(struct Parser* parser, int func_id) {
     run_scope(parser);
     set_current_function(NULL);
 
-    build_function_return(parser->bc_builder);
+    build_function_return_no_value(parser->bc_builder);
 
     parser->bc_builder->opcodes[jmp_reference] = parser->bc_builder->current_builder_location;
     update_sym_index(local_variable_frame);
@@ -502,7 +502,15 @@ void return_statement(struct Parser* parser) {
             fatal_error(RETURN_WITHOUT_VALUE_IN_NONE_VOID_FUN_ERROR);
         }
 
-        match_token(parser, END_EXPRESSION);
+        build_function_return_no_value(parser->bc_builder);
+    }
+    else {
+        struct ASTNode* ast;
+        make_ast_from_expr(&ast, parser);
+        build_expression(parser->bc_builder, ast);
+        destroy_ast_node(ast);
+
         build_function_return(parser->bc_builder);
     }
+    match_token(parser, END_EXPRESSION);
 }

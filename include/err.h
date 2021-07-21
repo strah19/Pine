@@ -26,5 +26,6 @@ extern void token_warning(const char* warning, struct Token* token);
 #define RETURN_WITHOUT_FUN_ERROR "Cannot call return when not in function"
 #define RETURN_WITHOUT_VALUE_IN_NONE_VOID_FUN_ERROR "Cannot call 'return;' in a none void function"
 #define FUNC_IN_FUNC_ERROR "Cannot define a function inside a function"
+#define VOID_FUN_IN_EXP_ERROR "Cannot have 'void' function in an expression"
 
 #endif //!ERR_H
