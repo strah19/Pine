@@ -1,16 +1,16 @@
 #include "../include/sem.h"
 #include "../include/err.h"
 
-static enum TokenType current_id_type = NONE;
+static enum TokenType current_id_type = T_NONE;
 
 void begin_sem() {
-	current_id_type = NONE;
+	current_id_type = T_NONE;
 }
 
 void validate_ast(struct ASTNode* root) {
 	if (!root) return;
 
-	if (root->op == EQUAL) {
+	if (root->op == T_EQUAL) {
 		current_id_type = root->left->type;
 	}
 
@@ -29,13 +29,13 @@ void validate_ast(struct ASTNode* root) {
 }
 
 bool check_if_conversion_possible(enum TokenType current, enum TokenType new_type) {
-	if (current == INTEGER && new_type == INTEGER)
+	if (current == T_INTEGER && new_type == T_INTEGER)
 		return true;
-	else if (current == INTEGER && new_type == CHAR || current == CHAR && new_type == INTEGER)
+	else if (current == T_INTEGER && new_type == T_CHAR || current == T_CHAR && new_type == T_INTEGER)
 		return true;
-	else if (current == CHAR && new_type == CHAR)
+	else if (current == T_CHAR && new_type == T_CHAR)
 		return true;
-	else if (current == NONE)
+	else if (current == T_NONE)
 		return true;
 	return false;
 }

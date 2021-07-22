@@ -7,25 +7,26 @@
 #define MAX_TOKEN_SIZE 256
 
 enum TokenType {
-    INTEGER, ID, IF, END_EXPRESSION, LPAR, RPAR, EQUAL, DOUBLE_EQUAL, ADD, SUBTRACT, MULTIPLE, DIVIDE, MAIN, LBRACKET, RBRACKET, LCURLEY_BRACKET,
-    INT, RCURLEY_BRACKET, ELIF, ELSE, RETURN, WHILE, FOR, CHAR, LESS_THAN, GREATER_THAN, LESS_THAN_EQUAL, GREATER_THAN_EQUAL, TO_THE_POWER_OF, FLOAT, PRINT, AND, OR, COLON,
-    EXCLEMATION, NOT, BREAK, VOID, STR, CONST, COMMA, ARROW_PTR,
-    NONE, T_EOF, 
+    T_INTEGER, T_ID, T_IF, T_SEMI_COLON, T_LPAR, T_RPAR, T_EQUAL, T_DOUBLE_EQUAL, T_PLUS, T_MINUS, 
+    T_STAR, T_SLASH, T_LBRACKET, T_RBRACKET, T_LCURLEY_BRACKET, T_INT, T_RCURLEY_BRACKET, T_ELIF, 
+    T_ELSE, T_RETURN, T_WHILE, T_FOR, T_CHAR, T_LESS_THAN, T_GREATER_THAN, T_LESS_THAN_EQUAL, 
+    T_GREATER_THAN_EQUAL, T_FLOAT, T_PRINT, T_AND, T_OR, T_COLON,T_NOT, T_BREAK, T_VOID, T_STR, 
+    T_CONST, T_COMMA, T_ARROW_PTR, T_NONE, T_EOF,
 };
 
 struct TokenInfo {
-    unsigned int token_line;
-    unsigned int token_pos;
+    uint32_t token_line;
+    uint32_t token_pos;
 };
 
 struct Token {
     enum TokenType type;
     char token_string[MAX_TOKEN_SIZE];
     struct TokenInfo token_info;
-    int code_id;
+    uint32_t index;
 };
 
-extern int move_token_counter(int value);
+extern int move_token_counter(int offset);
 
 extern void reset_token_counter();
 

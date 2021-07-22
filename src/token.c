@@ -22,8 +22,8 @@
 
 static int code_token_id_counter = -1;
 
-int move_token_counter(int value) {
-    code_token_id_counter += value;
+int move_token_counter(int offset) {
+    code_token_id_counter += offset;
     return code_token_id_counter;
 }
 
@@ -40,15 +40,16 @@ struct Token create_token(enum TokenType type, const char *in_source_token, uint
 
     strcpy(token.token_string, in_source_token);
     remove_whitespaces((char*)token.token_string);
+
     token.token_info.token_line = line;
     token.token_info.token_pos = pos;
 
-    token.code_id = move_token_counter(1);
+    token.index = move_token_counter(1);
     token.type = type;
 
     return token;
 }
 
 void log_token(struct Token* token) {
-    printf("Token Id[%d], Type: %d, Str: '%s', Line: %d, Pos: %d\n", token->code_id, token->type, token->token_string, token->token_info.token_line, token->token_info.token_pos);
+    printf("Token Id[%d], Type: %d, Str: '%s', Line: %d, Pos: %d\n", token->index, token->type, token->token_string, token->token_info.token_line, token->token_info.token_pos);
 }

@@ -30,7 +30,7 @@
 void log_tree(struct ASTNode* root, uint32_t tree_branch);
 
 struct ASTNode* create_ast_node(enum TokenType op, struct ASTNode* left, struct ASTNode* right) {
-    return create_ast_node_fill(op, left, right, NULL, NONE);
+    return create_ast_node_fill(op, left, right, NULL, T_NONE);
 }
 
 struct ASTNode* create_ast_node_fill(enum TokenType op, struct ASTNode* left, struct ASTNode* right, struct ASTNode* parent, enum TokenType type) {
@@ -84,48 +84,48 @@ void log_ast(struct ASTNode* root) {
 
 int fig_precedence_from_op(enum TokenType op) {
     switch(op) {
-        case ADD: return 6;
-        case SUBTRACT: return 6;
-        case MULTIPLE: return 7;
-        case DIVIDE: return 7;
-        case LPAR: return 1;
-        case RPAR: return 1;
-        case DOUBLE_EQUAL: return 5;
-        case OR: return 2;
-        case AND: return 3;
-        case LESS_THAN: return 5;
-        case GREATER_THAN: return 5;
-        case LESS_THAN_EQUAL: return 5;
-        case GREATER_THAN_EQUAL: return 5;
-        case NOT: return 4;
+        case T_PLUS: return 6;
+        case T_MINUS: return 6;
+        case T_STAR: return 7;
+        case T_SLASH: return 7;
+        case T_LPAR: return 1;
+        case T_RPAR: return 1;
+        case T_DOUBLE_EQUAL: return 5;
+        case T_OR: return 2;
+        case T_AND: return 3;
+        case T_LESS_THAN: return 5;
+        case T_GREATER_THAN: return 5;
+        case T_LESS_THAN_EQUAL: return 5;
+        case T_GREATER_THAN_EQUAL: return 5;
+        case T_NOT: return 4;
     }
 
     return -1;
 }
 
 void fill_ast_node(struct Token* token, struct ASTNode** node) {
-    if (token->type == INTEGER) {
+    if (token->type == T_INTEGER) {
         (*node)->int_val = atoi(token->token_string);
         (*node)->precedence = NUMERIC_PRECEDENCE;
-        (*node)->type = INTEGER;
+        (*node)->type = T_INTEGER;
     }
-    else if (token->type == FLOAT) {
+    else if (token->type == T_FLOAT) {
         char *pend;
         (*node)->int_val = (int) strtof(token->token_string, &pend);
         (*node)->precedence = NUMERIC_PRECEDENCE;
-        (*node)->type = FLOAT;
+        (*node)->type = T_FLOAT;
     }
-    else if (token->type == STR) {
+    else if (token->type == T_STR) {
         if (token->token_string[1] == '\0') {
             (*node)->char_val = token->token_string[0];
             (*node)->precedence = NUMERIC_PRECEDENCE;
-            (*node)->type = CHAR;
-            (*node)->op = CHAR;
+            (*node)->type = T_CHAR;
+            (*node)->op = T_CHAR;
         }
         else 
-            (*node)->type = STR;
+            (*node)->type = T_STR;
     }
-    else if(token->type == ID) {
+    else if(token->type == T_ID) {
         int var_id = search_type_symbol(token->token_string, VAR);
 
         if (check_id_arg(var_id)) {
@@ -148,7 +148,7 @@ void fill_ast_node(struct Token* token, struct ASTNode** node) {
 
 void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {
     int token_stoppage = 0;
-    *root = create_ast_node(LPAR, NULL, NULL);
+    *root = create_ast_node(T_LPAR, NULL, NULL);
 
     struct ASTNode* current = *root;
     struct ASTNode* new_item = NULL;
@@ -157,25 +157,25 @@ void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {
         struct Token *token = &parser->lexer->tokens[i];
 
         //This is BAD!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        if(token->type == END_EXPRESSION || token->type == LCURLEY_BRACKET || token->type == RPAR || token->type == COMMA)
+        if(token->type == T_SEMI_COLON || token->type == T_LCURLEY_BRACKET || token->type == T_RPAR || token->type == T_COMMA)
             break;
 
         new_item = create_ast_node(token->type, NULL, NULL);
         new_item->order = token->token_info.token_pos * token->token_info.token_line;
         fill_ast_node(token, &new_item);
 
-        if (new_item->op == EQUAL)
+        if (new_item->op == T_EQUAL)
             fatal_error("Equal operator can not be evaluated in an expression");
 
-        if (new_item->op != LPAR) 
-            if (new_item->op == RPAR) 
+        if (new_item->op != T_LPAR)
+            if (new_item->op == T_RPAR)
                 while(current->precedence > new_item->precedence && current->parent != NULL)
 				    current = current->parent;
             else 
                 while (current->precedence >= new_item->precedence && current->parent != NULL) 
                     current = current->parent;
 
-        if (new_item->op == RPAR) {
+        if (new_item->op == T_RPAR) {
             new_item = current->parent;
             new_item->right = current->right;
             if(current->right) current->right->parent = new_item;
@@ -200,40 +200,4 @@ void make_ast_from_expr(struct ASTNode** root, struct Parser* parser) {
     *root = (*root)->right;
     
     parser->token_index += token_stoppage;
-}
-
-int run_bin_exp(struct ASTNode* node) {
-    int left_val = 0, right_val = 0;
-
-    left_val = node->left->int_val;
-    right_val = node->right->int_val;
-
-    switch(node->op) {
-    case ADD:
-        return left_val + right_val;
-    case SUBTRACT:
-        return left_val - right_val;
-    case MULTIPLE:
-        return left_val * right_val;
-    case DIVIDE:
-        return left_val / right_val;
-    case DOUBLE_EQUAL:
-        return (left_val == right_val);
-    case OR:
-        return (left_val || right_val);
-    case AND:
-        return (left_val && right_val);
-    case LESS_THAN:
-        return (left_val < right_val);
-    case GREATER_THAN:
-        return (left_val > right_val);
-    case LESS_THAN_EQUAL:
-        return (left_val <= right_val);
-    case GREATER_THAN_EQUAL:
-        return (left_val >= right_val);
-    case NOT:
-        return (left_val != right_val);
-    }
-
-    return 0;
 }

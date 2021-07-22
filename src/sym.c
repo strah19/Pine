@@ -33,8 +33,8 @@ static uint32_t var_id_counter = 0;
 static struct FuncSym* function = NULL;
 
 struct VariableType var_types[] = {
-    {"int", INT, 4, INTEGER},
-    {"char", CHAR, 1, CHAR}
+    {"int", T_INT, 4, T_INTEGER},
+    {"char", T_CHAR, 1, T_CHAR}
 };
 
 void set_current_function(struct FuncSym* func) {

@@ -5,9 +5,6 @@
 
 #define LEXER_FILE_MODE "r"
 
-#define NEED_MORE_STRING_FOR_TOKEN 0
-#define CREATING_TOKEN 1
-
 struct Lexer {
     uint8_t *input_text;
     char current_possible_token[MAX_TOKEN_SIZE];
@@ -29,38 +26,37 @@ struct TokenPair {
 };
 
 static const struct TokenPair TOKEN_PAIRS[] = {
-    {"{", LCURLEY_BRACKET, false},
-    {"}", RCURLEY_BRACKET, false},
-    {"(", LPAR, false},
-    {")", RPAR, false},
-    {";", END_EXPRESSION, false},
-    {"[", LBRACKET, false},
-    {"]", RBRACKET, false},
-    {"<", LESS_THAN, false},
-    {">", GREATER_THAN, false},
-    {"^", TO_THE_POWER_OF, false},
-    {":", COLON , false},
-    {"=", EQUAL, false},
-    {"!=", NOT, false},
-    {"-", SUBTRACT, false},
-    {"+", ADD, false},
-    {"*", MULTIPLE, false},
-    {"/", DIVIDE, false},
-    {",", COMMA, false},
-    {"->", ARROW_PTR, false},
-    {"print", PRINT, true},
-    {"int", INT, true},
-    {"if", IF, true},
-    {"else", ELSE, true},
-    {"elif", ELIF, true},
-    {"and", AND, true},
-    {"or", OR, true},
-    {"while", WHILE, true},
-    {"break", BREAK, true},
-    {"void", VOID, true},
-    {"char", CHAR, true},
-    {"const", CONST, true},
-    {"return", RETURN, true}
+    {"{", T_LCURLEY_BRACKET, false},
+    {"}", T_RCURLEY_BRACKET, false},
+    {"(", T_LPAR, false},
+    {")", T_RPAR, false},
+    {";", T_SEMI_COLON, false},
+    {"[", T_LBRACKET, false},
+    {"]", T_RBRACKET, false},
+    {"<", T_LESS_THAN, false},
+    {">", T_GREATER_THAN, false},
+    {":", T_COLON , false},
+    {"=", T_EQUAL, false},
+    {"!=", T_NOT, false},
+    {"-", T_MINUS, false},
+    {"+", T_PLUS, false},
+    {"*", T_STAR, false},
+    {"/", T_SLASH, false},
+    {",", T_COMMA, false},
+    {"->", T_ARROW_PTR, false},
+    {"print", T_PRINT, true},
+    {"int", T_INT, true},
+    {"if", T_IF, true},
+    {"else", T_ELSE, true},
+    {"elif", T_ELIF, true},
+    {"and", T_AND, true},
+    {"or", T_OR, true},
+    {"while", T_WHILE, true},
+    {"break", T_BREAK, true},
+    {"void", T_VOID, true},
+    {"char", T_CHAR, true},
+    {"const", T_CONST, true},
+    {"return", T_RETURN, true}
 };
 
 extern struct LexLoader create_buffer_for_lexer(const char *filepath);
@@ -71,7 +67,7 @@ extern void destroy_lexer(struct Lexer *lexer);
 
 extern void run_tokenizer(struct Lexer *lexer);
 
-extern void log_token_data(struct Lexer *lexer);
+extern void log_lexer(struct Lexer *lexer);
 
 extern void clear_lexer_data(struct Lexer* lexer);
 

@@ -11,6 +11,12 @@ extern void fatal_compiler_error(const char* error, const char* s1, int line);
 
 extern void token_warning(const char* warning, struct Token* token);
 
+//Lexer errrors
+#define INCOMPLETE_INPUT_ERROR "Lexer input was incomplete"
+#define TOKEN_RESIZE_FAIL_ERROR "Failed to resize lexical tokens"
+#define MISMATCHED_COMMENTS_ERROR "Mismatched multi-line comment"
+
+//Parser errors
 #define LVALUE_CONST_ERROR "Value cannot be modified as it is a const"
 #define UNDEFINED_ID_ERROR "Undefined variable"
 #define MUST_BE_LVALUE_ERROR "Value needs to be modifiable lvalue"
@@ -27,5 +33,8 @@ extern void token_warning(const char* warning, struct Token* token);
 #define RETURN_WITHOUT_VALUE_IN_NONE_VOID_FUN_ERROR "Cannot call 'return;' in a none void function"
 #define FUNC_IN_FUNC_ERROR "Cannot define a function inside a function"
 #define VOID_FUN_IN_EXP_ERROR "Cannot have 'void' function in an expression"
+
+//General errors
+#define NO_INPUT_ERROR "Must enter a file for the compiler to run"
 
 #endif //!ERR_H

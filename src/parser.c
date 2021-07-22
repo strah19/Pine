@@ -83,25 +83,25 @@ bool run_statements(struct Parser* parser) {
         return false;
 
     switch (token->type) {
-    case PRINT:
+    case T_PRINT:
         print_statement(parser);
         break;
-    case ID:
+    case T_ID:
         id_found(parser);
         break;
-    case IF:
+    case T_IF:
         if_statement(parser);
         break;
-    case ELSE:
+    case T_ELSE:
         fatal_token_error(ELSE_WITHOUT_IF_ERROR, token);
         break;
-    case ELIF:
+    case T_ELIF:
         fatal_token_error(ELIF_WITHOUT_IF_ERROR, token);
         break;
-    case WHILE:
+    case T_WHILE:
         while_statement(parser);
         break;
-    case RETURN:
+    case T_RETURN:
         return_statement(parser);
         break;
     default:
@@ -133,7 +133,7 @@ void match_token(struct Parser* parser, enum TokenType type) {
 }
 
 void id_found(struct Parser* parser) {
-    if (peek_offset_token(parser, 1)->type == LPAR)
+    if (peek_offset_token(parser, 1)->type == T_LPAR)
         function_statement(parser);
     else
         assignment_statement(parser);
@@ -148,8 +148,8 @@ int get_arg_id(int id) {
 }
 
 bool find_const(struct Parser* parser) {
-    if (peek_next_token(parser)->type == CONST) {
-        match_token(parser, CONST);
+    if (peek_next_token(parser)->type == T_CONST) {
+        match_token(parser, T_CONST);
         return true;
     }
     return false;
@@ -162,7 +162,7 @@ void expression_assignment(struct Parser* parser, struct ASTNode** root) {
 }
 
 void print_statement(struct Parser* parser) {
-    match_token(parser, PRINT);
+    match_token(parser, T_PRINT);
     
     struct ASTNode* ast;
     make_ast_from_expr(&ast, parser);
@@ -171,7 +171,7 @@ void print_statement(struct Parser* parser) {
     parser->bc_builder->opcodes[parser->bc_builder->current_builder_location++] = SYS_WRITE;
 
     destroy_ast_node(ast);
-    match_token(parser, END_EXPRESSION);
+    match_token(parser, T_SEMI_COLON);
 }
 
 int check_for_var_redefination(struct Token* token) {
@@ -192,12 +192,12 @@ void assignment_statement(struct Parser* parser) {
     struct ASTNode* ast = NULL;
 
     struct Token* var_token = peek_next_token(parser);
-    match_token(parser, ID);
+    match_token(parser, T_ID);
 
     int var_id = UNKNOWN_ID;
     bool is_const = false;
 
-    if (peek_next_token(parser)->type == COLON) {
+    if (peek_next_token(parser)->type == T_COLON) {
         match_token(parser, peek_next_token(parser)->type);
         is_const = find_const(parser);
 
@@ -215,13 +215,13 @@ void assignment_statement(struct Parser* parser) {
         if (get_sym_index() > parser->bc_builder->data_size)
             parser->bc_builder->data_size++;
 
-        if (peek_next_token(parser)->type == END_EXPRESSION) {
+        if (peek_next_token(parser)->type == T_SEMI_COLON) {
             if (is_const) 
                 fatal_token_error(CONST_MUST_BE_DEFINED_ERROR, peek_next_token(parser));
 
             match_token(parser, peek_next_token(parser)->type);
 
-            ast = create_ast_node(EQUAL, create_ast_node_fill(ID, NULL, NULL, ast, var_type->value_type), create_ast_node_fill(var_type->value_type, NULL, NULL, ast, var_type->value_type));
+            ast = create_ast_node(T_EQUAL, create_ast_node_fill(T_ID, NULL, NULL, ast, var_type->value_type), create_ast_node_fill(var_type->value_type, NULL, NULL, ast, var_type->value_type));
             ast->left->var_id = get_symbols()[var_id].var.id;
 
             build_decleration(parser->bc_builder, ast);
@@ -237,7 +237,7 @@ void assignment_statement(struct Parser* parser) {
     if (is_const) 
         get_symbols()[var_id].var.is_const = is_const;
 
-    match_token(parser, END_EXPRESSION);
+    match_token(parser, T_SEMI_COLON);
 
     begin_sem();
     validate_ast(ast);
@@ -247,13 +247,13 @@ void assignment_statement(struct Parser* parser) {
 }
 
 int equal_statement(struct Parser* parser, int end_token, struct Token* var_token, struct ASTNode** root) {
-    *root = create_ast_node(EQUAL, NULL, NULL);
+    *root = create_ast_node(T_EQUAL, NULL, NULL);
 
     int id = search_type_symbol(var_token->token_string, VAR);
     if (id < -2)
-        (*root)->left = create_ast_node_fill(ID, NULL, NULL, *root, get_function()->arg_info[abs(id) - 3].var_info.value_type);
+        (*root)->left = create_ast_node_fill(T_ID, NULL, NULL, *root, get_function()->arg_info[abs(id) - 3].var_info.value_type);
     else
-        (*root)->left = create_ast_node_fill(ID, NULL, NULL, *root, get_symbols()[search_type_symbol(var_token->token_string, VAR)].var.value_type);
+        (*root)->left = create_ast_node_fill(T_ID, NULL, NULL, *root, get_symbols()[search_type_symbol(var_token->token_string, VAR)].var.value_type);
 
     if (id == UNKNOWN_ID)
         fatal_token_error(UNDEFINED_ID_ERROR, var_token);
@@ -263,7 +263,7 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
     else
         (*root)->left->var_id = get_symbols()[id].var.id;
 
-    if (var_token->type != ID)
+    if (var_token->type != T_ID)
         fatal_token_error(MUST_BE_LVALUE_ERROR, var_token);
     if (check_id_arg(id)) {
         if (get_function()->arg_info[get_arg_id(id)].var_info.is_const)
@@ -273,29 +273,29 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
         if (get_symbols()[search_type_symbol(var_token->token_string, VAR)].var.is_const)
             fatal_token_error(LVALUE_CONST_ERROR, var_token);
 
-    match_token(parser, EQUAL);
+    match_token(parser, T_EQUAL);
 
     struct Token* token = peek_next_token(parser);
 
     int start_of_expression = parser->token_index;
 
     while (1) {
-        if (token->type == EQUAL || token->type == END_EXPRESSION)
+        if (token->type == T_EQUAL || token->type == T_SEMI_COLON)
             break;
         token = retrieve_next_token(parser);
     }
     parser->token_index--;
 
-    if (token->type == EQUAL) {
+    if (token->type == T_EQUAL) {
         struct Token* next_var = &parser->lexer->tokens[parser->token_index - 1];
         struct Token* lval_check = &parser->lexer->tokens[parser->token_index - 2];
-            if (next_var->type != ID && lval_check->type != EQUAL) 
+            if (next_var->type != T_ID && lval_check->type != T_EQUAL)
                 fatal_token_error(MUST_BE_LVALUE_ERROR, next_var);
 
         end_token = equal_statement(parser, end_token, next_var, &(*root)->right);
         (*root)->right->parent = *root;
     }
-    if (token->type == END_EXPRESSION) {
+    if (token->type == T_SEMI_COLON) {
         parser->token_index = start_of_expression;
         expression_assignment(parser, &(*root)->right);
         (*root)->right->parent = *root;
@@ -308,13 +308,13 @@ int equal_statement(struct Parser* parser, int end_token, struct Token* var_toke
 }
 
 void run_scope(struct Parser* parser) {
-    match_token(parser, LCURLEY_BRACKET);
+    match_token(parser, T_LCURLEY_BRACKET);
     uint32_t left_bracket_match = parser->token_index;
-    while(peek_next_token(parser)->type != RCURLEY_BRACKET && peek_next_token(parser)->type != T_EOF) 
+    while(peek_next_token(parser)->type != T_RCURLEY_BRACKET && peek_next_token(parser)->type != T_EOF)
         run_statements(parser);
-    if (peek_next_token(parser)->type != RCURLEY_BRACKET) 
+    if (peek_next_token(parser)->type != T_RCURLEY_BRACKET)
         fatal_token_error(MISMATCHED_LCURLY_ERROR, &parser->lexer->tokens[left_bracket_match]);
-    match_token(parser, RCURLEY_BRACKET);
+    match_token(parser, T_RCURLEY_BRACKET);
 }
 
 uint32_t comparison_statement(struct Parser* parser) {
@@ -346,10 +346,10 @@ void generic_condition(struct Parser* parser, uint32_t condition_type) {
     parser->bc_builder->opcodes[jmp_reference] = parser->bc_builder->current_builder_location;
 
     switch (peek_next_token(parser)->type) {
-        case ELIF:
+        case T_ELIF:
         elif_statement(parser);
         break;
-        case ELSE:
+        case T_ELSE:
         else_statement(parser);
         break;
     }
@@ -357,11 +357,11 @@ void generic_condition(struct Parser* parser, uint32_t condition_type) {
 }
 
 void if_statement(struct Parser* parser) {
-    generic_condition(parser, IF);
+    generic_condition(parser, T_IF);
 }
 
 void else_statement(struct Parser* parser) {
-    match_token(parser, ELSE);
+    match_token(parser, T_ELSE);
     int local_variable_frame = get_sym_index();
 
     run_scope(parser);
@@ -370,11 +370,11 @@ void else_statement(struct Parser* parser) {
 }
 
 void elif_statement(struct Parser* parser) {
-    generic_condition(parser, ELIF);
+    generic_condition(parser, T_ELIF);
 }
 
 void while_statement(struct Parser* parser) {
-    match_token(parser, WHILE);
+    match_token(parser, T_WHILE);
  
     uint32_t start_ref = parser->bc_builder->current_builder_location;
     uint32_t jmp_reference = comparison_statement(parser);
@@ -392,7 +392,7 @@ void while_statement(struct Parser* parser) {
 
 void function_statement(struct Parser* parser) {
     struct Token* function_token = peek_next_token(parser);
-    match_token(parser, ID);
+    match_token(parser, T_ID);
 
     int func_id = search_type_symbol(function_token->token_string, FUNC);
 
@@ -411,17 +411,17 @@ void function_statement(struct Parser* parser) {
 }
 
 void function_definition(struct Parser* parser, int func_id) {
-    match_token(parser, LPAR);
+    match_token(parser, T_LPAR);
     int id = ARG_OFFSET;
     get_symbols()[func_id].function.arg_nums = 0;
     get_symbols()[func_id].function.created = true;
 
-    fill_return_info(&get_symbols()[func_id].function, NONE, 0, NONE, false, UNKNOWN_ID);
+    fill_return_info(&get_symbols()[func_id].function, T_NONE, 0, T_NONE, false, UNKNOWN_ID);
 
-    while (peek_next_token(parser)->type != RPAR) {
+    while (peek_next_token(parser)->type != T_RPAR) {
         struct Token* var_token = peek_next_token(parser);
-        match_token(parser, ID);
-        match_token(parser, COLON);
+        match_token(parser, T_ID);
+        match_token(parser, T_COLON);
 
         bool is_const = find_const(parser);
 
@@ -430,13 +430,13 @@ void function_definition(struct Parser* parser, int func_id) {
 
         fill_func_info(&get_symbols()[func_id].function.arg_info[get_symbols()[func_id].function.arg_nums++], var_type, &id, is_const, var_token->token_string);
 
-        if (peek_next_token(parser)->type != RPAR)
-            match_token(parser, COMMA);
+        if (peek_next_token(parser)->type != T_RPAR)
+            match_token(parser, T_COMMA);
     }
-    match_token(parser, RPAR);
+    match_token(parser, T_RPAR);
 
-    if (peek_next_token(parser)->type == ARROW_PTR) {
-        match_token(parser, ARROW_PTR);
+    if (peek_next_token(parser)->type == T_ARROW_PTR) {
+        match_token(parser, T_ARROW_PTR);
 
         struct VariableType* var_type = get_variable_types(peek_next_token(parser)->type);
 
@@ -466,13 +466,13 @@ void function_definition(struct Parser* parser, int func_id) {
 void function_call(struct Parser* parser, int func_id) {
     int arg_tracker = 0;
 
-    match_token(parser, LPAR);
+    match_token(parser, T_LPAR);
     struct ASTNode* ast[MAX_ARGS];
-    while (peek_next_token(parser)->type != RPAR) {
+    while (peek_next_token(parser)->type != T_RPAR) {
         make_ast_from_expr(&ast[arg_tracker], parser);
 
-        if (peek_next_token(parser)->type != RPAR) 
-            match_token(parser, COMMA);
+        if (peek_next_token(parser)->type != T_RPAR)
+            match_token(parser, T_COMMA);
         arg_tracker++;
     }
 
@@ -484,8 +484,8 @@ void function_call(struct Parser* parser, int func_id) {
     if (arg_tracker != get_symbols()[func_id].function.arg_nums) 
         fatal_error(MISMATCHED_ARG_NUMS_ERROR);
 
-    match_token(parser, RPAR);
-    match_token(parser, END_EXPRESSION);
+    match_token(parser, T_RPAR);
+    match_token(parser, T_SEMI_COLON);
     
     build_function_call(parser->bc_builder, func_id);
 }
@@ -494,11 +494,11 @@ void return_statement(struct Parser* parser) {
     if (get_function() == NULL)
         fatal_error(RETURN_WITHOUT_FUN_ERROR);
 
-    match_token(parser, RETURN);
-    if (peek_next_token(parser)->type == END_EXPRESSION) {
+    match_token(parser, T_RETURN);
+    if (peek_next_token(parser)->type == T_SEMI_COLON) {
         struct FuncSym* function = get_function();
 
-        if (function->return_info.type != NONE) {
+        if (function->return_info.type != T_NONE) {
             fatal_error(RETURN_WITHOUT_VALUE_IN_NONE_VOID_FUN_ERROR);
         }
 
@@ -512,5 +512,5 @@ void return_statement(struct Parser* parser) {
 
         build_function_return(parser->bc_builder);
     }
-    match_token(parser, END_EXPRESSION);
+    match_token(parser, T_SEMI_COLON);
 }

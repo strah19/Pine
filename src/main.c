@@ -4,12 +4,11 @@
 #include "../include/bytecode_builder.h"
 #include "../include/vm.h"
 #include "../include/sym.h"
+#include "../include/err.h"
 
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        printf("Must enter a file for the compiler to run.\n");
-        exit(EXIT_FAILURE);
-    }
+    if (argc < 2)
+        fatal_error(NO_INPUT_ERROR);
 
     struct LexLoader loader = create_buffer_for_lexer(argv[1]);
 

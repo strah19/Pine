@@ -62,21 +62,21 @@ void analyze_opcode_storage(struct ByteCodeBuilder* bc_builder) {
     }
 }
 
-uint32_t calculate_opcode_operator(struct ByteCodeBuilder* bc_builder, struct ASTNode* bin) {
+uint32_t convert_opcode_operator(struct ByteCodeBuilder* bc_builder, struct ASTNode* bin) {
     if (bin && bin->left && bin->right) {
         switch(bin->op) {
-            case ADD: return IADD;
-            case SUBTRACT: return ISUB;
-            case MULTIPLE: return IMUL;
-            case DIVIDE: return IDIV;
-            case DOUBLE_EQUAL: return IEQ;
-            case OR: return IOR;
-            case AND: return IAND;
-            case LESS_THAN: return ILT;
-            case GREATER_THAN: return IGT;
-            case LESS_THAN_EQUAL: return ILTE;
-            case GREATER_THAN_EQUAL: return IGTE;
-            case NOT: return INEQ;
+            case T_PLUS: return IADD;
+            case T_MINUS: return ISUB;
+            case T_STAR: return IMUL;
+            case T_SLASH: return IDIV;
+            case T_DOUBLE_EQUAL: return IEQ;
+            case T_OR: return IOR;
+            case T_AND: return IAND;
+            case T_LESS_THAN: return ILT;
+            case T_GREATER_THAN: return IGT;
+            case T_LESS_THAN_EQUAL: return ILTE;
+            case T_GREATER_THAN_EQUAL: return IGTE;
+            case T_NOT: return INEQ;
         }   
     }
 
@@ -85,11 +85,11 @@ uint32_t calculate_opcode_operator(struct ByteCodeBuilder* bc_builder, struct AS
 
 void push_node(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
     switch (root->type) {
-    case INTEGER:
+    case T_INTEGER:
         bc_builder->opcodes[bc_builder->current_builder_location++] = ICONST;
         bc_builder->opcodes[bc_builder->current_builder_location++] = root->int_val;
         break;
-    case CHAR:
+    case T_CHAR:
         bc_builder->opcodes[bc_builder->current_builder_location++] = CHARCONST;
         bc_builder->opcodes[bc_builder->current_builder_location++] = root->char_val;
         break;
@@ -113,9 +113,9 @@ void store_variable(struct ByteCodeBuilder* bc_builder, int var_id) {
 }
 
 void build_node(struct ByteCodeBuilder* bc_builder, struct ASTNode* root) {
-    if (root->op == ID)
+    if (root->op == T_ID)
         load_variable(bc_builder, root->var_id);
-    if (root->op == INTEGER || root->op == CHAR)
+    if (root->op == T_INTEGER || root->op == T_CHAR)
         push_node(bc_builder, root);
 }
 
@@ -125,11 +125,11 @@ static void build_expression_core(struct ByteCodeBuilder* bc_builder, struct AST
     build_expression_core(bc_builder, root->left);
     build_expression_core(bc_builder, root->right);
 
-    if (root->op != EQUAL) {
+    if (root->op != T_EQUAL) {
         build_node(bc_builder, root->left);
         build_node(bc_builder, root->right);
 
-        bc_builder->opcodes[bc_builder->current_builder_location++] = calculate_opcode_operator(bc_builder, root);
+        bc_builder->opcodes[bc_builder->current_builder_location++] = convert_opcode_operator(bc_builder, root);
     }
     else {
         build_node(bc_builder, root->right);

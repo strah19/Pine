@@ -40,6 +40,4 @@ extern void log_ast(struct ASTNode* root);
 
 extern void make_ast_from_expr(struct ASTNode** root, struct Parser* parser);
 
-extern int run_bin_exp(struct ASTNode* root);
-
 #endif //!EXPRESSION_H
