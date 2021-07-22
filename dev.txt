@@ -75,3 +75,30 @@ TD  | Try adding other int values (signed/unsigned)
 TD  | Added consts. (DONE)
 TD  | Create an interface for system calls.
 TD  | Add floats.
+-----------------------------
+
+7/21/2021 ~Beta Pine v0.04~
+-----------------------------
+TD  | Put the stack module in a libs folder and rename the pine module to utilty. Any function that is only in a .c file
+    | needs to have a decleration at the top for clarity.
+    | Lexer: get rid of lex prefix in comment functions. Make sure multi line comments are in their own function. 
+    | Need to have a way to identify chars instead of just strings that are only one byte (This is a syntax problem).
+    | Move the string code to its own function. At line 150, get rid of the duplicate code and make a system that 
+    | can recognize when tokens are similar and need more information. Any error char* should be a #define in err.h.
+    | We need to take a full string first. So if input is if var == 2 { }. Tokens should only be compared when the string
+    | is at if, var, ==, and 2. So there is conditions for when to stop reading in tokens. Then comparing the pairs is much
+    | easier. After all this, do a perfomance check.
+    | Symbols: Make sure the symbol can be resized (just like the lexer). Have the log symbol function print out more info.
+    | Have better names for some of the functions. 
+    | Expressions: Rename fig_precedence_from_op to convert_op_to_precedence. Rename make_ast_from_expr to ast_expr. Create a bit flag
+    | that can be taken in to know when to stop reading an expression. For example, if I say in the bit flag that the expression is in a function
+    | and it sees that the current token is a ) but the next is a ;, it should know to stop readings. Get rid of the check at line 167. The fill ast function
+    | should be ok for now. Create some helper functions for connecting different asts. For example, if we have a if statement ast and we need to connect an expression
+    | to it, this function should facilitate that.
+    | VM: Stack size should be a little bigger or resizable. Move the runtime error functions to err.h. Have the code that writes our bytecodes to a file and that
+    | dump/disasseble our program into a different file (disasseble.h). Create a union structure and then have the object store it. 
+    | Parser: THE PARSER SHOULD ONLY PARSE! This means the parser converts our tokens into ast's. Thks includes functions and control flow. Then (still in
+    | the parser) generate the code using the ast (just like what we have been doing with expressions but now also with other bits of code). Have clearer
+    | functions for token retrieval and have generic macros for things like match semi colon. Factor out anywhere we have a variable type. Any helper code for the 
+    | functions should be moved to a func.h file. 
+    | BytecodeBuilder: 
